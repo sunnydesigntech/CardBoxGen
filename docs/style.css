@@ -20,6 +20,7 @@ body {
   border-bottom: 1px solid var(--border);
 }
 .header h1 { margin: 0 0 6px; font-size: 18px; }
+.ver { font-size: 12px; color: var(--muted); font-weight: 600; margin-left: 6px; }
 .sub { margin: 0; color: var(--muted); font-size: 13px; }
 
 .mode { margin-top: 10px; }

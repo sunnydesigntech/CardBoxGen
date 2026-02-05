@@ -29,8 +29,26 @@ def test_edge_pair_complementary_same_segment_count_and_endpoints():
     dirv = (1, 0)
     normal = gen.outward_normal_for_edge(dirv)
 
-    a_pts = gen.finger_edge_points(start, dirv, normal, plan, thickness=3.0, invert_tabs=False)
-    b_pts = gen.finger_edge_points(start, dirv, normal, plan, thickness=3.0, invert_tabs=True)
+    a_pts = gen.finger_edge_points(
+        start,
+        dirv,
+        normal,
+        plan,
+        thickness=3.0,
+        invert_tabs=False,
+        kerf_mm=0.2,
+        clearance_mm=0.15,
+    )
+    b_pts = gen.finger_edge_points(
+        start,
+        dirv,
+        normal,
+        plan,
+        thickness=3.0,
+        invert_tabs=True,
+        kerf_mm=0.2,
+        clearance_mm=0.15,
+    )
 
     assert len(a_pts) == len(b_pts)
 
