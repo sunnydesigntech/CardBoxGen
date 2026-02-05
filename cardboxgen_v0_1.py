@@ -178,6 +178,25 @@ class EdgeFamily:
     VERTICAL = "vertical"  # wall-to-wall
 
 
+def joint_depths_drawn(*, thickness: float, kerf_mm: float, clearance_mm: float) -> Tuple[float, float]:
+        """Compute drawn joint depths for tabs vs slots.
+
+        Student-facing expectation (primary rule):
+            final_slot ≈ drawn_slot + kerf
+            target_final_slot = thickness + clearance
+            => drawn_slot = thickness + clearance − kerf
+
+        We keep tab depth nominal (material thickness) and expand/shrink slots to control fit.
+        """
+
+        t = float(thickness)
+        k = float(kerf_mm)
+        c = float(clearance_mm)
+        tab_depth = max(0.0, t)
+        slot_depth = max(0.0, t + c - k)
+        return tab_depth, slot_depth
+
+
 @dataclass(frozen=True)
 class EdgeKey:
     panel: str
@@ -228,27 +247,9 @@ def build_finger_plan(
 ) -> FingerPlan:
     if count <= 0:
         raise ValueError("finger count must be positive")
+    # Deterministic uniform pitch; kerf/clearance are handled in *depth*.
     pitch = length / count
-
-    # Symmetric in-plane width compensation.
-    tab_adjust = kerf_mm - clearance_mm / 2.0
-    slot_adjust = (clearance_mm / 2.0) - kerf_mm
-
-    widths: List[float] = []
-    for i in range(count):
-        is_tab = (i % 2 == 0) if start_with_tab_on_a else (i % 2 == 1)
-        w = pitch + (tab_adjust if is_tab else slot_adjust)
-        widths.append(w)
-
-    total = sum(widths)
-    err = total - length
-    widths = [w - err / count for w in widths]
-
-    # Safety: if compensation would cause degeneracy, fall back to uniform.
-    if min(widths) <= 0.25:
-        widths = [pitch] * count
-
-    # Final correction to hit the exact endpoint (numerical).
+    widths = [pitch] * count
     widths[-1] += (length - sum(widths))
     return FingerPlan(length=length, count=count, widths=widths, start_with_tab_on_a=start_with_tab_on_a)
 
@@ -260,6 +261,8 @@ def finger_edge_points(
     plan: FingerPlan,
     *,
     thickness: float,
+    kerf_mm: float,
+    clearance_mm: float,
     invert_tabs: bool,
 ) -> List[Point]:
     """Generate a Manhattan polyline along an edge using a FingerPlan.
@@ -275,6 +278,8 @@ def finger_edge_points(
     if abs(dot(dirv, normal_out)) > 1e-9:
         raise ValueError("dirv and normal must be perpendicular")
 
+    tab_depth, slot_depth = joint_depths_drawn(thickness=thickness, kerf_mm=kerf_mm, clearance_mm=clearance_mm)
+
     tabs_a = plan.tabs_mask_for_a()
     pts: List[Point] = []
     p = start
@@ -282,7 +287,8 @@ def finger_edge_points(
         is_tab = tabs_a[i]
         if invert_tabs:
             is_tab = not is_tab
-        off = mul(normal_out, thickness if is_tab else -thickness)
+        depth = tab_depth if is_tab else slot_depth
+        off = mul(normal_out, depth if is_tab else -depth)
         p_out = add(p, off)
         p2 = add(p, mul(dirv, w))
         p2_out = add(p2, off)
@@ -603,6 +609,36 @@ class EdgePair:
     plan: FingerPlan
 
 
+def validate_params_and_pairs(p: BoxParams, edge_pairs: Dict[str, EdgePair]) -> List[str]:
+    warnings: List[str] = []
+
+    if p.thickness <= 0:
+        warnings.append("Thickness must be > 0")
+    if p.kerf_mm < 0:
+        warnings.append("Kerf should be >= 0")
+    if p.kerf_mm >= p.thickness:
+        warnings.append("Kerf is greater than or equal to thickness (check units)")
+    if abs(p.clearance_mm) > max(1.0, 0.6 * p.thickness):
+        warnings.append("Joint clearance is large relative to thickness")
+
+    tab_d, slot_d = joint_depths_drawn(thickness=p.thickness, kerf_mm=p.kerf_mm, clearance_mm=p.clearance_mm)
+    if slot_d <= 0.1:
+        warnings.append("Computed drawn slot depth is near zero; joint may not work")
+    if tab_d <= 0.1:
+        warnings.append("Computed tab depth is near zero; joint may not work")
+
+    for pair in edge_pairs.values():
+        if pair.plan.count <= 0:
+            warnings.append(f"Edge pair {pair.id} has no fingers")
+            continue
+        pitch = pair.length / pair.plan.count
+        if pitch < 6.0:
+            warnings.append(f"Edge pair {pair.id}: tabs are very small (pitch {pitch:.1f}mm)")
+        if pitch < p.thickness * 1.2:
+            warnings.append(f"Edge pair {pair.id}: pitch is close to thickness (may be fragile)")
+    return warnings
+
+
 @dataclass
 class PanelEdge:
     name: str
@@ -649,7 +685,16 @@ def render_panel_from_spec(spec: PanelSpec, *, joint_params: JointParams, edge_p
             pts.append(end)
             continue
         pair = edge_pairs[e.finger_pair_id]
-        seg_pts = finger_edge_points(start, dirv, normal, pair.plan, thickness=joint_params.thickness, invert_tabs=e.invert_tabs)
+        seg_pts = finger_edge_points(
+            start,
+            dirv,
+            normal,
+            pair.plan,
+            thickness=joint_params.thickness,
+            kerf_mm=joint_params.kerf_mm,
+            clearance_mm=joint_params.clearance_mm,
+            invert_tabs=e.invert_tabs,
+        )
         pts.extend(seg_pts)
 
     # Ensure closed-ish (path writer closes). Also drop consecutive duplicates.
@@ -901,8 +946,80 @@ def build_panels_for_preset(p: BoxParams) -> List[Panel]:
     return panels
 
 
-def build_calibration_svg(*, thickness: float, kerf_mm: float, clearance_values: List[float], out_path: str):
-    """Calibration: generate multiple mating finger-joint strips for different clearances."""
+def generate_svg_with_warnings(p: BoxParams) -> Tuple[str, List[str]]:
+    """Convenience entrypoint for the browser UI.
+
+    Returns:
+      (svg_xml, warnings)
+    """
+
+    panels = build_panels_for_preset(p)
+
+    # Rebuild edge pairs for warnings (same logic as build_panels_for_preset)
+    t = p.thickness
+    outer_w = p.inner_width + 2 * t
+    outer_d = p.inner_depth + 2 * t
+    wall_h = p.inner_height + t
+    target_finger_w = p.finger_width if p.finger_width is not None else max(10.0, 3.0 * t)
+    joint = JointParams(
+        thickness=t,
+        target_finger_w=target_finger_w,
+        min_fingers=p.min_fingers,
+        kerf_mm=p.kerf_mm,
+        clearance_mm=p.clearance_mm,
+        finger_count_outer=p.finger_count_outer,
+        finger_count_vertical=p.finger_count_vertical,
+    )
+    preset = p.preset
+    include_front = preset in ("dispenser_slot_front", "window_front", "tray_open_front", "box_with_lid")
+    front_h = p.front_height if p.front_height is not None else wall_h
+    if preset == "tray_open_front":
+        front_h = p.front_height if p.front_height is not None else max(t * 2, 0.55 * wall_h)
+    elif preset in ("dispenser_slot_front", "window_front", "box_with_lid"):
+        front_h = wall_h
+
+    edge_pairs = build_edge_pairs_for_box(
+        joint=joint,
+        outer_w=outer_w,
+        outer_d=outer_d,
+        wall_h=wall_h,
+        front_h=front_h,
+        include_front=include_front,
+    )
+    warnings = validate_params_and_pairs(p, edge_pairs)
+
+    meta = p.__dict__.copy()
+    meta["joint_rule"] = "drawn_slot = thickness + clearance - kerf (expected final slot ~ thickness + clearance)"
+    svg = make_svg(
+        panels,
+        meta=meta,
+        sheet_width=p.sheet_width,
+        labels=p.labels,
+        offset_kerf=p.offset_kerf,
+        kerf_mm=p.kerf_mm,
+        layout_margin_mm=p.layout_margin_mm,
+        layout_padding_mm=p.layout_padding_mm,
+        stroke_mm=p.stroke_mm,
+        holding_tabs=p.holding_tabs,
+        tab_width_mm=p.tab_width_mm,
+    )
+    return svg, warnings
+
+
+def build_calibration_svg(
+    *,
+    thickness: float,
+    kerf_mm: float,
+    clearance_values: List[float],
+    out_path: str,
+    named_presets: Optional[List[Tuple[str, float]]] = None,
+):
+    """Calibration: generate multiple mating finger-joint strips for different clearances.
+
+    This uses the same primary rule as the main generator:
+      drawn_slot = thickness + clearance - kerf
+      expected_final_slot ≈ thickness + clearance
+    """
 
     t = thickness
     length = 90.0
@@ -911,16 +1028,24 @@ def build_calibration_svg(*, thickness: float, kerf_mm: float, clearance_values:
 
     joint = JointParams(thickness=t, target_finger_w=max(10.0, 3.0 * t), min_fingers=7, kerf_mm=kerf_mm, clearance_mm=0.0)
 
+    items: List[Tuple[str, float]] = []
+    if named_presets:
+        items.extend(named_presets)
+    items.extend([(f"clr {c:+.2f}", c) for c in clearance_values])
+
     panels: List[Panel] = []
     y_cursor = 0.0
-    for c in clearance_values:
+    for label, c in items:
         joint.clearance_mm = c
         n = compute_finger_count(length, joint.target_finger_w, min_fingers=joint.min_fingers, explicit=None)
         plan = build_finger_plan(length, count=n, kerf_mm=joint.kerf_mm, clearance_mm=joint.clearance_mm, start_with_tab_on_a=True)
 
+        tab_d, slot_d = joint_depths_drawn(thickness=t, kerf_mm=joint.kerf_mm, clearance_mm=c)
+        expected_final_slot = t + c
+
         # Two strips that should mate.
-        a_spec = build_rect_panel_spec(f"CAL_A_{c:+.2f}", length, height)
-        b_spec = build_rect_panel_spec(f"CAL_B_{c:+.2f}", length, height)
+        a_spec = build_rect_panel_spec(f"CAL_A_{label}", length, height)
+        b_spec = build_rect_panel_spec(f"CAL_B_{label}", length, height)
 
         # Use top edge on both as the jointed edge for easy viewing.
         a_spec.edges[0].finger_pair_id = "pair"
@@ -931,8 +1056,18 @@ def build_calibration_svg(*, thickness: float, kerf_mm: float, clearance_values:
         pair = EdgePair("pair", EdgeFamily.OUTER, EdgeKey(a_spec.name, "top"), EdgeKey(b_spec.name, "top"), length, plan)
         edge_pairs = {"pair": pair}
 
-        a_spec.labels = [(f"A clr {c:+.2f}", (length / 2, height / 2))]
-        b_spec.labels = [(f"B clr {c:+.2f}", (length / 2, height / 2))]
+        a_spec.labels = [
+            (
+                f"A {label} | drawn slot {slot_d:.2f} | final slot ~ {expected_final_slot:.2f}",
+                (length / 2, height / 2),
+            )
+        ]
+        b_spec.labels = [
+            (
+                f"B {label} | tab {tab_d:.2f}",
+                (length / 2, height / 2),
+            )
+        ]
 
         a = render_panel_from_spec(a_spec, joint_params=joint, edge_pairs=edge_pairs)
         b = render_panel_from_spec(b_spec, joint_params=joint, edge_pairs=edge_pairs)
@@ -1049,6 +1184,12 @@ def parse_args() -> argparse.Namespace:
 
     ap.add_argument("--calibration", action="store_true", help="Generate calibration plate (mating strips)")
     ap.add_argument(
+        "--calibration-set",
+        choices=["full", "student"],
+        default="full",
+        help="Calibration clearances set: full (many values) or student (tight/normal/loose)",
+    )
+    ap.add_argument(
         "--calibration-clearances",
         type=str,
         default="-0.10,-0.05,0,0.05,0.10,0.15,0.20",
@@ -1069,8 +1210,17 @@ def main():
         clearance_mm = float(args.fit)
 
     if args.calibration:
+        named = None
+        if args.calibration_set == "student":
+            named = [("tight", 0.00), ("normal", 0.10), ("loose", 0.20)]
         clearances = [float(x) for x in args.calibration_clearances.split(",") if x.strip() != ""]
-        build_calibration_svg(thickness=args.thickness, kerf_mm=kerf_mm, clearance_values=clearances, out_path=args.out)
+        build_calibration_svg(
+            thickness=args.thickness,
+            kerf_mm=kerf_mm,
+            clearance_values=clearances,
+            out_path=args.out,
+            named_presets=named,
+        )
         return
 
     # Map legacy variants to presets.

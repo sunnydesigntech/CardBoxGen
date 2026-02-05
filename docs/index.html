@@ -12,11 +12,63 @@
       <p class="sub">
         Runs fully in your browser (Pyodide). Generates laser-cut SVG with deterministic finger joints.
       </p>
+      <div class="mode">
+        <label class="check">
+          <input id="studentMode" type="checkbox" checked />
+          Student Mode
+        </label>
+      </div>
     </header>
 
     <main class="grid">
       <section class="card">
-        <h2>Parameters</h2>
+        <h2>Setup</h2>
+
+        <section id="wizard" class="wizard">
+          <h3>Student Mode (3 steps)</h3>
+
+          <div class="step">
+            <div class="stepTitle">Step 1 — Define the problem</div>
+            <div class="row">
+              <label for="dispenseType">Dispense type</label>
+              <select id="dispenseType">
+                <option value="stacking" selected>Stacking (cards / tiles)</option>
+                <option value="flowing">Flowing (dry solids only)</option>
+              </select>
+            </div>
+            <div class="row">
+              <label for="storageTarget">Storage target</label>
+              <input id="storageTarget" type="text" placeholder="e.g., 150 cards" />
+            </div>
+            <div class="row">
+              <label for="dispenseTarget">Dispense target</label>
+              <input id="dispenseTarget" type="text" placeholder="e.g., 1 card per pull" />
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="stepTitle">Step 2 — Choose a mechanism</div>
+            <div class="row">
+              <label for="mechanism">Mechanism</label>
+              <select id="mechanism">
+                <option value="tray_open_front" selected>Open-front tray</option>
+                <option value="dispenser_slot_front">Front slot dispenser</option>
+                <option value="window_front">Window front</option>
+                <option value="box_with_lid">Box with lid</option>
+              </select>
+            </div>
+            <p class="hint">Choosing a mechanism will set the preset below.</p>
+          </div>
+
+          <div class="step">
+            <div class="stepTitle">Step 3 — Fabrication setup</div>
+            <p class="hint">
+              If you don’t know kerf, generate the calibration SVG, cut it, then pick the best label.
+            </p>
+          </div>
+        </section>
+
+        <h3>Basic</h3>
 
         <div class="row">
           <label for="preset">Preset</label>
@@ -25,6 +77,14 @@
             <option value="dispenser_slot_front">dispenser_slot_front</option>
             <option value="window_front">window_front</option>
             <option value="box_with_lid">box_with_lid</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <label for="dimMode">Dimension mode</label>
+          <select id="dimMode">
+            <option value="internal" selected>Internal (space inside)</option>
+            <option value="external">External (outside size)</option>
           </select>
         </div>
 
@@ -47,14 +107,14 @@
           <label for="thickness">Thickness (mm)</label>
           <input id="thickness" type="number" value="3" step="0.01" min="0.1" />
         </div>
+
         <div class="row">
-          <label for="kerf">Kerf (mm)</label>
-          <input id="kerf" type="number" value="0.2" step="0.01" min="0" />
+          <label for="fit">Fit (tight → loose)</label>
+          <input id="fit" type="range" min="0" max="2" step="1" value="1" />
         </div>
-        <div class="row">
-          <label for="clearance">Clearance (mm)</label>
-          <input id="clearance" type="number" value="0.15" step="0.01" />
-        </div>
+        <div class="readout" id="fitReadout"></div>
+
+        <div class="readout" id="sizeReadout"></div>
 
         <div class="row">
           <label for="sheetWidth">Sheet width (mm)</label>
@@ -62,7 +122,7 @@
         </div>
 
         <details>
-          <summary>Optional layout settings</summary>
+          <summary>Layout (optional)</summary>
 
           <div class="row">
             <label for="marginMm">Margin (mm)</label>
@@ -97,6 +157,38 @@
           <label for="tabWidth">Tab width (mm)</label>
           <input id="tabWidth" type="number" value="2" step="0.1" min="0" />
         </div>
+
+        <details id="advanced">
+          <summary>Advanced</summary>
+
+          <div class="row">
+            <label for="kerf">Kerf (mm)</label>
+            <input id="kerf" type="number" value="0.2" step="0.01" min="0" />
+          </div>
+          <div class="row">
+            <label for="clearance">Joint clearance (mm)</label>
+            <input id="clearance" type="number" value="0.10" step="0.01" />
+          </div>
+
+          <div class="readout" id="jointRule"></div>
+
+          <div class="row">
+            <label for="calSet">Calibration set</label>
+            <select id="calSet">
+              <option value="student" selected>Student (tight/normal/loose)</option>
+              <option value="full">Full list</option>
+            </select>
+          </div>
+
+          <div class="row">
+            <label for="fingerWidth">Target tab width (mm)</label>
+            <input id="fingerWidth" type="number" value="" step="0.1" placeholder="(auto)" />
+          </div>
+          <div class="row">
+            <label for="minFingers">Min tabs</label>
+            <input id="minFingers" type="number" value="3" step="1" min="1" />
+          </div>
+        </details>
 
         <details>
           <summary>Preset options</summary>
@@ -138,14 +230,23 @@
         <div class="actions">
           <button id="btnGenerate" disabled>Loading Python…</button>
           <button id="btnCalibration" disabled>Generate calibration SVG</button>
+          <button id="btnBundle" disabled>Download bundle (zip)</button>
         </div>
 
         <p class="status" id="status">Initializing…</p>
         <a class="download" id="download" download="out.svg" hidden>Download SVG</a>
+        <div class="warnings" id="warnings" hidden></div>
       </section>
 
       <section class="card">
         <h2>Preview</h2>
+        <div class="previewBar">
+          <button id="zoomOut" type="button">−</button>
+          <button id="zoomIn" type="button">+</button>
+          <button id="fitView" type="button">Fit</button>
+          <label class="check"><input id="showCut" type="checkbox" checked />CUT</label>
+          <label class="check"><input id="showLabels" type="checkbox" checked />LABELS</label>
+        </div>
         <div id="preview" class="preview"></div>
       </section>
     </main>
@@ -155,6 +256,8 @@
         Tip: If you deploy this on GitHub Pages, it runs client-side and doesn’t need a server.
       </p>
     </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
     <script type="module" src="app.js"></script>
   </body>
