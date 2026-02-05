@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Card Box / Tray SVG Generator</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="header">
+      <h1>Card Box / Tray SVG Generator</h1>
+      <p class="sub">
+        Runs fully in your browser (Pyodide). Generates laser-cut SVG with deterministic finger joints.
+      </p>
+    </header>
+
+    <main class="grid">
+      <section class="card">
+        <h2>Parameters</h2>
+
+        <div class="row">
+          <label for="preset">Preset</label>
+          <select id="preset">
+            <option value="tray_open_front">tray_open_front</option>
+            <option value="dispenser_slot_front">dispenser_slot_front</option>
+            <option value="window_front">window_front</option>
+            <option value="box_with_lid">box_with_lid</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <label for="innerWidth">Inner width (mm)</label>
+          <input id="innerWidth" type="number" value="135" step="0.1" min="1" />
+        </div>
+        <div class="row">
+          <label for="innerDepth">Inner depth (mm)</label>
+          <input id="innerDepth" type="number" value="90" step="0.1" min="1" />
+        </div>
+        <div class="row">
+          <label for="innerHeight">Inner height (mm)</label>
+          <input id="innerHeight" type="number" value="225" step="0.1" min="1" />
+        </div>
+
+        <hr />
+
+        <div class="row">
+          <label for="thickness">Thickness (mm)</label>
+          <input id="thickness" type="number" value="3" step="0.01" min="0.1" />
+        </div>
+        <div class="row">
+          <label for="kerf">Kerf (mm)</label>
+          <input id="kerf" type="number" value="0.2" step="0.01" min="0" />
+        </div>
+        <div class="row">
+          <label for="clearance">Clearance (mm)</label>
+          <input id="clearance" type="number" value="0.15" step="0.01" />
+        </div>
+
+        <div class="row">
+          <label for="sheetWidth">Sheet width (mm)</label>
+          <input id="sheetWidth" type="number" value="340" step="1" min="50" />
+        </div>
+
+        <div class="row inline">
+          <label class="check">
+            <input id="labels" type="checkbox" checked />
+            Labels
+          </label>
+          <label class="check">
+            <input id="lid" type="checkbox" />
+            Lid (only for box_with_lid)
+          </label>
+        </div>
+
+        <div class="row inline">
+          <label class="check">
+            <input id="holdingTabs" type="checkbox" />
+            Holding tabs
+          </label>
+          <label for="tabWidth">Tab width (mm)</label>
+          <input id="tabWidth" type="number" value="2" step="0.1" min="0" />
+        </div>
+
+        <details>
+          <summary>Preset options</summary>
+
+          <div class="row">
+            <label for="frontHeight">Front height (mm)</label>
+            <input id="frontHeight" type="number" value="" step="0.1" placeholder="(auto)" />
+          </div>
+
+          <div class="row inline">
+            <label class="check">
+              <input id="scoop" type="checkbox" />
+              Scoop (tray_open_front)
+            </label>
+          </div>
+          <div class="row">
+            <label for="scoopRadius">Scoop radius (mm)</label>
+            <input id="scoopRadius" type="number" value="22" step="0.1" />
+          </div>
+          <div class="row">
+            <label for="scoopDepth">Scoop depth (mm)</label>
+            <input id="scoopDepth" type="number" value="18" step="0.1" />
+          </div>
+
+          <div class="row">
+            <label for="slotWidth">Slot width (mm)</label>
+            <input id="slotWidth" type="number" value="86" step="0.1" />
+          </div>
+          <div class="row">
+            <label for="slotHeight">Slot height (mm)</label>
+            <input id="slotHeight" type="number" value="18" step="0.1" />
+          </div>
+          <div class="row">
+            <label for="slotY">Slot Y from bottom (mm)</label>
+            <input id="slotY" type="number" value="38" step="0.1" />
+          </div>
+        </details>
+
+        <div class="actions">
+          <button id="btnGenerate" disabled>Loading Python…</button>
+          <button id="btnCalibration" disabled>Generate calibration SVG</button>
+        </div>
+
+        <p class="status" id="status">Initializing…</p>
+        <a class="download" id="download" download="out.svg" hidden>Download SVG</a>
+      </section>
+
+      <section class="card">
+        <h2>Preview</h2>
+        <div id="preview" class="preview"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>
+        Tip: If you deploy this on GitHub Pages, it runs client-side and doesn’t need a server.
+      </p>
+    </footer>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
