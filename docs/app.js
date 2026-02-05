@@ -63,7 +63,14 @@ async function init() {
   els.btnGenerate.disabled = false;
   els.btnCalibration.disabled = false;
   els.btnGenerate.textContent = "Generate SVG";
-  setStatus("Ready.");
+
+  // Show something useful immediately on first load.
+  try {
+    await generateSvg();
+  } catch (e) {
+    console.error(e);
+    setStatus(`Ready (auto-generate failed): ${e?.message ?? e}`);
+  }
 }
 
 function buildParams() {
