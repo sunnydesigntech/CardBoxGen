@@ -1094,11 +1094,21 @@ def main():
             ramp_angle_deg=args.ramp_angle,
             **common
         )
-    else:
-        panels, warns, meta = build_rotary_wheel_candy(
-            max_piece=args.max_piece, irregular=args.irregular, axle_d=args.axle_d,
-            **common
+    elif args.template == "candy_machine_rotary_layered":
+        panels, warns, meta = build_candy_machine_rotary_layered(
+            max_piece=args.max_piece,
+            irregular=bool(args.irregular),
+            hopper_h=float(max(10.0, args.inner_h)),
+            depth_layers_total=8,
+            wheel_layers=3,
+            screw_d=3.2,
+            screw_margin=6.0,
+            axle_d=args.axle_d,
+            add_feet=False,
+            **common,
         )
+    else:
+        raise ValueError(f"Unknown template: {args.template}")
 
     svg = make_svg(panels, meta)
     with open(args.out, "w", encoding="utf-8") as f:
