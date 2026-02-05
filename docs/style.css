@@ -304,10 +304,29 @@ button:not(:disabled):hover { border-color: var(--accent); }
 }
 .drawerHeader { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
 .drawerTitle { font-weight: 700; }
+.drawerTools { padding-top: 10px; }
+.drawerSearch { width: 100%; }
 .drawerBody { padding-top: 10px; }
 .helpTopic { border: 1px solid var(--border); border-radius: 10px; padding: 10px; background: #0b1220; margin-bottom: 10px; }
 .helpTopic h4 { margin: 0 0 6px; font-size: 13px; }
 .helpTopic p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.35; }
+
+.helpCategory {
+  margin: 12px 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  opacity: 0.9;
+}
+
+.helpTopicBody { margin-top: 8px; }
+.helpKeyMeta { color: var(--muted); font-size: 11px; margin-top: 2px; }
+
+.faqItem { border: 1px solid var(--border); border-radius: 10px; padding: 10px; background: #0b1220; margin-bottom: 10px; }
+.faqItem h4 { margin: 0 0 6px; font-size: 13px; }
+.faqItem p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.4; }
+
+.fitTools { margin-top: 10px; }
 
 @media (max-width: 767px) {
   .header { padding: 12px; }

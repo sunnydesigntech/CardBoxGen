@@ -1,17 +1,21 @@
 {
   "app": {
     "title": "卡盒／托盤 SVG 產生器",
-    "version": "v0.3.1",
+    "version": "v0.4",
     "subtitle": "完全在瀏覽器中執行（Pyodide）。產生可雷切的 SVG，並使用可重現的指接結構。"
   },
   "mode": {
     "student": "學生模式",
-    "help": "說明"
+    "help": "說明",
+    "faq": "FAQ"
   },
   "helpSections": {
     "consider": "建議思考",
+    "decide": "如何決定",
     "typical": "常見數值",
-    "pitfalls": "常見陷阱"
+    "pitfalls": "常見陷阱",
+    "wrong": "如果不對",
+    "example": "例子"
   },
   "sections": {
     "setup": "設定",
@@ -20,6 +24,7 @@
     "layout": "排版",
     "layoutOptional": "排版（選填）",
     "advanced": "進階",
+    "fitTools": "配合工具（選填）",
     "presetOptions": "預設選項",
     "preview": "預覽",
     "exports": "匯出"
@@ -32,9 +37,9 @@
     "step2": "步驟 2 — 選擇機構",
     "step3": "步驟 3 — 製作設定",
     "step2Hint": "選擇機構會自動設定下方的預設。",
-    "step3Hint": "如果不知道刀縫（kerf），先產生校正 SVG，切割後選擇最合適的標籤。",
+    "step3Hint": "如果不知道刀縫（kerf），先跑配合測試（進階 → 配合工具），切割後選擇最合適的標籤。",
     "checklistTitle": "校正檢查清單",
-    "check1": "產生校正 SVG",
+    "check1": "跑配合測試（選填）",
     "check2": "切割它",
     "check3": "選擇最合適的標籤",
     "check4": "套用數值並重新產生最終 SVG"
@@ -105,6 +110,7 @@
   "actions": {
     "generate": "產生 SVG",
     "calibration": "產生校正 SVG",
+    "fitTest": "配合測試（選填）",
     "bundle": "下載打包（zip）",
     "downloadSvg": "下載 SVG",
     "downloadCalibration": "下載校正 SVG",
@@ -112,6 +118,19 @@
     "zoomIn": "+",
     "zoomOut": "−",
     "controls": "參數"
+  },
+  "helpUi": {
+    "searchPlaceholder": "搜尋說明…",
+    "noResults": "找不到符合的主題。"
+  },
+  "faqUi": {
+    "searchPlaceholder": "搜尋 FAQ…",
+    "noResults": "找不到符合的問題。",
+    "troubleshootingTitle": "疑難排解",
+    "troubleshootingShort": "快速找到該改哪個參數。"
+  },
+  "fitTools": {
+    "hint": "用一小張測試片先找到最合適的接合間隙（很推薦給學生）。"
   },
   "status": {
     "initializing": "初始化中…",

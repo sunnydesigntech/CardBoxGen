@@ -1,17 +1,21 @@
 {
   "app": {
     "title": "卡盒／托盘 SVG 生成器",
-    "version": "v0.3.1",
+    "version": "v0.4",
     "subtitle": "完全在浏览器中运行（Pyodide）。生成可激光切割的 SVG，并使用可复现的指接结构。"
   },
   "mode": {
     "student": "学生模式",
-    "help": "帮助"
+    "help": "帮助",
+    "faq": "FAQ"
   },
   "helpSections": {
     "consider": "建议思考",
+    "decide": "如何决定",
     "typical": "常见数值",
-    "pitfalls": "常见坑"
+    "pitfalls": "常见坑",
+    "wrong": "如果不对",
+    "example": "例子"
   },
   "sections": {
     "setup": "设置",
@@ -20,6 +24,7 @@
     "layout": "排版",
     "layoutOptional": "排版（可选）",
     "advanced": "高级",
+    "fitTools": "配合工具（选填）",
     "presetOptions": "预设选项",
     "preview": "预览",
     "exports": "导出"
@@ -32,9 +37,9 @@
     "step2": "步骤 2 — 选择机构",
     "step3": "步骤 3 — 制作设置",
     "step2Hint": "选择机构会自动设置下方的预设。",
-    "step3Hint": "如果不知道刀缝（kerf），先生成校准 SVG，切割后选择最合适的标签。",
+    "step3Hint": "如果不知道刀缝（kerf），先跑配合测试（高级 → 配合工具），切割后选择最合适的标签。",
     "checklistTitle": "校准检查清单",
-    "check1": "生成校准 SVG",
+    "check1": "跑配合测试（选填）",
     "check2": "切割它",
     "check3": "选择最佳标签",
     "check4": "应用数值并重新生成最终 SVG"
@@ -105,6 +110,7 @@
   "actions": {
     "generate": "生成 SVG",
     "calibration": "生成校准 SVG",
+    "fitTest": "配合测试（选填）",
     "bundle": "下载打包（zip）",
     "downloadSvg": "下载 SVG",
     "downloadCalibration": "下载校准 SVG",
@@ -112,6 +118,19 @@
     "zoomIn": "+",
     "zoomOut": "−",
     "controls": "参数"
+  },
+  "helpUi": {
+    "searchPlaceholder": "搜索说明…",
+    "noResults": "找不到符合的主题。"
+  },
+  "faqUi": {
+    "searchPlaceholder": "搜索 FAQ…",
+    "noResults": "找不到符合的问题。",
+    "troubleshootingTitle": "故障排查",
+    "troubleshootingShort": "快速找到该改哪个参数。"
+  },
+  "fitTools": {
+    "hint": "用一小张测试片先找到最合适的接合间隙（很推荐给学生）。"
   },
   "status": {
     "initializing": "初始化中…",

@@ -3,7 +3,7 @@
 
 import { loadPyodide } from "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.mjs";
 
-const APP_VERSION = "0.3.1";
+const APP_VERSION = "0.4";
 const LANG_STORAGE_KEY = "cardboxgen.lang";
 
 let currentLang = "en";
@@ -30,7 +30,9 @@ async function loadLanguage(lang) {
   localStorage.setItem(LANG_STORAGE_KEY, safeLang);
   document.documentElement.lang = safeLang.startsWith("zh") ? "zh" : "en";
   applyTranslations();
+  rebuildHelpContent();
   buildHelpDrawer();
+  buildFaqDrawer();
   decorateHelpIcons();
 }
 
@@ -65,6 +67,12 @@ const els = {
   helpDrawer: document.getElementById("helpDrawer"),
   helpDrawerClose: document.getElementById("helpDrawerClose"),
   helpDrawerBody: document.getElementById("helpDrawerBody"),
+  helpSearch: document.getElementById("helpSearch"),
+  faqDrawerBtn: document.getElementById("faqDrawerBtn"),
+  faqDrawer: document.getElementById("faqDrawer"),
+  faqDrawerClose: document.getElementById("faqDrawerClose"),
+  faqDrawerBody: document.getElementById("faqDrawerBody"),
+  faqSearch: document.getElementById("faqSearch"),
   drawerOverlay: document.getElementById("drawerOverlay"),
   popover: document.getElementById("popover"),
   controlsToggle: document.getElementById("controlsToggle"),
@@ -157,6 +165,100 @@ let calibrationGeneratedOnce = false;
 
 const FIT_PRESETS = [0.0, 0.1, 0.2];
 
+const HELP_CATEGORY_ORDER = [
+  "Project",
+  "Dimensions",
+  "Laser fit",
+  "Tabs",
+  "Layout",
+  "Preset options",
+  "Troubleshooting",
+];
+
+const HELP_CATEGORY_BY_KEY = {
+  dispenseType: "Project",
+  storageTarget: "Project",
+  dispenseTarget: "Project",
+  mechanism: "Project",
+  preset: "Project",
+
+  dimensionMode: "Dimensions",
+  innerWidth: "Dimensions",
+  innerDepth: "Dimensions",
+  innerHeight: "Dimensions",
+  thickness: "Dimensions",
+
+  fit: "Laser fit",
+  kerf: "Laser fit",
+  clearance: "Laser fit",
+  calSet: "Laser fit",
+  fingerWidth: "Laser fit",
+  minTabs: "Laser fit",
+
+  holdingTabs: "Tabs",
+  tabWidth: "Tabs",
+
+  sheetWidth: "Layout",
+  margin: "Layout",
+  padding: "Layout",
+  stroke: "Layout",
+  labelsToggle: "Layout",
+  lid: "Layout",
+
+  frontHeight: "Preset options",
+  scoop: "Preset options",
+  scoopRadius: "Preset options",
+  scoopDepth: "Preset options",
+  slotWidth: "Preset options",
+  slotHeight: "Preset options",
+  slotY: "Preset options",
+
+  troubleshooting: "Troubleshooting",
+};
+
+let helpContent = {};
+
+function arr(v) {
+  return Array.isArray(v) ? v : [];
+}
+
+function rebuildHelpContent() {
+  const helpObj = getPath(dict, "help") || {};
+  const out = {};
+  Object.keys(helpObj).forEach((k) => {
+    const base = getPath(dict, `help.${k}`) || {};
+    out[k] = {
+      key: k,
+      category: HELP_CATEGORY_BY_KEY[k] || "Other",
+      title: base.title || k,
+      short: base.short || "",
+      meaning: base.meaning || base.what || "",
+      decide: arr(base.decide),
+      typical: arr(base.typical),
+      pitfalls: arr(base.pitfalls),
+      wrong: arr(base.wrong),
+      example: base.example || "",
+    };
+  });
+
+  if (!out.troubleshooting) {
+    out.troubleshooting = {
+      key: "troubleshooting",
+      category: "Troubleshooting",
+      title: t("faqUi.troubleshootingTitle"),
+      short: t("faqUi.troubleshootingShort"),
+      meaning: "",
+      decide: [],
+      typical: [],
+      pitfalls: [],
+      wrong: [],
+      example: "",
+    };
+  }
+
+  helpContent = out;
+}
+
 function computeDerived() {
   const thickness = num(els.thickness, 3);
   const kerf = num(els.kerf, 0.2);
@@ -223,7 +325,7 @@ async function init() {
   await pyodide.runPythonAsync(`import importlib\ncard = importlib.import_module('cardboxgen_v0_1')`);
 
   els.btnGenerate.disabled = false;
-  els.btnCalibration.disabled = false;
+  if (els.btnCalibration) els.btnCalibration.disabled = false;
   els.btnBundle.disabled = false;
   els.btnGenerate.textContent = t("actions.generate");
 
@@ -393,6 +495,7 @@ json.dumps({"svg": svg, "warnings": warnings})
   els.preview.innerHTML = `<div id="svgWrap">${svg}</div>`;
   applyLayerToggles();
   attachHoverHighlight();
+  userZoomed = false;
   fitToView();
   const blob = new Blob([svg], { type: "image/svg+xml" });
   const url = URL.createObjectURL(blob);
@@ -513,6 +616,7 @@ open(path, 'r', encoding='utf-8').read()
   els.preview.innerHTML = `<div id="svgWrap">${svg}</div>`;
   applyLayerToggles();
   attachHoverHighlight();
+  userZoomed = false;
   fitToView();
   const blob = new Blob([svg], { type: "image/svg+xml" });
   const url = URL.createObjectURL(blob);
@@ -529,6 +633,10 @@ open(path, 'r', encoding='utf-8').read()
   setStatusKey("status.readyFile", { filename: lastDownloadFilename });
 }
 
+const MIN_SCALE = 0.1;
+const MAX_SCALE = 6.0;
+
+let userZoomed = false;
 let view = { scale: 1.0, tx: 0, ty: 0 };
 
 function getSvgWrap() {
@@ -552,7 +660,8 @@ function fitToView() {
   const rect = els.preview.getBoundingClientRect();
   const pad = 20;
   const s = Math.min((rect.width - pad) / vbW, (rect.height - pad) / vbH);
-  view.scale = Number.isFinite(s) && s > 0 ? s : 1;
+  const fitted = Number.isFinite(s) && s > 0 ? s : 1;
+  view.scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, fitted));
   view.tx = 0;
   view.ty = 0;
   applyTransform();
@@ -609,47 +718,109 @@ function positionPopover(anchorRect) {
   pop.style.top = `${y}px`;
 }
 
-function getHelpContent(helpKey) {
-  const base = getPath(dict, `help.${helpKey}`) || { title: helpKey, short: "" };
-  return {
-    title: base.title || helpKey,
-    short: base.short || "",
-    consider: Array.isArray(base.consider) ? base.consider : [],
-    typical: Array.isArray(base.typical) ? base.typical : [],
-    pitfalls: Array.isArray(base.pitfalls) ? base.pitfalls : [],
+function getHelp(helpKey) {
+  return helpContent?.[helpKey] || {
+    key: helpKey,
+    category: "Other",
+    title: helpKey,
+    short: "",
+    meaning: "",
+    decide: [],
+    typical: [],
+    pitfalls: [],
+    wrong: [],
+    example: "",
   };
 }
 
-function renderHelpHtml(helpKey, mode = "full") {
-  const c = getHelpContent(helpKey);
-  const title = `<div class="popoverTitle">${escapeHtml(String(c.title))}</div>`;
-  const short = c.short ? `<div class="popoverShort">${escapeHtml(String(c.short))}</div>` : "";
-  if (mode === "tooltip") return title + short;
-
-  function listBlock(label, items) {
-    if (!items || !items.length) return "";
-    return (
-      `<div class="popoverSection">` +
-      `<div class="popoverSectionTitle">${escapeHtml(label)}</div>` +
-      `<ul class="popoverList">${items.map((x) => `<li>${escapeHtml(String(x))}</li>`).join("")}</ul>` +
-      `</div>`
-    );
-  }
-
-  const consider = listBlock(t("helpSections.consider"), c.consider);
-  const typical = listBlock(t("helpSections.typical"), c.typical);
-  const pitfalls = listBlock(t("helpSections.pitfalls"), c.pitfalls);
-  const openHelp = `<div class="popoverSection"><button type="button" class="ghostBtn" data-open-help="${escapeHtml(helpKey)}">${escapeHtml(t("mode.help"))}</button></div>`;
-  return title + short + consider + typical + pitfalls + openHelp;
+function renderHelpListBlock(label, items) {
+  if (!items || !items.length) return "";
+  return (
+    `<div class="popoverSection">` +
+    `<div class="popoverSectionTitle">${escapeHtml(label)}</div>` +
+    `<ul class="popoverList">${items.map((x) => `<li>${escapeHtml(String(x))}</li>`).join("")}</ul>` +
+    `</div>`
+  );
 }
 
-function showHelpPopover(helpKey, anchorEl, mode = "full") {
+function renderHelpHtml(helpKey, { includeOpenHelp = true } = {}) {
+  const c = getHelp(helpKey);
+  const title = `<div class="popoverTitle">${escapeHtml(String(c.title))}</div>`;
+  const short = c.short ? `<div class="popoverShort">${escapeHtml(String(c.short))}</div>` : "";
+  const meaning = c.meaning ? `<div class="popoverShort">${escapeHtml(String(c.meaning))}</div>` : "";
+
+  const decide = renderHelpListBlock(t("helpSections.decide"), c.decide);
+  const typical = renderHelpListBlock(t("helpSections.typical"), c.typical);
+  const pitfalls = renderHelpListBlock(t("helpSections.pitfalls"), c.pitfalls);
+  const wrong = renderHelpListBlock(t("helpSections.wrong"), c.wrong);
+  const example = c.example
+    ? `<div class="popoverSection"><div class="popoverSectionTitle">${escapeHtml(t("helpSections.example"))}</div><div class="popoverShort">${escapeHtml(String(c.example))}</div></div>`
+    : "";
+  const openHelp = includeOpenHelp
+    ? `<div class="popoverSection"><button type="button" class="ghostBtn" data-open-help="${escapeHtml(helpKey)}">${escapeHtml(t("mode.help"))}</button></div>`
+    : "";
+  return title + short + meaning + decide + typical + pitfalls + wrong + example + openHelp;
+}
+
+function renderHelpDetailsHtml(helpKey) {
+  const c = getHelp(helpKey);
+  const short = c.short ? `<div class="popoverShort">${escapeHtml(String(c.short))}</div>` : "";
+  const meaning = c.meaning ? `<div class="popoverShort">${escapeHtml(String(c.meaning))}</div>` : "";
+  const decide = renderHelpListBlock(t("helpSections.decide"), c.decide);
+  const typical = renderHelpListBlock(t("helpSections.typical"), c.typical);
+  const pitfalls = renderHelpListBlock(t("helpSections.pitfalls"), c.pitfalls);
+  const wrong = renderHelpListBlock(t("helpSections.wrong"), c.wrong);
+  const example = c.example
+    ? `<div class="popoverSection"><div class="popoverSectionTitle">${escapeHtml(t("helpSections.example"))}</div><div class="popoverShort">${escapeHtml(String(c.example))}</div></div>`
+    : "";
+  return short + meaning + decide + typical + pitfalls + wrong + example;
+}
+
+const POPOVER_CLOSE_DELAY_MS = 150;
+const popoverState = {
+  key: null,
+  anchorEl: null,
+  pinned: false,
+  hoverIcon: false,
+  hoverPopover: false,
+  closeTimer: null,
+};
+
+function clearPopoverCloseTimer() {
+  if (popoverState.closeTimer) {
+    clearTimeout(popoverState.closeTimer);
+    popoverState.closeTimer = null;
+  }
+}
+
+function closePopoverAndClearPin() {
+  popoverState.pinned = false;
+  popoverState.hoverIcon = false;
+  popoverState.hoverPopover = false;
+  clearPopoverCloseTimer();
+  closePopover();
+  popoverState.key = null;
+  popoverState.anchorEl = null;
+}
+
+function schedulePopoverClose() {
+  clearPopoverCloseTimer();
+  popoverState.closeTimer = setTimeout(() => {
+    popoverState.closeTimer = null;
+    if (popoverState.pinned || popoverState.hoverIcon || popoverState.hoverPopover) return;
+    closePopoverAndClearPin();
+  }, POPOVER_CLOSE_DELAY_MS);
+}
+
+function openPopover(helpKey, anchorEl) {
   const pop = els.popover;
   if (!pop || !anchorEl) return;
-  pop.innerHTML = renderHelpHtml(helpKey, mode);
+  popoverState.key = helpKey;
+  popoverState.anchorEl = anchorEl;
+  pop.innerHTML = renderHelpHtml(helpKey);
   pop.hidden = false;
-  positionPopover(anchorEl.getBoundingClientRect());
   pop.dataset.anchor = helpKey;
+  positionPopover(anchorEl.getBoundingClientRect());
 }
 
 function decorateHelpIcons() {
@@ -661,16 +832,36 @@ function decorateHelpIcons() {
     btn.className = "infoBtn";
     btn.textContent = "i";
     btn.setAttribute("aria-label", `Info: ${helpKey}`);
-    btn.addEventListener("mouseenter", () => {
-      if (window.matchMedia("(hover: hover)").matches) showHelpPopover(helpKey, btn, "tooltip");
+    btn.addEventListener("pointerenter", () => {
+      popoverState.hoverIcon = true;
+      clearPopoverCloseTimer();
+      openPopover(helpKey, btn);
     });
-    btn.addEventListener("mouseleave", () => {
-      if (window.matchMedia("(hover: hover)").matches) closePopover();
+    btn.addEventListener("pointerleave", () => {
+      popoverState.hoverIcon = false;
+      if (!popoverState.pinned) schedulePopoverClose();
+    });
+    btn.addEventListener("focus", () => {
+      popoverState.hoverIcon = true;
+      clearPopoverCloseTimer();
+      openPopover(helpKey, btn);
+    });
+    btn.addEventListener("blur", () => {
+      popoverState.hoverIcon = false;
+      if (!popoverState.pinned) schedulePopoverClose();
     });
     btn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      showHelpPopover(helpKey, btn, "full");
+
+      const same = popoverState.key === helpKey;
+      if (same && popoverState.pinned) {
+        popoverState.pinned = false;
+        if (!(popoverState.hoverIcon || popoverState.hoverPopover)) closePopoverAndClearPin();
+        return;
+      }
+      popoverState.pinned = true;
+      openPopover(helpKey, btn);
     });
     label.appendChild(btn);
   });
@@ -680,7 +871,8 @@ function syncOverlay() {
   if (!els.drawerOverlay) return;
   const controlsOpen = document.body.classList.contains("drawerOpen");
   const helpOpen = !!els.helpDrawer && !els.helpDrawer.hidden;
-  els.drawerOverlay.hidden = !(controlsOpen || helpOpen);
+  const faqOpen = !!els.faqDrawer && !els.faqDrawer.hidden;
+  els.drawerOverlay.hidden = !(controlsOpen || helpOpen || faqOpen);
 }
 
 function openHelpDrawer(targetKey = null) {
@@ -698,16 +890,150 @@ function closeHelpDrawer() {
   syncOverlay();
 }
 
+function openFaqDrawer() {
+  if (!els.faqDrawer) return;
+  els.faqDrawer.hidden = false;
+  syncOverlay();
+}
+function closeFaqDrawer() {
+  if (!els.faqDrawer) return;
+  els.faqDrawer.hidden = true;
+  syncOverlay();
+}
+
+function helpMatchesQuery(h, q) {
+  if (!q) return true;
+  const hay = [
+    h.key,
+    h.category,
+    h.title,
+    h.short,
+    h.meaning,
+    ...(h.decide || []),
+    ...(h.typical || []),
+    ...(h.pitfalls || []),
+    ...(h.wrong || []),
+    h.example,
+  ]
+    .filter(Boolean)
+    .join("\n")
+    .toLowerCase();
+  return hay.includes(q);
+}
+
 function buildHelpDrawer() {
   if (!els.helpDrawerBody) return;
-  const helpObj = getPath(dict, "help") || {};
-  const keys = Object.keys(helpObj);
-  els.helpDrawerBody.innerHTML = keys
-    .map((k) => {
-      const c = getHelpContent(k);
-      return `<section class="helpTopic" id="help-${escapeHtml(k)}"><h4>${escapeHtml(String(c.title))}</h4><p>${escapeHtml(String(c.short || ""))}</p></section>`;
+
+  const q = (els.helpSearch?.value || "").trim().toLowerCase();
+  const keys = Object.keys(helpContent || {});
+  const byCategory = new Map();
+  keys.forEach((k) => {
+    const h = getHelp(k);
+    if (!helpMatchesQuery(h, q)) return;
+    const cat = h.category || "Other";
+    if (!byCategory.has(cat)) byCategory.set(cat, []);
+    byCategory.get(cat).push(k);
+  });
+
+  const categories = [...HELP_CATEGORY_ORDER, ...[...byCategory.keys()].filter((c) => !HELP_CATEGORY_ORDER.includes(c))];
+  const html = categories
+    .map((cat) => {
+      const list = byCategory.get(cat) || [];
+      if (!list.length) return "";
+      const items = list
+        .map((k) => {
+          const h = getHelp(k);
+          return (
+            `<section class="helpTopic" id="help-${escapeHtml(k)}">` +
+            `<h4>${escapeHtml(String(h.title))}</h4>` +
+            `<div class="helpKeyMeta">${escapeHtml(String(cat))}</div>` +
+            `<div class="helpTopicBody">${renderHelpDetailsHtml(k)}</div>` +
+            `</section>`
+          );
+        })
+        .join("");
+      return `<div class="helpCategory">${escapeHtml(cat)}</div>${items}`;
     })
     .join("");
+
+  els.helpDrawerBody.innerHTML = html || `<p class="hint">${escapeHtml(t("helpUi.noResults"))}</p>`;
+}
+
+const FAQ_DATA = {
+  Project: [
+    {
+      q: "Internal vs external dimensions — which should I use?",
+      a: "Use Internal when you care about the space that must fit your items. Use External when you must match an outside footprint. Dimension mode converts for you using material thickness.",
+      links: ["dimensionMode", "thickness"],
+    },
+    {
+      q: "How do I size W/D/H from a storage target and dispense target?",
+      a: "Start with the item’s real size. Add a little clearance so items don’t jam. Decide the storage stack height and the dispense opening separately; then choose a mechanism/preset that matches the behavior you want.",
+      links: ["storageTarget", "dispenseTarget", "mechanism", "preset"],
+    },
+    {
+      q: "Which mechanism should I choose for flowing vs stacking items?",
+      a: "Stacking is for flat items (cards/tiles) and is more predictable. Flowing is only for dry solids that can pour; it’s not recommended for cards.",
+      links: ["dispenseType", "mechanism"],
+    },
+  ],
+  "Laser fit": [
+    {
+      q: "What is kerf? Why does it matter?",
+      a: "Kerf is the width of material removed by the laser cut. If you ignore it, tabs/slots won’t match the real cut size, and joints can become too tight or too loose.",
+      links: ["kerf"],
+    },
+    {
+      q: "What is joint clearance? Tight vs loose symptoms",
+      a: "Clearance controls how easily joints assemble. Too tight: hard to press together, material may tear. Too loose: wobbly joints and gaps. Adjust in small steps (e.g. 0.05mm).",
+      links: ["clearance", "fit"],
+    },
+    {
+      q: "My joints are too tight / too loose — what do I change?",
+      a: "Too tight: increase Joint clearance a little, or verify kerf with the Fit Test. Too loose: decrease Joint clearance. Keep thickness correct.",
+      links: ["clearance", "kerf", "thickness"],
+    },
+  ],
+  Preview: [
+    {
+      q: "Why preview scale looks wrong / how to check mm scale",
+      a: "The preview is for layout and sanity-checking. Always verify in your laser software that units are mm and that a known dimension matches (e.g. inner width). Use the Fit button to zoom to the drawing.",
+      links: ["innerWidth"],
+    },
+    {
+      q: "Preview/export troubleshooting",
+      a: "If your laser software changes size on import, confirm SVG units, viewBox handling, and any DPI import setting. Then measure a known dimension.",
+      links: [],
+    },
+  ],
+};
+
+function buildFaqDrawer() {
+  if (!els.faqDrawerBody) return;
+  const q = (els.faqSearch?.value || "").trim().toLowerCase();
+  const cats = Object.keys(FAQ_DATA);
+  const blocks = cats
+    .map((cat) => {
+      const items = (FAQ_DATA[cat] || []).filter((it) => {
+        if (!q) return true;
+        const hay = `${it.q}\n${it.a}`.toLowerCase();
+        return hay.includes(q);
+      });
+      if (!items.length) return "";
+      const inner = items
+        .map((it) => {
+          const linksHtml = (it.links || []).length
+            ? `<p>${it.links
+                .map((k) => `<a href="#" data-open-help="${escapeHtml(k)}">${escapeHtml(getHelp(k).title || k)}</a>`)
+                .join(" · ")}</p>`
+            : "";
+          return `<section class="faqItem"><h4>${escapeHtml(it.q)}</h4><p>${escapeHtml(it.a)}</p>${linksHtml}</section>`;
+        })
+        .join("");
+      return `<div class="helpCategory">${escapeHtml(cat)}</div>${inner}`;
+    })
+    .join("");
+  els.faqDrawerBody.innerHTML = blocks || `<p class="hint">${escapeHtml(t("faqUi.noResults"))}</p>`;
 }
 
 function updateHeaderHeightVar() {
@@ -724,7 +1050,7 @@ els.btnGenerate.addEventListener("click", () => {
   });
 });
 
-els.btnCalibration.addEventListener("click", () => {
+els.btnCalibration?.addEventListener("click", () => {
   generateCalibration().catch((e) => {
     console.error(e);
     setStatusKey("status.error", { message: e?.message ?? e });
@@ -755,26 +1081,52 @@ els.controlsToggle?.addEventListener("click", () => {
 els.drawerOverlay?.addEventListener("click", () => {
   document.body.classList.remove("drawerOpen");
   closeHelpDrawer();
-  closePopover();
+  closeFaqDrawer();
+  closePopoverAndClearPin();
   syncOverlay();
 });
 
 els.helpDrawerBtn?.addEventListener("click", () => openHelpDrawer());
 els.helpDrawerClose?.addEventListener("click", () => closeHelpDrawer());
+els.faqDrawerBtn?.addEventListener("click", () => openFaqDrawer());
+els.faqDrawerClose?.addEventListener("click", () => closeFaqDrawer());
+
+els.helpSearch?.addEventListener("input", () => buildHelpDrawer());
+els.faqSearch?.addEventListener("input", () => buildFaqDrawer());
+
+els.popover?.addEventListener("pointerenter", () => {
+  popoverState.hoverPopover = true;
+  clearPopoverCloseTimer();
+});
+els.popover?.addEventListener("pointerleave", () => {
+  popoverState.hoverPopover = false;
+  if (!popoverState.pinned) schedulePopoverClose();
+});
 
 els.popover?.addEventListener("click", (e) => {
   const btn = e.target.closest("[data-open-help]");
   if (btn) {
     const k = btn.getAttribute("data-open-help");
-    closePopover();
+    closePopoverAndClearPin();
     openHelpDrawer(k);
   }
 });
 
+els.faqDrawerBody?.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-open-help]");
+  if (!btn) return;
+  e.preventDefault();
+  const k = btn.getAttribute("data-open-help");
+  if (!k) return;
+  closeFaqDrawer();
+  openHelpDrawer(k);
+});
+
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
-    closePopover();
+    closePopoverAndClearPin();
     closeHelpDrawer();
+    closeFaqDrawer();
     document.body.classList.remove("drawerOpen");
     syncOverlay();
   }
@@ -783,7 +1135,7 @@ document.addEventListener("keydown", (e) => {
 document.addEventListener("click", (e) => {
   const inPopover = els.popover && !els.popover.hidden && els.popover.contains(e.target);
   const isInfoBtn = e.target?.classList?.contains("infoBtn");
-  if (!inPopover && !isInfoBtn) closePopover();
+  if (!inPopover && !isInfoBtn) closePopoverAndClearPin();
 });
 
 els.studentMode?.addEventListener("change", () => setStudentMode(els.studentMode.checked));
@@ -802,14 +1154,19 @@ els.clearance?.addEventListener("input", () => {
 });
 
 els.zoomIn?.addEventListener("click", () => {
-  view.scale = Math.min(6, view.scale * 1.15);
+  userZoomed = true;
+  view.scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, view.scale * 1.15));
   applyTransform();
 });
 els.zoomOut?.addEventListener("click", () => {
-  view.scale = Math.max(0.1, view.scale / 1.15);
+  userZoomed = true;
+  view.scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, view.scale / 1.15));
   applyTransform();
 });
-els.fitView?.addEventListener("click", () => fitToView());
+els.fitView?.addEventListener("click", () => {
+  userZoomed = false;
+  fitToView();
+});
 
 els.showCut?.addEventListener("change", applyLayerToggles);
 els.showLabels?.addEventListener("change", applyLayerToggles);
@@ -828,7 +1185,10 @@ async function main() {
   });
 
   updateHeaderHeightVar();
-  window.addEventListener("resize", updateHeaderHeightVar);
+  window.addEventListener("resize", () => {
+    updateHeaderHeightVar();
+    if (!userZoomed) fitToView();
+  });
 
   // Initial UI state
   setStudentMode(true);

@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.4
+
+- Info popover hover + click-to-pin stability (popover stays open when moving into it)
+- Help drawer upgrades: shared helpContent, category grouping, and search
+- New FAQ drawer: searchable Q&A with links into Help topics
+- Calibration moved to optional Fit tools (Fit Test) instead of a primary action
+- Preview zoom behavior improved: clamped zoom and smarter auto-fit on resize
+
 ## v0.3.1
 
 - Documentation refresh (README + Pages docs + changelog)

@@ -1,17 +1,20 @@
 {
   "app": {
     "title": "Card Box / Tray SVG Generator",
-    "version": "v0.3.1",
+    "version": "v0.4",
     "subtitle": "Runs fully in your browser (Pyodide). Generates laser-cut SVG with deterministic finger joints."
   },
   "mode": {
     "student": "Student Mode",
-    "help": "Help"
+    "help": "Help",
+    "faq": "FAQ"
   },
   "helpSections": {
-    "consider": "What to consider",
+    "decide": "What to decide",
     "typical": "Typical values",
-    "pitfalls": "Pitfalls"
+    "pitfalls": "Pitfalls",
+    "wrong": "If it’s wrong",
+    "example": "Example"
   },
   "sections": {
     "setup": "Setup",
@@ -20,9 +23,13 @@
     "layout": "Layout",
     "layoutOptional": "Layout (optional)",
     "advanced": "Advanced",
+    "fitTools": "Fit tools (optional)",
     "presetOptions": "Preset options",
     "preview": "Preview",
     "exports": "Export"
+  },
+  "fitTools": {
+    "hint": "Generate a small test cut to measure kerf and pick a joint clearance that feels right."
   },
   "steps": {
     "title": "Student Mode (3 steps)",
@@ -32,12 +39,22 @@
     "step2": "Step 2 — Choose a mechanism",
     "step3": "Step 3 — Fabrication setup",
     "step2Hint": "Choosing a mechanism will set the preset below.",
-    "step3Hint": "If you don’t know kerf, generate the calibration SVG, cut it, then pick the best label.",
+    "step3Hint": "If you don’t know kerf yet, use the optional Fit Test (Advanced → Fit tools), cut it, then pick the best label.",
     "checklistTitle": "Calibration checklist",
-    "check1": "Generate calibration SVG",
+    "check1": "Run Fit Test (optional)",
     "check2": "Cut it",
     "check3": "Choose best label",
     "check4": "Apply values and regenerate final SVG"
+  },
+  "helpUi": {
+    "searchPlaceholder": "Search help…",
+    "noResults": "No matching topics."
+  },
+  "faqUi": {
+    "searchPlaceholder": "Search FAQ…",
+    "noResults": "No matching questions.",
+    "troubleshootingTitle": "Troubleshooting",
+    "troubleshootingShort": "Common symptoms and what to change."
   },
   "labels": {
     "dispenseType": "Dispense type",
@@ -105,6 +122,7 @@
   "actions": {
     "generate": "Generate SVG",
     "calibration": "Generate calibration SVG",
+    "fitTest": "Fit Test (optional)",
     "bundle": "Download bundle (zip)",
     "downloadSvg": "Download SVG",
     "downloadCalibration": "Download calibration SVG",
@@ -148,40 +166,333 @@
     "tip": "Tip: If you deploy this on GitHub Pages, it runs client-side and doesn’t need a server."
   },
   "help": {
-    "dispenseType": { "title": "Dispense type", "short": "Choose whether you are dispensing stacked items (cards/tiles) or flowing dry solids." },
-    "storageTarget": { "title": "Storage target", "short": "Describe how many items you want to store (for planning only)." },
-    "dispenseTarget": { "title": "Dispense target", "short": "Describe how you want it to dispense (for planning only)." },
-    "mechanism": { "title": "Mechanism", "short": "Pick a mechanism; it sets a preset that matches the design." },
+    "dispenseType": {
+      "title": "Dispense type",
+      "short": "Stacking = cards/tiles. Flowing = dry solids only.",
+      "meaning": "This affects what mechanisms make sense and how the opening should work.",
+      "decide": ["If you are dispensing flat items, choose stacking."],
+      "typical": ["Cards/tiles: stacking."],
+      "pitfalls": ["Flowing is not recommended for cards."],
+      "wrong": ["Choosing flowing for cards can cause jams and unstable output."],
+      "example": "Example: Trading cards → Stacking. Rice/beans (dry) → Flowing."
+    },
+    "storageTarget": {
+      "title": "Storage target",
+      "short": "A planning note: how many items you want to store.",
+      "meaning": "This doesn’t change geometry directly; it helps students think about capacity.",
+      "decide": ["Write an approximate count (or total height/stack)."],
+      "typical": ["Example: 150 cards."],
+      "pitfalls": ["Don’t treat this as the real dimension input — use W/D/H below."],
+      "wrong": ["If you only set this and not dimensions, the design won’t match your items."],
+      "example": "Example: 200 cards, or 2 stacks of 100."
+    },
+    "dispenseTarget": {
+      "title": "Dispense target",
+      "short": "A planning note: how you want it to dispense.",
+      "meaning": "This helps you choose an opening and mechanism, not the final dimensions.",
+      "decide": ["Describe the user action (pull 1 card, shake to pour, etc.)."],
+      "typical": ["Example: 1 card per pull."],
+      "pitfalls": ["If you want 1-at-a-time dispensing, mechanism matters more than capacity."],
+      "wrong": ["A mismatch between mechanism and target can cause multiple items to dispense."],
+      "example": "Example: ‘Pull 1 card from a front slot’."
+    },
+    "mechanism": {
+      "title": "Mechanism",
+      "short": "Chooses a mechanism and sets the underlying preset.",
+      "meaning": "Mechanism is the student-friendly name; Preset is the generator template.",
+      "decide": ["Pick the one that matches how you want to access/dispense."],
+      "typical": ["Open-front tray is simplest to build and use."],
+      "pitfalls": ["Slot mechanisms require valid slot dimensions."],
+      "wrong": ["Wrong mechanism can block access or dispense too fast."],
+      "example": "Example: Classroom card tray → Open-front tray."
+    },
 
-    "preset": { "title": "Preset", "short": "A predefined design template (tray, dispenser, window, box)." },
-    "dimensionMode": { "title": "Dimension mode", "short": "Choose whether your W/D/H refer to inside space (internal) or outside size (external)." },
-    "innerWidth": { "title": "Inner width", "short": "Inside width of the box/tray." },
-    "innerDepth": { "title": "Inner depth", "short": "Inside depth (front-to-back) of the box/tray." },
-    "innerHeight": { "title": "Inner height", "short": "Inside height of the box/tray." },
-    "thickness": { "title": "Thickness", "short": "Material thickness. Commonly 2–4mm for card board / acrylic." },
-    "fit": { "title": "Fit", "short": "Quick fit preset. Tight is stronger but harder to assemble; Loose is easier for students." },
+    "preset": {
+      "title": "Preset",
+      "short": "The template used to generate panels and cutouts.",
+      "meaning": "Different presets add or remove features (slot, window, lid, etc.).",
+      "decide": ["Choose the closest template, then adjust optional parameters."],
+      "typical": ["tray_open_front for general storage/trays."],
+      "pitfalls": ["Some options only apply to specific presets."],
+      "wrong": ["A preset mismatch can create missing/extra panels."],
+      "example": "Example: Need a lid → box_with_lid."
+    },
+    "dimensionMode": {
+      "title": "Dimension mode",
+      "short": "Are W/D/H internal (inside space) or external (outside size)?",
+      "meaning": "Internal is best when you care about fitting items. External is best when you must fit a footprint.",
+      "decide": ["Pick Internal unless you have a strict outside size constraint."],
+      "typical": ["Students: Internal."],
+      "pitfalls": ["Switching mode without re-checking thickness changes the effective cavity size."],
+      "wrong": ["Wrong mode can make the cavity too small even if numbers look correct."],
+      "example": "Example: A 63mm-wide card needs Internal width slightly above 63mm."
+    },
+    "innerWidth": {
+      "title": "Inner width (mm)",
+      "short": "Inside width of the cavity.",
+      "meaning": "This is the width available for your items.",
+      "decide": ["Measure item width, then add clearance (wiggle room)."],
+      "typical": ["Cards: item width + 1–3mm (depends on sleeve and tolerance)."],
+      "pitfalls": ["Too tight can jam; too loose can cause tilting."],
+      "wrong": ["Too small → items don’t fit. Too large → items rattle/lean."],
+      "example": "Example: 63mm cards → Inner width 65–67mm."
+    },
+    "innerDepth": {
+      "title": "Inner depth (mm)",
+      "short": "Inside depth (front-to-back) of the cavity.",
+      "meaning": "Depth mostly affects capacity and stability.",
+      "decide": ["Set depth to item depth plus a little clearance."],
+      "typical": ["Cards: item depth + 1–3mm."],
+      "pitfalls": ["Very deep trays can make it hard to grab items."],
+      "wrong": ["Too shallow → items stick out. Too deep → wasted material/space."],
+      "example": "Example: 88mm card depth → Inner depth 90–92mm."
+    },
+    "innerHeight": {
+      "title": "Inner height (mm)",
+      "short": "Inside height of the cavity.",
+      "meaning": "Height controls capacity (how tall the stack can be).",
+      "decide": ["Choose a height that matches your storage target."],
+      "typical": ["Card stacks: depends on count and card thickness."],
+      "pitfalls": ["If height is too tall, stacks can lean unless constrained."],
+      "wrong": ["Too low → items don’t fit. Too high → less stable."],
+      "example": "Example: 150 cards might be ~45–60mm tall (depends on cards)."
+    },
+    "thickness": {
+      "title": "Thickness (mm)",
+      "short": "Your material thickness (mm).",
+      "meaning": "Thickness affects outside size, joint geometry, and fit rules.",
+      "decide": ["Measure your sheet with calipers if possible."],
+      "typical": ["Chipboard/acrylic: 2–4mm (varies by material)."],
+      "pitfalls": ["Nominal ‘3mm’ material is often 2.8–3.2mm."],
+      "wrong": ["Wrong thickness makes joints misfit and dimensions inaccurate."],
+      "example": "Example: If your sheet measures 2.9mm, enter 2.9."
+    },
+    "fit": {
+      "title": "Fit (tight → loose)",
+      "short": "A quick preset that sets Joint clearance for you.",
+      "meaning": "Fit is easier than picking an exact clearance when you’re starting.",
+      "decide": ["Use Loose for student builds; use Tight only after you’ve calibrated."],
+      "typical": ["Loose is often the best classroom default."],
+      "pitfalls": ["If kerf is unknown, even ‘Normal’ may be too tight."],
+      "wrong": ["Too tight → hard assembly. Too loose → wobble/gaps."],
+      "example": "Example: Start with Loose, then adjust clearance by 0.05mm if needed."
+    },
 
-    "sheetWidth": { "title": "Sheet width", "short": "How wide your material sheet is, used to lay out parts efficiently." },
-    "margin": { "title": "Margin", "short": "Extra empty space around the sheet edges." },
-    "padding": { "title": "Padding", "short": "Spacing between parts so they don’t overlap." },
-    "stroke": { "title": "Stroke", "short": "SVG line thickness for display. Usually doesn’t affect cutting if your laser uses paths." },
-    "labelsToggle": { "title": "Labels", "short": "Add engraved labels (panel names) to help assembly." },
-    "lid": { "title": "Lid", "short": "Add a lid when using the box_with_lid preset." },
-    "holdingTabs": { "title": "Holding tabs", "short": "Add small bridges so parts stay attached to the sheet after cutting." },
-    "tabWidth": { "title": "Tab width", "short": "Width of each holding tab bridge." },
+    "sheetWidth": {
+      "title": "Sheet width (mm)",
+      "short": "Used for laying out parts on your material.",
+      "meaning": "This doesn’t change the box size, only how panels are arranged.",
+      "decide": ["Enter the usable width of your sheet (after margins)."],
+      "typical": ["Example: 300–600mm depending on stock."],
+      "pitfalls": ["If too small, layout may overflow or pack poorly."],
+      "wrong": ["Wrong sheet width can cause overlaps or unexpected panel ordering."],
+      "example": "Example: A4 landscape usable width ≈ 297mm."
+    },
+    "margin": {
+      "title": "Margin (mm)",
+      "short": "Empty space around the outside edge of the sheet.",
+      "meaning": "Useful to avoid clamps, warped edges, or charred borders.",
+      "decide": ["Use a margin if your laser bed has edge constraints."],
+      "typical": ["5–15mm."],
+      "pitfalls": ["Too large wastes material."],
+      "wrong": ["Too small can put cuts too close to the sheet edge."],
+      "example": "Example: Margin 10mm."
+    },
+    "padding": {
+      "title": "Padding (mm)",
+      "short": "Spacing between panels in the layout.",
+      "meaning": "Padding helps prevent scorching and makes parts easier to remove.",
+      "decide": ["Increase if your laser burns edges or if parts are hard to separate."],
+      "typical": ["8–15mm."],
+      "pitfalls": ["Too much padding can push layout beyond the sheet width."],
+      "wrong": ["Too small can make parts overlap or touch."],
+      "example": "Example: Padding 12mm."
+    },
+    "stroke": {
+      "title": "Stroke (mm)",
+      "short": "SVG stroke width used for rendering.",
+      "meaning": "Many laser workflows cut the path centerline, not stroke thickness.",
+      "decide": ["Leave at 0.2 unless your workflow needs a different preview stroke."],
+      "typical": ["0.2mm."],
+      "pitfalls": ["Some software may interpret stroke thickness visually; confirm your cut settings."],
+      "wrong": ["If your laser uses stroke width, verify settings before cutting."],
+      "example": "Example: Stroke 0.2mm."
+    },
+    "labelsToggle": {
+      "title": "Labels",
+      "short": "Engraved panel labels to help assembly.",
+      "meaning": "Labels are useful during prototyping and teaching.",
+      "decide": ["Turn on for classroom builds; turn off for final clean parts."],
+      "typical": ["On for student mode."],
+      "pitfalls": ["Engraving increases laser time."],
+      "wrong": ["If you don’t want engraved text, turn this off."],
+      "example": "Example: Keep labels on for first prototype."
+    },
+    "lid": {
+      "title": "Lid",
+      "short": "Adds lid panels (only for box_with_lid preset).",
+      "meaning": "The lid is generated as additional panels in the layout.",
+      "decide": ["Enable only if you need a closing top."],
+      "typical": ["Enabled for storage boxes."],
+      "pitfalls": ["A lid increases material usage and assembly complexity."],
+      "wrong": ["If enabled on other presets, it may be ignored."],
+      "example": "Example: For a travel box, enable Lid."
+    },
+    "holdingTabs": {
+      "title": "Holding tabs",
+      "short": "Small bridges that keep parts attached after cutting.",
+      "meaning": "Tabs prevent parts from shifting or falling through honeycomb beds.",
+      "decide": ["Enable if your parts move after cuts, or if you want safer handling."],
+      "typical": ["Off for clean cuts; On for thin or small parts."],
+      "pitfalls": ["You must cut/sand tabs after the laser run."],
+      "wrong": ["Too few tabs → parts drop. Too many → lots of cleanup."],
+      "example": "Example: Enable tabs for acrylic to prevent pieces shifting."
+    },
+    "tabWidth": {
+      "title": "Tab width (mm)",
+      "short": "How wide each holding tab bridge is.",
+      "meaning": "Wider tabs hold better but require more cleanup.",
+      "decide": ["Pick a width your material can survive without snapping."],
+      "typical": ["1.5–3.0mm."],
+      "pitfalls": ["Too thin can break during cutting; too thick is hard to remove."],
+      "wrong": ["Broken tabs → parts fall; oversized tabs → lots of sanding."],
+      "example": "Example: Tab width 2mm."
+    },
 
-    "kerf": { "title": "Kerf", "short": "How much material your laser removes (cut width). Measure with calibration." },
-    "clearance": { "title": "Joint clearance", "short": "Extra looseness in joints. Increase if too tight; decrease if too loose." },
-    "calSet": { "title": "Calibration set", "short": "Choose a short student set or a full list of clearances." },
-    "fingerWidth": { "title": "Target tab width", "short": "Approximate width of each finger/tab along the joint edge. Leave auto for most cases." },
-    "minTabs": { "title": "Min tabs", "short": "Minimum number of tabs on each joint edge." },
+    "kerf": {
+      "title": "Kerf (mm)",
+      "short": "Laser cut width (material removed).",
+      "meaning": "Kerf changes the real size of tabs/slots after cutting.",
+      "decide": ["Run the Fit Test once per material + laser settings."],
+      "typical": ["Often ~0.15–0.25mm, but it varies a lot."],
+      "pitfalls": ["Changing power/speed changes kerf."],
+      "wrong": ["Kerf too small → joints too tight. Kerf too big → joints too loose."],
+      "example": "Example: Measured kerf 0.20mm → enter 0.20."
+    },
+    "clearance": {
+      "title": "Joint clearance (mm)",
+      "short": "Extra looseness in finger joints.",
+      "meaning": "Clearance tunes how easily tabs slide into slots.",
+      "decide": ["Adjust in small steps (e.g. 0.05mm) based on a test cut."],
+      "typical": ["0.00 tight, 0.10 normal, 0.20 loose (student-friendly)."],
+      "pitfalls": ["Clearance can’t fix an incorrect thickness input."],
+      "wrong": ["Too tight → hard assembly/tearing. Too loose → wobble/gaps."],
+      "example": "Example: If joints are tight, try 0.10 → 0.15mm."
+    },
+    "calSet": {
+      "title": "Calibration set",
+      "short": "Which list of clearances to include in the Fit Test.",
+      "meaning": "Student is shorter; Full includes more fine steps.",
+      "decide": ["Use Student for class. Use Full when dialing in a perfect fit."],
+      "typical": ["Student: tight/normal/loose labels."],
+      "pitfalls": ["Too many options can confuse first-time users."],
+      "wrong": ["If the test doesn’t include the value you need, switch to Full."],
+      "example": "Example: Start with Student, then switch to Full if needed."
+    },
+    "fingerWidth": {
+      "title": "Target tab width (mm)",
+      "short": "Approximate width of each finger along a joint edge.",
+      "meaning": "This affects how many fingers appear on an edge.",
+      "decide": ["Leave auto unless you need a specific look/strength."],
+      "typical": ["Auto, or ~8–15mm."],
+      "pitfalls": ["Very small fingers are fragile; very large fingers reduce alignment."],
+      "wrong": ["Too small → weak tabs. Too large → joints can twist."],
+      "example": "Example: Try 10mm for a balanced look."
+    },
+    "minTabs": {
+      "title": "Min tabs",
+      "short": "Minimum number of tabs on each joint edge.",
+      "meaning": "More tabs usually means better alignment and strength.",
+      "decide": ["Keep at 3+ unless the edge is very short."],
+      "typical": ["3 to 7."],
+      "pitfalls": ["Too many tabs on a short edge creates tiny fragile features."],
+      "wrong": ["Too few tabs → weak joint. Too many → fragile or messy cuts."],
+      "example": "Example: Min tabs 3 for small trays."
+    },
 
-    "frontHeight": { "title": "Front height", "short": "Adjust how tall the front panel is (tray_open_front)." },
-    "scoop": { "title": "Scoop", "short": "Adds a scoop cutout for easier grabbing (tray_open_front)." },
-    "scoopRadius": { "title": "Scoop radius", "short": "Radius of the scoop curve." },
-    "scoopDepth": { "title": "Scoop depth", "short": "How deep the scoop cut goes." },
-    "slotWidth": { "title": "Slot width", "short": "Width of the dispensing slot (dispenser_slot_front)." },
-    "slotHeight": { "title": "Slot height", "short": "Height of the dispensing slot (dispenser_slot_front)." },
-    "slotY": { "title": "Slot Y", "short": "Vertical position of the slot measured from the bottom." }
+    "frontHeight": {
+      "title": "Front height (mm)",
+      "short": "How tall the front panel is (tray_open_front).",
+      "meaning": "Lowering the front makes it easier to grab items.",
+      "decide": ["Set a front height that keeps items in place but allows access."],
+      "typical": ["Auto or roughly 1/2 to 3/4 of inner height."],
+      "pitfalls": ["Too low can let items fall out."],
+      "wrong": ["Too high → hard to grab. Too low → poor retention."],
+      "example": "Example: Inner height 60mm → front height 35–45mm."
+    },
+    "scoop": {
+      "title": "Scoop",
+      "short": "Adds a scoop cutout for easier grabbing (tray_open_front).",
+      "meaning": "A scoop removes material from the front opening.",
+      "decide": ["Enable if fingers need help to reach the bottom of the tray."],
+      "typical": ["On for deep trays."],
+      "pitfalls": ["Scoops reduce front strength."],
+      "wrong": ["Overly large scoops can weaken the front panel."],
+      "example": "Example: Enable scoop for small parts bins."
+    },
+    "scoopRadius": {
+      "title": "Scoop radius (mm)",
+      "short": "Radius of the scoop curve.",
+      "meaning": "Larger radius makes a gentler curve.",
+      "decide": ["Use a radius that fits within the front opening."],
+      "typical": ["15–30mm."],
+      "pitfalls": ["Too large may intersect joints or edges."],
+      "wrong": ["If geometry overlaps, reduce radius or depth."],
+      "example": "Example: Radius 22mm."
+    },
+    "scoopDepth": {
+      "title": "Scoop depth (mm)",
+      "short": "How deep the scoop cut goes.",
+      "meaning": "Depth controls how much material is removed from the front.",
+      "decide": ["Increase if access is still hard; decrease if too weak."],
+      "typical": ["10–25mm."],
+      "pitfalls": ["Too deep can cut into the bottom area."],
+      "wrong": ["Over-deep scoops weaken the panel."],
+      "example": "Example: Depth 18mm."
+    },
+    "slotWidth": {
+      "title": "Slot width (mm)",
+      "short": "Width of the dispensing slot (dispenser_slot_front).",
+      "meaning": "Slot width controls what can pass through.",
+      "decide": ["Set slightly larger than item width if items slide out sideways."],
+      "typical": ["Cards: near card width, but constrained to prevent double-feed."],
+      "pitfalls": ["Too wide can allow multiple items to escape."],
+      "wrong": ["If too narrow, items jam. If too wide, uncontrolled dispensing."],
+      "example": "Example: 63mm cards → slot width 60–62mm depending on mechanism."
+    },
+    "slotHeight": {
+      "title": "Slot height (mm)",
+      "short": "Height of the dispensing slot (dispenser_slot_front).",
+      "meaning": "Slot height controls thickness clearance and how many items can slip out.",
+      "decide": ["Keep low for single-item dispensing."],
+      "typical": ["Often 10–20mm (depends on item thickness)."],
+      "pitfalls": ["Too tall can allow 2 items at once."],
+      "wrong": ["Too small → jams. Too large → double-feed."],
+      "example": "Example: Slot height 18mm."
+    },
+    "slotY": {
+      "title": "Slot Y (mm)",
+      "short": "Vertical position of the slot from the bottom.",
+      "meaning": "Controls where the opening sits relative to the item stack.",
+      "decide": ["Place it where the stack naturally presses the front."],
+      "typical": ["Often 1/4 to 1/2 of inner height."],
+      "pitfalls": ["Slot + height must stay within the front panel."],
+      "wrong": ["Invalid slot placement will be warned/ignored."],
+      "example": "Example: If inner height is 80mm, try slotY 30–40mm."
+    },
+    "troubleshooting": {
+      "title": "Troubleshooting",
+      "short": "Common symptoms and what to change.",
+      "meaning": "Use these quick checks before re-cutting a full design.",
+      "decide": [],
+      "typical": [],
+      "pitfalls": [],
+      "wrong": [
+        "Too tight: increase Joint clearance by ~0.05mm or verify kerf with Fit Test.",
+        "Too loose: decrease Joint clearance by ~0.05mm.",
+        "Wrong size: confirm Dimension mode and Thickness."
+      ],
+      "example": "Example: Tight joints → clearance 0.10 → 0.15mm."
+    }
   }
 }

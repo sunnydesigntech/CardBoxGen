@@ -12,7 +12,7 @@
         <div class="headerTitle">
           <h1>
             <span data-i18n="app.title">Card Box / Tray SVG Generator</span>
-            <span class="ver" data-i18n="app.version">v0.3.1</span>
+            <span class="ver" data-i18n="app.version">v0.4</span>
           </h1>
           <p class="sub" data-i18n="app.subtitle">
             Runs fully in your browser (Pyodide). Generates laser-cut SVG with deterministic finger joints.
@@ -28,6 +28,7 @@
           </select>
 
           <button id="helpDrawerBtn" type="button" class="ghostBtn" data-i18n="mode.help">Help</button>
+          <button id="faqDrawerBtn" type="button" class="ghostBtn" data-i18n="mode.faq">FAQ</button>
 
           <label class="check">
             <input id="studentMode" type="checkbox" checked />
@@ -109,13 +110,13 @@
               <span class="badge" id="step3Badge"></span>
             </div>
             <p class="hint" data-i18n="steps.step3Hint">
-              If you don’t know kerf, generate the calibration SVG, cut it, then pick the best label.
+              If you don’t know kerf yet, use the optional Fit Test (Advanced → Fit tools), cut it, then pick the best label.
             </p>
 
             <div class="checklist">
               <div class="checklistTitle" data-i18n="steps.checklistTitle">Calibration checklist</div>
               <ol class="checklistList">
-                <li data-i18n="steps.check1">Generate calibration SVG</li>
+                <li data-i18n="steps.check1">Run Fit Test (optional)</li>
                 <li data-i18n="steps.check2">Cut it</li>
                 <li data-i18n="steps.check3">Choose best label</li>
                 <li data-i18n="steps.check4">Apply values and regenerate final SVG</li>
@@ -244,6 +245,14 @@
             </select>
           </div>
 
+          <details class="section fitTools">
+            <summary data-i18n="sections.fitTools">Fit tools (optional)</summary>
+            <p class="hint" data-i18n="fitTools.hint">Generate a small test cut to measure kerf and pick a joint clearance that feels right.</p>
+            <div class="actions">
+              <button id="btnCalibration" disabled data-i18n="actions.fitTest">Fit Test (optional)</button>
+            </div>
+          </details>
+
           <div class="row">
             <label for="fingerWidth" data-help="fingerWidth"><span data-i18n="labels.fingerWidth">Target tab width (mm)</span></label>
             <input id="fingerWidth" type="number" value="" step="0.1" data-i18n-placeholder="placeholders.auto" placeholder="(auto)" />
@@ -293,7 +302,6 @@
 
         <div class="actions">
           <button id="btnGenerate" disabled data-i18n="status.loadingPyodide">Loading Python…</button>
-          <button id="btnCalibration" disabled data-i18n="actions.calibration">Generate calibration SVG</button>
           <button id="btnBundle" disabled data-i18n="actions.bundle">Download bundle (zip)</button>
         </div>
 
@@ -333,7 +341,21 @@
         <div class="drawerTitle" data-i18n="mode.help">Help</div>
         <button id="helpDrawerClose" type="button" class="ghostBtn">×</button>
       </div>
+      <div class="drawerTools">
+        <input id="helpSearch" type="search" class="drawerSearch" data-i18n-placeholder="helpUi.searchPlaceholder" placeholder="Search help…" />
+      </div>
       <div id="helpDrawerBody" class="drawerBody"></div>
+    </aside>
+
+    <aside id="faqDrawer" class="drawer" hidden>
+      <div class="drawerHeader">
+        <div class="drawerTitle" data-i18n="mode.faq">FAQ</div>
+        <button id="faqDrawerClose" type="button" class="ghostBtn">×</button>
+      </div>
+      <div class="drawerTools">
+        <input id="faqSearch" type="search" class="drawerSearch" data-i18n-placeholder="faqUi.searchPlaceholder" placeholder="Search FAQ…" />
+      </div>
+      <div id="faqDrawerBody" class="drawerBody"></div>
     </aside>
 
     <script type="module" src="app.js"></script>
