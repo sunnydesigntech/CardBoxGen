@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "卡盒／托盘 SVG 生成器",
-    "version": "v0.3",
+    "version": "v0.3.1",
     "subtitle": "完全在浏览器中运行（Pyodide）。生成可激光切割的 SVG，并使用可复现的指接结构。"
   },
   "mode": {

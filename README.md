@@ -8,6 +8,11 @@ This project focuses on:
 - **Practical kerf + fit** handling for press-fit / friction-fit
 - **Browser-first workflow** via a static Pyodide web app (GitHub Pages)
 
+Current version: **v0.3.1**
+
+Live web app:
+- https://sunnydesigntech.github.io/CardBoxGen/
+
 ## Key Names (presets + parts)
 
 ### Presets (`--preset`)
@@ -111,3 +116,20 @@ Steps:
 
 Your site URL will be:
 - `https://<user>.github.io/<repo>/`
+
+## Versioning + Releases
+
+- The generator version is defined in `__version__` in [cardboxgen_v0_1.py](cardboxgen_v0_1.py).
+- The web app version text lives in [docs/app.js](docs/app.js) (`APP_VERSION`) and [docs/i18n/](docs/i18n/) (`app.version`).
+- The GitHub Pages app runs the copy in [docs/cardboxgen_v0_1.py](docs/cardboxgen_v0_1.py), so keep it synced.
+
+Release checklist (for a new version):
+- Bump `__version__` in both generator copies (or bump root + run `python3 tools/sync_docs.py`).
+- Update `APP_VERSION` and `app.version` strings.
+- Run tests: `pytest -q`
+- Commit, then tag and publish:
+	- `git tag -a vX.Y -m "CardBoxGen vX.Y"`
+	- `git push origin vX.Y`
+	- (optional) `gh release create vX.Y --title "vX.Y" --notes-file CHANGELOG.md`
+
+See [CHANGELOG.md](CHANGELOG.md) for published versions.

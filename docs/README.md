@@ -11,14 +11,19 @@ From the repo root:
 
 ### GitHub Pages
 
+This repo includes an Actions workflow that deploys the `docs/` folder to GitHub Pages.
+
 In GitHub repo settings:
 
 - Settings → Pages
-- Source: `Deploy from a branch`
-- Branch: `main` (or `master`) and folder: `/docs`
+- Source: **GitHub Actions**
 
 Then your tool will be available at:
 
 - `https://<your-username>.github.io/<repo-name>/`
 
 (Exact URL depends on repository name.)
+
+For this repo, the live URL is:
+
+- https://sunnydesigntech.github.io/CardBoxGen/

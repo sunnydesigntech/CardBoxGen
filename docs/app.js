@@ -3,7 +3,7 @@
 
 import { loadPyodide } from "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.mjs";
 
-const APP_VERSION = "0.3";
+const APP_VERSION = "0.3.1";
 const LANG_STORAGE_KEY = "cardboxgen.lang";
 
 let currentLang = "en";

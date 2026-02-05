@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "卡盒／托盤 SVG 產生器",
-    "version": "v0.3",
+    "version": "v0.3.1",
     "subtitle": "完全在瀏覽器中執行（Pyodide）。產生可雷切的 SVG，並使用可重現的指接結構。"
   },
   "mode": {

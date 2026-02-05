@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "Card Box / Tray SVG Generator",
-    "version": "v0.3",
+    "version": "v0.3.1",
     "subtitle": "Runs fully in your browser (Pyodide). Generates laser-cut SVG with deterministic finger joints."
   },
   "mode": {
