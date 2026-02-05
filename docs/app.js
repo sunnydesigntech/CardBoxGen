@@ -3,7 +3,76 @@
 
 import { loadPyodide } from "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.mjs";
 
+const APP_VERSION = "0.3";
+const LANG_STORAGE_KEY = "cardboxgen.lang";
+
+let currentLang = "en";
+let dict = null;
+
+function getPath(obj, key) {
+  if (!obj) return null;
+  return key.split(".").reduce((acc, part) => (acc && typeof acc === "object" ? acc[part] : null), obj);
+}
+
+function t(key, vars = null) {
+  const raw = getPath(dict, key);
+  const base = typeof raw === "string" ? raw : key;
+  if (!vars) return base;
+  return base.replace(/\{\{(\w+)\}\}/g, (_, name) => (vars[name] ?? ""));
+}
+
+async function loadLanguage(lang) {
+  const safeLang = ["en", "zh-Hant", "zh-Hans"].includes(lang) ? lang : "en";
+  const resp = await fetch(`./i18n/${safeLang}.json`, { cache: "no-store" });
+  if (!resp.ok) throw new Error(`Failed to load i18n: ${resp.status}`);
+  dict = await resp.json();
+  currentLang = safeLang;
+  localStorage.setItem(LANG_STORAGE_KEY, safeLang);
+  document.documentElement.lang = safeLang.startsWith("zh") ? "zh" : "en";
+  applyTranslations();
+  buildHelpDrawer();
+  decorateHelpIcons();
+}
+
+function detectInitialLanguage() {
+  const saved = localStorage.getItem(LANG_STORAGE_KEY);
+  if (saved) return saved;
+  const nav = (navigator.language || "en").toLowerCase();
+  if (nav.startsWith("zh")) {
+    // Heuristic: treat zh-tw/hk/mo as Hant, else Hans.
+    if (nav.includes("tw") || nav.includes("hk") || nav.includes("mo") || nav.includes("hant")) return "zh-Hant";
+    return "zh-Hans";
+  }
+  return "en";
+}
+
+function applyTranslations() {
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const key = el.getAttribute("data-i18n");
+    const val = t(key);
+    if (val && val !== key) el.textContent = val;
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+    const key = el.getAttribute("data-i18n-placeholder");
+    const val = t(key);
+    if (val && val !== key) el.setAttribute("placeholder", val);
+  });
+}
+
 const els = {
+  langSelect: document.getElementById("langSelect"),
+  helpDrawerBtn: document.getElementById("helpDrawerBtn"),
+  helpDrawer: document.getElementById("helpDrawer"),
+  helpDrawerClose: document.getElementById("helpDrawerClose"),
+  helpDrawerBody: document.getElementById("helpDrawerBody"),
+  drawerOverlay: document.getElementById("drawerOverlay"),
+  popover: document.getElementById("popover"),
+  controlsToggle: document.getElementById("controlsToggle"),
+  controlsPanel: document.getElementById("controlsPanel"),
+  mobileGenerate: document.getElementById("mobileGenerate"),
+  mobileDownload: document.getElementById("mobileDownload"),
+  mobileBundle: document.getElementById("mobileBundle"),
+
   studentMode: document.getElementById("studentMode"),
   wizard: document.getElementById("wizard"),
   dispenseType: document.getElementById("dispenseType"),
@@ -48,6 +117,10 @@ const els = {
   download: document.getElementById("download"),
   warnings: document.getElementById("warnings"),
 
+  step1Badge: document.getElementById("step1Badge"),
+  step2Badge: document.getElementById("step2Badge"),
+  step3Badge: document.getElementById("step3Badge"),
+
   zoomOut: document.getElementById("zoomOut"),
   zoomIn: document.getElementById("zoomIn"),
   fitView: document.getElementById("fitView"),
@@ -57,6 +130,10 @@ const els = {
 
 function setStatus(msg) {
   els.status.textContent = msg;
+}
+
+function setStatusKey(key, vars = null) {
+  setStatus(t(key, vars));
 }
 
 function num(el, fallback = null) {
@@ -73,31 +150,46 @@ function escapeHtml(s) {
 let pyodide = null;
 let lastSvg = null;
 let lastParams = null;
+let lastDownloadFilename = null;
+let lastDownloadUrl = null;
+let pythonWarnings = [];
+let calibrationGeneratedOnce = false;
 
 const FIT_PRESETS = [0.0, 0.1, 0.2];
 
 function computeDerived() {
-  const t = num(els.thickness, 3);
+  const thickness = num(els.thickness, 3);
   const kerf = num(els.kerf, 0.2);
   const c = num(els.clearance, 0.1);
-  const drawnSlot = t + c - kerf;
-  const expectedFinalSlot = t + c;
-  els.jointRule.textContent = `Joint rule: drawn slot depth = thickness + clearance − kerf = ${drawnSlot.toFixed(2)}mm. Expected final slot ≈ thickness + clearance = ${expectedFinalSlot.toFixed(2)}mm.`;
+  const drawnSlot = thickness + c - kerf;
+  const expectedFinalSlot = thickness + c;
+  els.jointRule.textContent = t("readouts.jointRule", { drawn: drawnSlot.toFixed(2), final: expectedFinalSlot.toFixed(2) });
 
   const w = num(els.innerWidth, 135);
   const d = num(els.innerDepth, 90);
   const h = num(els.innerHeight, 225);
   if (els.dimMode.value === "internal") {
-    const outerW = w + 2 * t;
-    const outerD = d + 2 * t;
-    const outerH = h + t;
-    els.sizeReadout.textContent = `Computed external size ≈ W ${outerW.toFixed(1)} × D ${outerD.toFixed(1)} × H ${outerH.toFixed(1)} (mm)`;
+    const outerW = w + 2 * thickness;
+    const outerD = d + 2 * thickness;
+    const outerH = h + thickness;
+    els.sizeReadout.textContent = t("readouts.computedExternal", {
+      w: outerW.toFixed(1),
+      d: outerD.toFixed(1),
+      h: outerH.toFixed(1),
+    });
   } else {
-    const innerW = w - 2 * t;
-    const innerD = d - 2 * t;
-    const innerH = h - t;
-    els.sizeReadout.textContent = `Computed internal size ≈ W ${innerW.toFixed(1)} × D ${innerD.toFixed(1)} × H ${innerH.toFixed(1)} (mm)`;
+    const innerW = w - 2 * thickness;
+    const innerD = d - 2 * thickness;
+    const innerH = h - thickness;
+    els.sizeReadout.textContent = t("readouts.computedInternal", {
+      w: innerW.toFixed(1),
+      d: innerD.toFixed(1),
+      h: innerH.toFixed(1),
+    });
   }
+
+  updateStepBadges();
+  renderWarnings();
 }
 
 function setFitPreset(index) {
@@ -105,7 +197,7 @@ function setFitPreset(index) {
   const c = FIT_PRESETS[i];
   els.fit.value = String(i);
   els.clearance.value = c.toFixed(2);
-  els.fitReadout.textContent = i === 0 ? "Fit: Tight (harder to assemble)" : i === 1 ? "Fit: Normal" : "Fit: Loose (student-friendly)";
+  els.fitReadout.textContent = i === 0 ? t("fit.tight") : i === 1 ? t("fit.normal") : t("fit.loose");
   computeDerived();
 }
 
@@ -118,10 +210,10 @@ function setStudentMode(on) {
 }
 
 async function init() {
-  setStatus("Loading Pyodide…");
+  setStatusKey("status.loadingPyodide");
   pyodide = await loadPyodide({});
 
-  setStatus("Loading generator module…");
+  setStatusKey("status.loadingModule");
   const resp = await fetch("./cardboxgen_v0_1.py", { cache: "no-store" });
   if (!resp.ok) throw new Error(`Failed to load Python module: ${resp.status}`);
   const code = await resp.text();
@@ -133,15 +225,87 @@ async function init() {
   els.btnGenerate.disabled = false;
   els.btnCalibration.disabled = false;
   els.btnBundle.disabled = false;
-  els.btnGenerate.textContent = "Generate SVG";
+  els.btnGenerate.textContent = t("actions.generate");
+
+  if (els.mobileGenerate) els.mobileGenerate.disabled = false;
+  if (els.mobileBundle) els.mobileBundle.disabled = false;
 
   // Show something useful immediately on first load.
   try {
     await generateSvg();
   } catch (e) {
     console.error(e);
-    setStatus(`Ready (auto-generate failed): ${e?.message ?? e}`);
+    setStatus(`${t("status.ready")} (${e?.message ?? e})`);
   }
+}
+
+function updateStepBadges() {
+  const step1Complete = !!els.storageTarget.value.trim() && !!els.dispenseTarget.value.trim();
+  const step2Complete = !!(els.mechanism?.value ?? "").trim();
+  const thicknessSet = (els.thickness.value ?? "").trim() !== "";
+  const kerfKnown = (els.kerf.value ?? "").trim() !== "";
+  const step3Complete = thicknessSet && (kerfKnown || calibrationGeneratedOnce);
+
+  if (els.step1Badge) els.step1Badge.textContent = step1Complete ? t("steps.complete") : t("steps.incomplete");
+  if (els.step2Badge) els.step2Badge.textContent = step2Complete ? t("steps.complete") : t("steps.incomplete");
+  if (els.step3Badge) els.step3Badge.textContent = step3Complete ? t("steps.complete") : t("steps.incomplete");
+}
+
+function collectUiWarningKeys(p) {
+  const keys = [];
+  if (p.kerf_mm >= p.thickness) keys.push("warnings.kerfTooBig");
+
+  // Heuristic: for ~3mm stock, >0.4mm clearance is usually overly loose.
+  if (p.thickness <= 3.5 && p.clearance_mm > 0.4) keys.push("warnings.clearanceLarge");
+
+  if ((p.min_fingers ?? 3) < 3) keys.push("warnings.minTabs");
+
+  if (p.preset === "dispenser_slot_front") {
+    const sw = p.slot_width;
+    const sh = p.slot_height;
+    const sy = p.slot_y_from_bottom;
+    const ok =
+      Number.isFinite(sw) &&
+      Number.isFinite(sh) &&
+      Number.isFinite(sy) &&
+      sw > 0 &&
+      sh > 0 &&
+      sy >= 0 &&
+      sw <= p.inner_width &&
+      sy + sh <= p.inner_height;
+    if (!ok) keys.push("warnings.slotInvalid");
+  }
+
+  return keys;
+}
+
+function renderWarnings() {
+  const p = buildParams();
+  const uiKeys = collectUiWarningKeys(p);
+  const uiWarnings = uiKeys.map((k) => t(k));
+
+  const allPython = Array.isArray(pythonWarnings) ? pythonWarnings : [];
+  const hasAny = uiWarnings.length || allPython.length;
+  if (!hasAny) {
+    els.warnings.hidden = true;
+    els.warnings.innerHTML = "";
+    return;
+  }
+
+  const uiList = uiWarnings.length
+    ? `<div class="warnBlock"><strong>${escapeHtml(t("warnings.title"))}</strong><ul>${uiWarnings
+        .map((w) => `<li>${escapeHtml(String(w))}</li>`)
+        .join("")}</ul></div>`
+    : "";
+
+  const pyList = allPython.length
+    ? `<div class="warnBlock"><strong>${escapeHtml(t("warnings.title"))}</strong><ul>${allPython
+        .map((w) => `<li>${escapeHtml(String(w))}</li>`)
+        .join("")}</ul></div>`
+    : "";
+
+  els.warnings.hidden = false;
+  els.warnings.innerHTML = uiList + pyList;
 }
 
 function buildParams() {
@@ -196,11 +360,11 @@ function buildParams() {
 async function generateSvg() {
   els.download.hidden = true;
   els.preview.textContent = "";
-  els.warnings.hidden = true;
-  els.warnings.innerHTML = "";
+  pythonWarnings = [];
+  renderWarnings();
 
   const p = buildParams();
-  setStatus("Generating SVG…");
+  setStatusKey("status.generatingSvg");
 
   // Send parameters to Python.
   pyodide.globals.set("p_json", JSON.stringify(p));
@@ -220,11 +384,9 @@ json.dumps({"svg": svg, "warnings": warnings})
 
   lastSvg = svg;
   lastParams = p;
+  pythonWarnings = warnings;
 
-  if (warnings.length) {
-    els.warnings.hidden = false;
-    els.warnings.innerHTML = `<strong>Warnings</strong><ul>${warnings.map((w) => `<li>${escapeHtml(String(w))}</li>`).join("")}</ul>`;
-  }
+  renderWarnings();
 
   // Preview (inline SVG) + download.
   // Wrap for pan/zoom transforms.
@@ -234,18 +396,27 @@ json.dumps({"svg": svg, "warnings": warnings})
   fitToView();
   const blob = new Blob([svg], { type: "image/svg+xml" });
   const url = URL.createObjectURL(blob);
+  if (lastDownloadUrl) URL.revokeObjectURL(lastDownloadUrl);
+  lastDownloadUrl = url;
+  lastDownloadFilename = `cardbox_${p.preset}.svg`;
+
   els.download.href = url;
   els.download.hidden = false;
-  els.download.textContent = "Download SVG";
-  els.download.download = `cardbox_${p.preset}.svg`;
+  els.download.textContent = t("actions.downloadSvg");
+  els.download.download = lastDownloadFilename;
 
-  setStatus("Done.");
+  if (els.mobileDownload) els.mobileDownload.disabled = false;
+
+  setStatusKey("status.readyFile", { filename: lastDownloadFilename });
 }
 
 async function getCalibrationSvgString() {
   const thickness = num(els.thickness, 3);
   const kerf = num(els.kerf, 0.2);
   const calSet = els.calSet?.value ?? "student";
+
+  calibrationGeneratedOnce = true;
+  updateStepBadges();
 
   pyodide.globals.set("thickness", thickness);
   pyodide.globals.set("kerf", kerf);
@@ -314,10 +485,13 @@ async function downloadBundleZip() {
 }
 
 async function generateCalibration() {
-  setStatus("Generating calibration SVG…");
+  setStatusKey("status.generatingCalibration");
   const thickness = num(els.thickness, 3);
   const kerf = num(els.kerf, 0.2);
   const calSet = els.calSet?.value ?? "student";
+
+  calibrationGeneratedOnce = true;
+  updateStepBadges();
 
   pyodide.globals.set("thickness", thickness);
   pyodide.globals.set("kerf", kerf);
@@ -342,12 +516,17 @@ open(path, 'r', encoding='utf-8').read()
   fitToView();
   const blob = new Blob([svg], { type: "image/svg+xml" });
   const url = URL.createObjectURL(blob);
+  if (lastDownloadUrl) URL.revokeObjectURL(lastDownloadUrl);
+  lastDownloadUrl = url;
+  lastDownloadFilename = `calibration.svg`;
   els.download.href = url;
   els.download.hidden = false;
-  els.download.textContent = "Download calibration SVG";
-  els.download.download = `calibration.svg`;
+  els.download.textContent = t("actions.downloadCalibration");
+  els.download.download = lastDownloadFilename;
 
-  setStatus("Done.");
+  if (els.mobileDownload) els.mobileDownload.disabled = false;
+
+  setStatusKey("status.readyFile", { filename: lastDownloadFilename });
 }
 
 let view = { scale: 1.0, tx: 0, ty: 0 };
@@ -398,19 +577,149 @@ function attachHoverHighlight() {
   cut.querySelectorAll(":scope > g[id]").forEach((g) => {
     g.addEventListener("mouseenter", () => {
       g.classList.add("hilite");
-      setStatus(`Hover: ${g.id}`);
+      setStatusKey("status.hover", { name: g.id });
     });
     g.addEventListener("mouseleave", () => {
       g.classList.remove("hilite");
-      setStatus("Ready.");
+      setStatusKey("status.ready");
     });
   });
+}
+
+function closePopover() {
+  if (!els.popover) return;
+  els.popover.hidden = true;
+  els.popover.innerHTML = "";
+  els.popover.dataset.anchor = "";
+}
+
+function positionPopover(anchorRect) {
+  const pop = els.popover;
+  if (!pop) return;
+  const pad = 10;
+  const w = pop.offsetWidth || 320;
+  const h = pop.offsetHeight || 220;
+  const maxX = window.innerWidth - pad - w;
+  const maxY = window.innerHeight - pad - h;
+
+  let x = Math.min(Math.max(pad, anchorRect.left), maxX);
+  let y = anchorRect.bottom + 8;
+  if (y > maxY) y = Math.max(pad, anchorRect.top - h - 8);
+  pop.style.left = `${x}px`;
+  pop.style.top = `${y}px`;
+}
+
+function getHelpContent(helpKey) {
+  const base = getPath(dict, `help.${helpKey}`) || { title: helpKey, short: "" };
+  return {
+    title: base.title || helpKey,
+    short: base.short || "",
+    consider: Array.isArray(base.consider) ? base.consider : [],
+    typical: Array.isArray(base.typical) ? base.typical : [],
+    pitfalls: Array.isArray(base.pitfalls) ? base.pitfalls : [],
+  };
+}
+
+function renderHelpHtml(helpKey, mode = "full") {
+  const c = getHelpContent(helpKey);
+  const title = `<div class="popoverTitle">${escapeHtml(String(c.title))}</div>`;
+  const short = c.short ? `<div class="popoverShort">${escapeHtml(String(c.short))}</div>` : "";
+  if (mode === "tooltip") return title + short;
+
+  function listBlock(label, items) {
+    if (!items || !items.length) return "";
+    return (
+      `<div class="popoverSection">` +
+      `<div class="popoverSectionTitle">${escapeHtml(label)}</div>` +
+      `<ul class="popoverList">${items.map((x) => `<li>${escapeHtml(String(x))}</li>`).join("")}</ul>` +
+      `</div>`
+    );
+  }
+
+  const consider = listBlock(t("helpSections.consider"), c.consider);
+  const typical = listBlock(t("helpSections.typical"), c.typical);
+  const pitfalls = listBlock(t("helpSections.pitfalls"), c.pitfalls);
+  const openHelp = `<div class="popoverSection"><button type="button" class="ghostBtn" data-open-help="${escapeHtml(helpKey)}">${escapeHtml(t("mode.help"))}</button></div>`;
+  return title + short + consider + typical + pitfalls + openHelp;
+}
+
+function showHelpPopover(helpKey, anchorEl, mode = "full") {
+  const pop = els.popover;
+  if (!pop || !anchorEl) return;
+  pop.innerHTML = renderHelpHtml(helpKey, mode);
+  pop.hidden = false;
+  positionPopover(anchorEl.getBoundingClientRect());
+  pop.dataset.anchor = helpKey;
+}
+
+function decorateHelpIcons() {
+  document.querySelectorAll("label[data-help]").forEach((label) => {
+    if (label.querySelector(":scope > .infoBtn")) return;
+    const helpKey = label.getAttribute("data-help");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "infoBtn";
+    btn.textContent = "i";
+    btn.setAttribute("aria-label", `Info: ${helpKey}`);
+    btn.addEventListener("mouseenter", () => {
+      if (window.matchMedia("(hover: hover)").matches) showHelpPopover(helpKey, btn, "tooltip");
+    });
+    btn.addEventListener("mouseleave", () => {
+      if (window.matchMedia("(hover: hover)").matches) closePopover();
+    });
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      showHelpPopover(helpKey, btn, "full");
+    });
+    label.appendChild(btn);
+  });
+}
+
+function syncOverlay() {
+  if (!els.drawerOverlay) return;
+  const controlsOpen = document.body.classList.contains("drawerOpen");
+  const helpOpen = !!els.helpDrawer && !els.helpDrawer.hidden;
+  els.drawerOverlay.hidden = !(controlsOpen || helpOpen);
+}
+
+function openHelpDrawer(targetKey = null) {
+  if (!els.helpDrawer) return;
+  els.helpDrawer.hidden = false;
+  syncOverlay();
+  if (targetKey) {
+    const el = document.getElementById(`help-${targetKey}`);
+    el?.scrollIntoView({ block: "start" });
+  }
+}
+function closeHelpDrawer() {
+  if (!els.helpDrawer) return;
+  els.helpDrawer.hidden = true;
+  syncOverlay();
+}
+
+function buildHelpDrawer() {
+  if (!els.helpDrawerBody) return;
+  const helpObj = getPath(dict, "help") || {};
+  const keys = Object.keys(helpObj);
+  els.helpDrawerBody.innerHTML = keys
+    .map((k) => {
+      const c = getHelpContent(k);
+      return `<section class="helpTopic" id="help-${escapeHtml(k)}"><h4>${escapeHtml(String(c.title))}</h4><p>${escapeHtml(String(c.short || ""))}</p></section>`;
+    })
+    .join("");
+}
+
+function updateHeaderHeightVar() {
+  const header = document.querySelector(".header");
+  const h = header ? header.getBoundingClientRect().height : 120;
+  document.documentElement.style.setProperty("--header-h", `${Math.ceil(h)}px`);
 }
 
 els.btnGenerate.addEventListener("click", () => {
   generateSvg().catch((e) => {
     console.error(e);
-    setStatus(`Error: ${e?.message ?? e}`);
+    setStatusKey("status.error", { message: e?.message ?? e });
     els.preview.innerHTML = `<pre>${escapeHtml(String(e?.stack ?? e))}</pre>`;
   });
 });
@@ -418,7 +727,7 @@ els.btnGenerate.addEventListener("click", () => {
 els.btnCalibration.addEventListener("click", () => {
   generateCalibration().catch((e) => {
     console.error(e);
-    setStatus(`Error: ${e?.message ?? e}`);
+    setStatusKey("status.error", { message: e?.message ?? e });
     els.preview.innerHTML = `<pre>${escapeHtml(String(e?.stack ?? e))}</pre>`;
   });
 });
@@ -426,9 +735,55 @@ els.btnCalibration.addEventListener("click", () => {
 els.btnBundle?.addEventListener("click", () => {
   downloadBundleZip().catch((e) => {
     console.error(e);
-    setStatus(`Error: ${e?.message ?? e}`);
+    setStatusKey("status.error", { message: e?.message ?? e });
     els.preview.innerHTML = `<pre>${escapeHtml(String(e?.stack ?? e))}</pre>`;
   });
+});
+
+els.mobileGenerate?.addEventListener("click", () => els.btnGenerate?.click());
+els.mobileBundle?.addEventListener("click", () => els.btnBundle?.click());
+els.mobileDownload?.addEventListener("click", () => {
+  if (els.download?.hidden) return;
+  els.download?.click();
+});
+
+els.controlsToggle?.addEventListener("click", () => {
+  document.body.classList.toggle("drawerOpen");
+  syncOverlay();
+});
+
+els.drawerOverlay?.addEventListener("click", () => {
+  document.body.classList.remove("drawerOpen");
+  closeHelpDrawer();
+  closePopover();
+  syncOverlay();
+});
+
+els.helpDrawerBtn?.addEventListener("click", () => openHelpDrawer());
+els.helpDrawerClose?.addEventListener("click", () => closeHelpDrawer());
+
+els.popover?.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-open-help]");
+  if (btn) {
+    const k = btn.getAttribute("data-open-help");
+    closePopover();
+    openHelpDrawer(k);
+  }
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    closePopover();
+    closeHelpDrawer();
+    document.body.classList.remove("drawerOpen");
+    syncOverlay();
+  }
+});
+
+document.addEventListener("click", (e) => {
+  const inPopover = els.popover && !els.popover.hidden && els.popover.contains(e.target);
+  const isInfoBtn = e.target?.classList?.contains("infoBtn");
+  if (!inPopover && !isInfoBtn) closePopover();
 });
 
 els.studentMode?.addEventListener("change", () => setStudentMode(els.studentMode.checked));
@@ -438,7 +793,7 @@ els.mechanism?.addEventListener("change", () => {
 
 els.fit?.addEventListener("input", () => setFitPreset(Number(els.fit.value)));
 els.clearance?.addEventListener("input", () => {
-  els.fitReadout.textContent = "Fit: Custom (using Joint clearance)";
+  els.fitReadout.textContent = t("fit.custom");
   computeDerived();
 });
 
@@ -459,13 +814,31 @@ els.fitView?.addEventListener("click", () => fitToView());
 els.showCut?.addEventListener("change", applyLayerToggles);
 els.showLabels?.addEventListener("change", applyLayerToggles);
 
-init().catch((e) => {
-  console.error(e);
-  setStatus(`Failed to initialize: ${e?.message ?? e}`);
-  els.preview.innerHTML = `<pre>${escapeHtml(String(e?.stack ?? e))}</pre>`;
-});
+async function main() {
+  currentLang = detectInitialLanguage();
+  if (els.langSelect) els.langSelect.value = currentLang;
+  await loadLanguage(currentLang);
 
-// Initial UI state
-setStudentMode(true);
-setFitPreset(1);
-computeDerived();
+  if (els.mobileDownload) els.mobileDownload.disabled = true;
+
+  els.langSelect?.addEventListener("change", async () => {
+    const v = els.langSelect.value;
+    await loadLanguage(v);
+    computeDerived();
+  });
+
+  updateHeaderHeightVar();
+  window.addEventListener("resize", updateHeaderHeightVar);
+
+  // Initial UI state
+  setStudentMode(true);
+  setFitPreset(1);
+  computeDerived();
+
+  await init();
+}
+
+main().catch((e) => {
+  console.error(e);
+  setStatusKey("status.initFailed", { message: e?.message ?? e });
+});

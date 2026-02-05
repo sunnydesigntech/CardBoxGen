@@ -1,0 +1,187 @@
+{
+  "app": {
+    "title": "Card Box / Tray SVG Generator",
+    "version": "v0.3",
+    "subtitle": "Runs fully in your browser (Pyodide). Generates laser-cut SVG with deterministic finger joints."
+  },
+  "mode": {
+    "student": "Student Mode",
+    "help": "Help"
+  },
+  "helpSections": {
+    "consider": "What to consider",
+    "typical": "Typical values",
+    "pitfalls": "Pitfalls"
+  },
+  "sections": {
+    "setup": "Setup",
+    "studentSteps": "Student steps",
+    "basic": "Basic",
+    "layout": "Layout",
+    "layoutOptional": "Layout (optional)",
+    "advanced": "Advanced",
+    "presetOptions": "Preset options",
+    "preview": "Preview",
+    "exports": "Export"
+  },
+  "steps": {
+    "title": "Student Mode (3 steps)",
+    "complete": "Complete",
+    "incomplete": "Incomplete",
+    "step1": "Step 1 — Define the problem",
+    "step2": "Step 2 — Choose a mechanism",
+    "step3": "Step 3 — Fabrication setup",
+    "step2Hint": "Choosing a mechanism will set the preset below.",
+    "step3Hint": "If you don’t know kerf, generate the calibration SVG, cut it, then pick the best label.",
+    "checklistTitle": "Calibration checklist",
+    "check1": "Generate calibration SVG",
+    "check2": "Cut it",
+    "check3": "Choose best label",
+    "check4": "Apply values and regenerate final SVG"
+  },
+  "labels": {
+    "dispenseType": "Dispense type",
+    "storageTarget": "Storage target",
+    "dispenseTarget": "Dispense target",
+    "mechanism": "Mechanism",
+
+    "preset": "Preset",
+    "dimensionMode": "Dimension mode",
+    "internal": "Internal (space inside)",
+    "external": "External (outside size)",
+
+    "innerWidth": "Inner width (mm)",
+    "innerDepth": "Inner depth (mm)",
+    "innerHeight": "Inner height (mm)",
+
+    "thickness": "Thickness (mm)",
+    "fit": "Fit (tight → loose)",
+
+    "sheetWidth": "Sheet width (mm)",
+    "margin": "Margin (mm)",
+    "padding": "Padding (mm)",
+    "stroke": "Stroke (mm)",
+    "labelsToggle": "Labels",
+    "lid": "Lid (only for box_with_lid)",
+    "holdingTabs": "Holding tabs",
+    "tabWidth": "Tab width (mm)",
+
+    "kerf": "Kerf (mm)",
+    "clearance": "Joint clearance (mm)",
+    "calSet": "Calibration set",
+    "calStudent": "Student (tight/normal/loose)",
+    "calFull": "Full list",
+    "fingerWidth": "Target tab width (mm)",
+    "minTabs": "Min tabs",
+
+    "frontHeight": "Front height (mm)",
+    "scoop": "Scoop (tray_open_front)",
+    "scoopRadius": "Scoop radius (mm)",
+    "scoopDepth": "Scoop depth (mm)",
+    "slotWidth": "Slot width (mm)",
+    "slotHeight": "Slot height (mm)",
+    "slotY": "Slot Y from bottom (mm)",
+
+    "cut": "CUT",
+    "labelsLayer": "LABELS"
+  },
+  "placeholders": {
+    "storageTarget": "e.g., 150 cards",
+    "dispenseTarget": "e.g., 1 card per pull",
+    "auto": "(auto)"
+  },
+  "options": {
+    "dispense": {
+      "stacking": "Stacking (cards / tiles)",
+      "flowing": "Flowing (dry solids only)"
+    },
+    "mechanism": {
+      "tray_open_front": "Open-front tray",
+      "dispenser_slot_front": "Front slot dispenser",
+      "window_front": "Window front",
+      "box_with_lid": "Box with lid"
+    }
+  },
+  "actions": {
+    "generate": "Generate SVG",
+    "calibration": "Generate calibration SVG",
+    "bundle": "Download bundle (zip)",
+    "downloadSvg": "Download SVG",
+    "downloadCalibration": "Download calibration SVG",
+    "fit": "Fit",
+    "zoomIn": "+",
+    "zoomOut": "−",
+    "controls": "Controls"
+  },
+  "status": {
+    "initializing": "Initializing…",
+    "loadingPyodide": "Loading Pyodide…",
+    "loadingModule": "Loading generator module…",
+    "generatingSvg": "Generating SVG…",
+    "generatingCalibration": "Generating calibration SVG…",
+    "done": "Done.",
+    "ready": "Ready.",
+    "readyFile": "Ready: {{filename}}",
+    "hover": "Hover: {{name}}",
+    "error": "Error: {{message}}",
+    "initFailed": "Failed to initialize: {{message}}"
+  },
+  "fit": {
+    "tight": "Fit: Tight (harder to assemble)",
+    "normal": "Fit: Normal",
+    "loose": "Fit: Loose (student-friendly)",
+    "custom": "Fit: Custom (using Joint clearance)"
+  },
+  "readouts": {
+    "jointRule": "Joint rule: drawn slot depth = thickness + clearance − kerf = {{drawn}}mm. Expected final slot ≈ thickness + clearance = {{final}}mm.",
+    "computedExternal": "Computed external size ≈ W {{w}} × D {{d}} × H {{h}} (mm)",
+    "computedInternal": "Computed internal size ≈ W {{w}} × D {{d}} × H {{h}} (mm)"
+  },
+  "warnings": {
+    "title": "Warnings",
+    "kerfTooBig": "Kerf is greater than or equal to thickness. Joints may not work.",
+    "clearanceLarge": "Joint clearance looks large for this thickness. Parts may be loose.",
+    "slotInvalid": "Slot dimensions are invalid or exceed the front panel.",
+    "minTabs": "Min tabs is less than 3. Joints may be weak or misaligned."
+  },
+  "footer": {
+    "tip": "Tip: If you deploy this on GitHub Pages, it runs client-side and doesn’t need a server."
+  },
+  "help": {
+    "dispenseType": { "title": "Dispense type", "short": "Choose whether you are dispensing stacked items (cards/tiles) or flowing dry solids." },
+    "storageTarget": { "title": "Storage target", "short": "Describe how many items you want to store (for planning only)." },
+    "dispenseTarget": { "title": "Dispense target", "short": "Describe how you want it to dispense (for planning only)." },
+    "mechanism": { "title": "Mechanism", "short": "Pick a mechanism; it sets a preset that matches the design." },
+
+    "preset": { "title": "Preset", "short": "A predefined design template (tray, dispenser, window, box)." },
+    "dimensionMode": { "title": "Dimension mode", "short": "Choose whether your W/D/H refer to inside space (internal) or outside size (external)." },
+    "innerWidth": { "title": "Inner width", "short": "Inside width of the box/tray." },
+    "innerDepth": { "title": "Inner depth", "short": "Inside depth (front-to-back) of the box/tray." },
+    "innerHeight": { "title": "Inner height", "short": "Inside height of the box/tray." },
+    "thickness": { "title": "Thickness", "short": "Material thickness. Commonly 2–4mm for card board / acrylic." },
+    "fit": { "title": "Fit", "short": "Quick fit preset. Tight is stronger but harder to assemble; Loose is easier for students." },
+
+    "sheetWidth": { "title": "Sheet width", "short": "How wide your material sheet is, used to lay out parts efficiently." },
+    "margin": { "title": "Margin", "short": "Extra empty space around the sheet edges." },
+    "padding": { "title": "Padding", "short": "Spacing between parts so they don’t overlap." },
+    "stroke": { "title": "Stroke", "short": "SVG line thickness for display. Usually doesn’t affect cutting if your laser uses paths." },
+    "labelsToggle": { "title": "Labels", "short": "Add engraved labels (panel names) to help assembly." },
+    "lid": { "title": "Lid", "short": "Add a lid when using the box_with_lid preset." },
+    "holdingTabs": { "title": "Holding tabs", "short": "Add small bridges so parts stay attached to the sheet after cutting." },
+    "tabWidth": { "title": "Tab width", "short": "Width of each holding tab bridge." },
+
+    "kerf": { "title": "Kerf", "short": "How much material your laser removes (cut width). Measure with calibration." },
+    "clearance": { "title": "Joint clearance", "short": "Extra looseness in joints. Increase if too tight; decrease if too loose." },
+    "calSet": { "title": "Calibration set", "short": "Choose a short student set or a full list of clearances." },
+    "fingerWidth": { "title": "Target tab width", "short": "Approximate width of each finger/tab along the joint edge. Leave auto for most cases." },
+    "minTabs": { "title": "Min tabs", "short": "Minimum number of tabs on each joint edge." },
+
+    "frontHeight": { "title": "Front height", "short": "Adjust how tall the front panel is (tray_open_front)." },
+    "scoop": { "title": "Scoop", "short": "Adds a scoop cutout for easier grabbing (tray_open_front)." },
+    "scoopRadius": { "title": "Scoop radius", "short": "Radius of the scoop curve." },
+    "scoopDepth": { "title": "Scoop depth", "short": "How deep the scoop cut goes." },
+    "slotWidth": { "title": "Slot width", "short": "Width of the dispensing slot (dispenser_slot_front)." },
+    "slotHeight": { "title": "Slot height", "short": "Height of the dispensing slot (dispenser_slot_front)." },
+    "slotY": { "title": "Slot Y", "short": "Vertical position of the slot measured from the bottom." }
+  }
+}

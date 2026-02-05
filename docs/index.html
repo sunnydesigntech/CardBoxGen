@@ -8,256 +8,333 @@
   </head>
   <body>
     <header class="header">
-      <h1>Card Box / Tray SVG Generator <span class="ver">v0.2</span></h1>
-      <p class="sub">
-        Runs fully in your browser (Pyodide). Generates laser-cut SVG with deterministic finger joints.
-      </p>
-      <div class="mode">
-        <label class="check">
-          <input id="studentMode" type="checkbox" checked />
-          Student Mode
-        </label>
+      <div class="headerTop">
+        <div class="headerTitle">
+          <h1>
+            <span data-i18n="app.title">Card Box / Tray SVG Generator</span>
+            <span class="ver" data-i18n="app.version">v0.3</span>
+          </h1>
+          <p class="sub" data-i18n="app.subtitle">
+            Runs fully in your browser (Pyodide). Generates laser-cut SVG with deterministic finger joints.
+          </p>
+        </div>
+
+        <div class="headerControls">
+          <label class="srOnly" for="langSelect">Language</label>
+          <select id="langSelect" class="langSelect" aria-label="Language">
+            <option value="en">English</option>
+            <option value="zh-Hant">繁體中文</option>
+            <option value="zh-Hans">简体中文</option>
+          </select>
+
+          <button id="helpDrawerBtn" type="button" class="ghostBtn" data-i18n="mode.help">Help</button>
+
+          <label class="check">
+            <input id="studentMode" type="checkbox" checked />
+            <span data-i18n="mode.student">Student Mode</span>
+          </label>
+
+          <button id="controlsToggle" type="button" class="ghostBtn controlsToggle" data-i18n="actions.controls">
+            Controls
+          </button>
+        </div>
+      </div>
+
+      <div class="headerSticky">
+        <button id="mobileGenerate" type="button" class="primaryBtn" data-i18n="actions.generate">Generate SVG</button>
+        <button id="mobileDownload" type="button" class="ghostBtn" disabled data-i18n="actions.downloadSvg">Download SVG</button>
+        <button id="mobileBundle" type="button" class="ghostBtn" disabled data-i18n="actions.bundle">Download bundle (zip)</button>
       </div>
     </header>
 
     <main class="grid">
-      <section class="card">
-        <h2>Setup</h2>
+      <section class="card controls" id="controlsPanel">
+        <h2 data-i18n="sections.setup">Setup</h2>
 
-        <section id="wizard" class="wizard">
-          <h3>Student Mode (3 steps)</h3>
+        <details id="wizard" class="wizard section" open>
+          <summary>
+            <span data-i18n="steps.title">Student Mode (3 steps)</span>
+          </summary>
 
           <div class="step">
-            <div class="stepTitle">Step 1 — Define the problem</div>
+            <div class="stepTitle">
+              <span data-i18n="steps.step1">Step 1 — Define the problem</span>
+              <span class="badge" id="step1Badge"></span>
+            </div>
             <div class="row">
-              <label for="dispenseType">Dispense type</label>
+              <label for="dispenseType" data-help="dispenseType">
+                <span data-i18n="labels.dispenseType">Dispense type</span>
+              </label>
               <select id="dispenseType">
-                <option value="stacking" selected>Stacking (cards / tiles)</option>
-                <option value="flowing">Flowing (dry solids only)</option>
+                <option value="stacking" selected data-i18n="options.dispense.stacking">Stacking (cards / tiles)</option>
+                <option value="flowing" data-i18n="options.dispense.flowing">Flowing (dry solids only)</option>
               </select>
             </div>
             <div class="row">
-              <label for="storageTarget">Storage target</label>
-              <input id="storageTarget" type="text" placeholder="e.g., 150 cards" />
+              <label for="storageTarget" data-help="storageTarget">
+                <span data-i18n="labels.storageTarget">Storage target</span>
+              </label>
+              <input id="storageTarget" type="text" data-i18n-placeholder="placeholders.storageTarget" placeholder="e.g., 150 cards" />
             </div>
             <div class="row">
-              <label for="dispenseTarget">Dispense target</label>
-              <input id="dispenseTarget" type="text" placeholder="e.g., 1 card per pull" />
+              <label for="dispenseTarget" data-help="dispenseTarget">
+                <span data-i18n="labels.dispenseTarget">Dispense target</span>
+              </label>
+              <input id="dispenseTarget" type="text" data-i18n-placeholder="placeholders.dispenseTarget" placeholder="e.g., 1 card per pull" />
             </div>
           </div>
 
           <div class="step">
-            <div class="stepTitle">Step 2 — Choose a mechanism</div>
+            <div class="stepTitle">
+              <span data-i18n="steps.step2">Step 2 — Choose a mechanism</span>
+              <span class="badge" id="step2Badge"></span>
+            </div>
             <div class="row">
-              <label for="mechanism">Mechanism</label>
+              <label for="mechanism" data-help="mechanism">
+                <span data-i18n="labels.mechanism">Mechanism</span>
+              </label>
               <select id="mechanism">
-                <option value="tray_open_front" selected>Open-front tray</option>
-                <option value="dispenser_slot_front">Front slot dispenser</option>
-                <option value="window_front">Window front</option>
-                <option value="box_with_lid">Box with lid</option>
+                <option value="tray_open_front" selected data-i18n="options.mechanism.tray_open_front">Open-front tray</option>
+                <option value="dispenser_slot_front" data-i18n="options.mechanism.dispenser_slot_front">Front slot dispenser</option>
+                <option value="window_front" data-i18n="options.mechanism.window_front">Window front</option>
+                <option value="box_with_lid" data-i18n="options.mechanism.box_with_lid">Box with lid</option>
               </select>
             </div>
-            <p class="hint">Choosing a mechanism will set the preset below.</p>
+            <p class="hint" data-i18n="steps.step2Hint">Choosing a mechanism will set the preset below.</p>
           </div>
 
           <div class="step">
-            <div class="stepTitle">Step 3 — Fabrication setup</div>
-            <p class="hint">
+            <div class="stepTitle">
+              <span data-i18n="steps.step3">Step 3 — Fabrication setup</span>
+              <span class="badge" id="step3Badge"></span>
+            </div>
+            <p class="hint" data-i18n="steps.step3Hint">
               If you don’t know kerf, generate the calibration SVG, cut it, then pick the best label.
             </p>
+
+            <div class="checklist">
+              <div class="checklistTitle" data-i18n="steps.checklistTitle">Calibration checklist</div>
+              <ol class="checklistList">
+                <li data-i18n="steps.check1">Generate calibration SVG</li>
+                <li data-i18n="steps.check2">Cut it</li>
+                <li data-i18n="steps.check3">Choose best label</li>
+                <li data-i18n="steps.check4">Apply values and regenerate final SVG</li>
+              </ol>
+            </div>
           </div>
-        </section>
+        </details>
 
-        <h3>Basic</h3>
+        <details class="section" open>
+          <summary><span data-i18n="sections.basic">Basic</span></summary>
 
-        <div class="row">
-          <label for="preset">Preset</label>
+          <div class="row">
+          <label for="preset" data-help="preset"><span data-i18n="labels.preset">Preset</span></label>
           <select id="preset">
             <option value="tray_open_front">tray_open_front</option>
             <option value="dispenser_slot_front">dispenser_slot_front</option>
             <option value="window_front">window_front</option>
             <option value="box_with_lid">box_with_lid</option>
           </select>
-        </div>
+          </div>
 
-        <div class="row">
-          <label for="dimMode">Dimension mode</label>
+          <div class="row">
+          <label for="dimMode" data-help="dimensionMode"><span data-i18n="labels.dimensionMode">Dimension mode</span></label>
           <select id="dimMode">
-            <option value="internal" selected>Internal (space inside)</option>
-            <option value="external">External (outside size)</option>
+            <option value="internal" selected data-i18n="labels.internal">Internal (space inside)</option>
+            <option value="external" data-i18n="labels.external">External (outside size)</option>
           </select>
-        </div>
-
-        <div class="row">
-          <label for="innerWidth">Inner width (mm)</label>
-          <input id="innerWidth" type="number" value="135" step="0.1" min="1" />
-        </div>
-        <div class="row">
-          <label for="innerDepth">Inner depth (mm)</label>
-          <input id="innerDepth" type="number" value="90" step="0.1" min="1" />
-        </div>
-        <div class="row">
-          <label for="innerHeight">Inner height (mm)</label>
-          <input id="innerHeight" type="number" value="225" step="0.1" min="1" />
-        </div>
-
-        <hr />
-
-        <div class="row">
-          <label for="thickness">Thickness (mm)</label>
-          <input id="thickness" type="number" value="3" step="0.01" min="0.1" />
-        </div>
-
-        <div class="row">
-          <label for="fit">Fit (tight → loose)</label>
-          <input id="fit" type="range" min="0" max="2" step="1" value="1" />
-        </div>
-        <div class="readout" id="fitReadout"></div>
-
-        <div class="readout" id="sizeReadout"></div>
-
-        <div class="row">
-          <label for="sheetWidth">Sheet width (mm)</label>
-          <input id="sheetWidth" type="number" value="340" step="1" min="50" />
-        </div>
-
-        <details>
-          <summary>Layout (optional)</summary>
+          </div>
 
           <div class="row">
-            <label for="marginMm">Margin (mm)</label>
-            <input id="marginMm" type="number" value="10" step="0.5" min="0" />
+            <label for="innerWidth" data-help="innerWidth"><span data-i18n="labels.innerWidth">Inner width (mm)</span></label>
+            <input id="innerWidth" type="number" value="135" step="0.1" min="1" />
           </div>
           <div class="row">
-            <label for="paddingMm">Padding (mm)</label>
-            <input id="paddingMm" type="number" value="12" step="0.5" min="0" />
+            <label for="innerDepth" data-help="innerDepth"><span data-i18n="labels.innerDepth">Inner depth (mm)</span></label>
+            <input id="innerDepth" type="number" value="90" step="0.1" min="1" />
           </div>
           <div class="row">
-            <label for="strokeMm">Stroke (mm)</label>
-            <input id="strokeMm" type="number" value="0.2" step="0.05" min="0.01" />
+            <label for="innerHeight" data-help="innerHeight"><span data-i18n="labels.innerHeight">Inner height (mm)</span></label>
+            <input id="innerHeight" type="number" value="225" step="0.1" min="1" />
           </div>
+
+          <hr />
+
+          <div class="row">
+            <label for="thickness" data-help="thickness"><span data-i18n="labels.thickness">Thickness (mm)</span></label>
+            <input id="thickness" type="number" value="3" step="0.01" min="0.1" />
+          </div>
+
+          <div class="row">
+            <label for="fit" data-help="fit"><span data-i18n="labels.fit">Fit (tight → loose)</span></label>
+            <input id="fit" type="range" min="0" max="2" step="1" value="1" />
+          </div>
+          <div class="readout" id="fitReadout"></div>
+
+          <div class="readout" id="sizeReadout"></div>
+
         </details>
 
-        <div class="row inline">
-          <label class="check">
-            <input id="labels" type="checkbox" checked />
-            Labels
-          </label>
-          <label class="check">
-            <input id="lid" type="checkbox" />
-            Lid (only for box_with_lid)
-          </label>
-        </div>
-
-        <div class="row inline">
-          <label class="check">
-            <input id="holdingTabs" type="checkbox" />
-            Holding tabs
-          </label>
-          <label for="tabWidth">Tab width (mm)</label>
-          <input id="tabWidth" type="number" value="2" step="0.1" min="0" />
-        </div>
-
-        <details id="advanced">
-          <summary>Advanced</summary>
+        <details class="section" open>
+          <summary><span data-i18n="sections.layout">Layout</span></summary>
 
           <div class="row">
-            <label for="kerf">Kerf (mm)</label>
-            <input id="kerf" type="number" value="0.2" step="0.01" min="0" />
+            <label for="sheetWidth" data-help="sheetWidth"><span data-i18n="labels.sheetWidth">Sheet width (mm)</span></label>
+            <input id="sheetWidth" type="number" value="340" step="1" min="50" />
+          </div>
+
+          <details>
+            <summary data-i18n="sections.layoutOptional">Layout (optional)</summary>
+
+            <div class="row">
+              <label for="marginMm" data-help="margin"><span data-i18n="labels.margin">Margin (mm)</span></label>
+              <input id="marginMm" type="number" value="10" step="0.5" min="0" />
+            </div>
+            <div class="row">
+              <label for="paddingMm" data-help="padding"><span data-i18n="labels.padding">Padding (mm)</span></label>
+              <input id="paddingMm" type="number" value="12" step="0.5" min="0" />
+            </div>
+            <div class="row">
+              <label for="strokeMm" data-help="stroke"><span data-i18n="labels.stroke">Stroke (mm)</span></label>
+              <input id="strokeMm" type="number" value="0.2" step="0.05" min="0.01" />
+            </div>
+          </details>
+
+          <div class="row inline">
+            <label class="check" data-help="labelsToggle">
+              <input id="labels" type="checkbox" checked />
+              <span data-i18n="labels.labelsToggle">Labels</span>
+            </label>
+            <label class="check" data-help="lid">
+              <input id="lid" type="checkbox" />
+              <span data-i18n="labels.lid">Lid (only for box_with_lid)</span>
+            </label>
+          </div>
+
+          <div class="row inline">
+            <label class="check" data-help="holdingTabs">
+              <input id="holdingTabs" type="checkbox" />
+              <span data-i18n="labels.holdingTabs">Holding tabs</span>
+            </label>
+            <label for="tabWidth" data-help="tabWidth"><span data-i18n="labels.tabWidth">Tab width (mm)</span></label>
+            <input id="tabWidth" type="number" value="2" step="0.1" min="0" />
+          </div>
+
+        </details>
+
+        <details id="advanced" class="section">
+          <summary data-i18n="sections.advanced">Advanced</summary>
+
+          <div class="row">
+            <label for="kerf" data-help="kerf"><span data-i18n="labels.kerf">Kerf (mm)</span></label>
+            <input id="kerf" type="number" value="" placeholder="0.2" step="0.01" min="0" />
           </div>
           <div class="row">
-            <label for="clearance">Joint clearance (mm)</label>
+            <label for="clearance" data-help="clearance"><span data-i18n="labels.clearance">Joint clearance (mm)</span></label>
             <input id="clearance" type="number" value="0.10" step="0.01" />
           </div>
 
           <div class="readout" id="jointRule"></div>
 
           <div class="row">
-            <label for="calSet">Calibration set</label>
+            <label for="calSet" data-help="calSet"><span data-i18n="labels.calSet">Calibration set</span></label>
             <select id="calSet">
-              <option value="student" selected>Student (tight/normal/loose)</option>
-              <option value="full">Full list</option>
+              <option value="student" selected data-i18n="labels.calStudent">Student (tight/normal/loose)</option>
+              <option value="full" data-i18n="labels.calFull">Full list</option>
             </select>
           </div>
 
           <div class="row">
-            <label for="fingerWidth">Target tab width (mm)</label>
-            <input id="fingerWidth" type="number" value="" step="0.1" placeholder="(auto)" />
+            <label for="fingerWidth" data-help="fingerWidth"><span data-i18n="labels.fingerWidth">Target tab width (mm)</span></label>
+            <input id="fingerWidth" type="number" value="" step="0.1" data-i18n-placeholder="placeholders.auto" placeholder="(auto)" />
           </div>
           <div class="row">
-            <label for="minFingers">Min tabs</label>
+            <label for="minFingers" data-help="minTabs"><span data-i18n="labels.minTabs">Min tabs</span></label>
             <input id="minFingers" type="number" value="3" step="1" min="1" />
           </div>
         </details>
 
-        <details>
-          <summary>Preset options</summary>
+        <details class="section">
+          <summary data-i18n="sections.presetOptions">Preset options</summary>
 
           <div class="row">
-            <label for="frontHeight">Front height (mm)</label>
-            <input id="frontHeight" type="number" value="" step="0.1" placeholder="(auto)" />
+            <label for="frontHeight" data-help="frontHeight"><span data-i18n="labels.frontHeight">Front height (mm)</span></label>
+            <input id="frontHeight" type="number" value="" step="0.1" data-i18n-placeholder="placeholders.auto" placeholder="(auto)" />
           </div>
 
           <div class="row inline">
-            <label class="check">
+            <label class="check" data-help="scoop">
               <input id="scoop" type="checkbox" />
-              Scoop (tray_open_front)
+              <span data-i18n="labels.scoop">Scoop (tray_open_front)</span>
             </label>
           </div>
           <div class="row">
-            <label for="scoopRadius">Scoop radius (mm)</label>
+            <label for="scoopRadius" data-help="scoopRadius"><span data-i18n="labels.scoopRadius">Scoop radius (mm)</span></label>
             <input id="scoopRadius" type="number" value="22" step="0.1" />
           </div>
           <div class="row">
-            <label for="scoopDepth">Scoop depth (mm)</label>
+            <label for="scoopDepth" data-help="scoopDepth"><span data-i18n="labels.scoopDepth">Scoop depth (mm)</span></label>
             <input id="scoopDepth" type="number" value="18" step="0.1" />
           </div>
 
           <div class="row">
-            <label for="slotWidth">Slot width (mm)</label>
+            <label for="slotWidth" data-help="slotWidth"><span data-i18n="labels.slotWidth">Slot width (mm)</span></label>
             <input id="slotWidth" type="number" value="86" step="0.1" />
           </div>
           <div class="row">
-            <label for="slotHeight">Slot height (mm)</label>
+            <label for="slotHeight" data-help="slotHeight"><span data-i18n="labels.slotHeight">Slot height (mm)</span></label>
             <input id="slotHeight" type="number" value="18" step="0.1" />
           </div>
           <div class="row">
-            <label for="slotY">Slot Y from bottom (mm)</label>
+            <label for="slotY" data-help="slotY"><span data-i18n="labels.slotY">Slot Y from bottom (mm)</span></label>
             <input id="slotY" type="number" value="38" step="0.1" />
           </div>
         </details>
 
         <div class="actions">
-          <button id="btnGenerate" disabled>Loading Python…</button>
-          <button id="btnCalibration" disabled>Generate calibration SVG</button>
-          <button id="btnBundle" disabled>Download bundle (zip)</button>
+          <button id="btnGenerate" disabled data-i18n="status.loadingPyodide">Loading Python…</button>
+          <button id="btnCalibration" disabled data-i18n="actions.calibration">Generate calibration SVG</button>
+          <button id="btnBundle" disabled data-i18n="actions.bundle">Download bundle (zip)</button>
         </div>
 
-        <p class="status" id="status">Initializing…</p>
-        <a class="download" id="download" download="out.svg" hidden>Download SVG</a>
+        <p class="status" id="status" data-i18n="status.initializing">Initializing…</p>
+        <a class="download" id="download" download="out.svg" hidden data-i18n="actions.downloadSvg">Download SVG</a>
         <div class="warnings" id="warnings" hidden></div>
       </section>
 
-      <section class="card">
-        <h2>Preview</h2>
-        <div class="previewBar">
-          <button id="zoomOut" type="button">−</button>
-          <button id="zoomIn" type="button">+</button>
-          <button id="fitView" type="button">Fit</button>
-          <label class="check"><input id="showCut" type="checkbox" checked />CUT</label>
-          <label class="check"><input id="showLabels" type="checkbox" checked />LABELS</label>
-        </div>
-        <div id="preview" class="preview"></div>
+      <section class="card previewCard">
+        <details class="section" open>
+          <summary><span data-i18n="sections.preview">Preview</span></summary>
+          <div class="previewBar">
+            <button id="zoomOut" type="button" data-i18n="actions.zoomOut">−</button>
+            <button id="zoomIn" type="button" data-i18n="actions.zoomIn">+</button>
+            <button id="fitView" type="button" data-i18n="actions.fit">Fit</button>
+            <label class="check"><input id="showCut" type="checkbox" checked /> <span data-i18n="labels.cut">CUT</span></label>
+            <label class="check"><input id="showLabels" type="checkbox" checked /> <span data-i18n="labels.labelsLayer">LABELS</span></label>
+          </div>
+          <div id="preview" class="preview"></div>
+        </details>
       </section>
     </main>
 
     <footer class="footer">
       <p>
-        Tip: If you deploy this on GitHub Pages, it runs client-side and doesn’t need a server.
+        <span data-i18n="footer.tip">Tip: If you deploy this on GitHub Pages, it runs client-side and doesn’t need a server.</span>
       </p>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
+    <div id="popover" class="popover" hidden></div>
+
+    <div id="drawerOverlay" class="drawerOverlay" hidden></div>
+    <aside id="helpDrawer" class="drawer" hidden>
+      <div class="drawerHeader">
+        <div class="drawerTitle" data-i18n="mode.help">Help</div>
+        <button id="helpDrawerClose" type="button" class="ghostBtn">×</button>
+      </div>
+      <div id="helpDrawerBody" class="drawerBody"></div>
+    </aside>
 
     <script type="module" src="app.js"></script>
   </body>

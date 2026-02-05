@@ -1,0 +1,187 @@
+{
+  "app": {
+    "title": "卡盒／托盘 SVG 生成器",
+    "version": "v0.3",
+    "subtitle": "完全在浏览器中运行（Pyodide）。生成可激光切割的 SVG，并使用可复现的指接结构。"
+  },
+  "mode": {
+    "student": "学生模式",
+    "help": "帮助"
+  },
+  "helpSections": {
+    "consider": "建议思考",
+    "typical": "常见数值",
+    "pitfalls": "常见坑"
+  },
+  "sections": {
+    "setup": "设置",
+    "studentSteps": "学生步骤",
+    "basic": "基本",
+    "layout": "排版",
+    "layoutOptional": "排版（可选）",
+    "advanced": "高级",
+    "presetOptions": "预设选项",
+    "preview": "预览",
+    "exports": "导出"
+  },
+  "steps": {
+    "title": "学生模式（3 步）",
+    "complete": "完成",
+    "incomplete": "未完成",
+    "step1": "步骤 1 — 定义需求",
+    "step2": "步骤 2 — 选择机构",
+    "step3": "步骤 3 — 制作设置",
+    "step2Hint": "选择机构会自动设置下方的预设。",
+    "step3Hint": "如果不知道刀缝（kerf），先生成校准 SVG，切割后选择最合适的标签。",
+    "checklistTitle": "校准检查清单",
+    "check1": "生成校准 SVG",
+    "check2": "切割它",
+    "check3": "选择最佳标签",
+    "check4": "应用数值并重新生成最终 SVG"
+  },
+  "labels": {
+    "dispenseType": "出料类型",
+    "storageTarget": "存储目标",
+    "dispenseTarget": "出料目标",
+    "mechanism": "机构",
+
+    "preset": "预设",
+    "dimensionMode": "尺寸模式",
+    "internal": "内尺寸（内部空间）",
+    "external": "外尺寸（外观尺寸）",
+
+    "innerWidth": "内宽（mm）",
+    "innerDepth": "内深（mm）",
+    "innerHeight": "内高（mm）",
+
+    "thickness": "厚度（mm）",
+    "fit": "松紧（紧 → 松）",
+
+    "sheetWidth": "板材宽度（mm）",
+    "margin": "边界（mm）",
+    "padding": "间距（mm）",
+    "stroke": "线宽（mm）",
+    "labelsToggle": "标签",
+    "lid": "上盖（仅 box_with_lid）",
+    "holdingTabs": "固定小桥",
+    "tabWidth": "小桥宽度（mm）",
+
+    "kerf": "刀缝 Kerf（mm）",
+    "clearance": "接合间隙（mm）",
+    "calSet": "校准集合",
+    "calStudent": "学生（紧／正常／松）",
+    "calFull": "完整列表",
+    "fingerWidth": "目标榫宽（mm）",
+    "minTabs": "最少榫数",
+
+    "frontHeight": "前板高度（mm）",
+    "scoop": "挖勺（tray_open_front）",
+    "scoopRadius": "挖勺半径（mm）",
+    "scoopDepth": "挖勺深度（mm）",
+    "slotWidth": "出料槽宽（mm）",
+    "slotHeight": "出料槽高（mm）",
+    "slotY": "出料槽 Y（自底部起，mm）",
+
+    "cut": "切割",
+    "labelsLayer": "标签"
+  },
+  "placeholders": {
+    "storageTarget": "例如：150 张卡",
+    "dispenseTarget": "例如：每次抽 1 张",
+    "auto": "（自动）"
+  },
+  "options": {
+    "dispense": {
+      "stacking": "堆叠出料（卡片／板片）",
+      "flowing": "流动式（仅干燥颗粒）"
+    },
+    "mechanism": {
+      "tray_open_front": "开口托盘",
+      "dispenser_slot_front": "前方出料槽",
+      "window_front": "前方视窗",
+      "box_with_lid": "带上盖盒"
+    }
+  },
+  "actions": {
+    "generate": "生成 SVG",
+    "calibration": "生成校准 SVG",
+    "bundle": "下载打包（zip）",
+    "downloadSvg": "下载 SVG",
+    "downloadCalibration": "下载校准 SVG",
+    "fit": "自适应",
+    "zoomIn": "+",
+    "zoomOut": "−",
+    "controls": "参数"
+  },
+  "status": {
+    "initializing": "初始化中…",
+    "loadingPyodide": "加载 Pyodide…",
+    "loadingModule": "加载生成器模块…",
+    "generatingSvg": "正在生成 SVG…",
+    "generatingCalibration": "正在生成校准 SVG…",
+    "done": "完成。",
+    "ready": "就绪。",
+    "readyFile": "就绪：{{filename}}",
+    "hover": "指向：{{name}}",
+    "error": "错误：{{message}}",
+    "initFailed": "初始化失败：{{message}}"
+  },
+  "fit": {
+    "tight": "松紧：紧（更难组装）",
+    "normal": "松紧：正常",
+    "loose": "松紧：松（适合课堂）",
+    "custom": "松紧：自定义（使用接合间隙）"
+  },
+  "readouts": {
+    "jointRule": "接合规则：绘制的槽深 = 厚度 + 间隙 − kerf = {{drawn}}mm。预期完成后槽宽 ≈ 厚度 + 间隙 = {{final}}mm。",
+    "computedExternal": "推算外尺寸 ≈ W {{w}} × D {{d}} × H {{h}}（mm）",
+    "computedInternal": "推算内尺寸 ≈ W {{w}} × D {{d}} × H {{h}}（mm）"
+  },
+  "warnings": {
+    "title": "警告",
+    "kerfTooBig": "刀缝（kerf）大于或等于厚度，接合可能失效。",
+    "clearanceLarge": "接合间隙看起来偏大，作品可能松动。",
+    "slotInvalid": "出料槽尺寸不合理或超出前板范围。",
+    "minTabs": "最少榫数小于 3，接合可能过弱或不对齐。"
+  },
+  "footer": {
+    "tip": "提示：部署到 GitHub Pages 后可完全在浏览器端运行，不需要服务器。"
+  },
+  "help": {
+    "dispenseType": { "title": "出料类型", "short": "选择堆叠出料（卡片／板片）或流动式（仅干燥颗粒）。" },
+    "storageTarget": { "title": "存储目标", "short": "描述想要存放的数量（仅供规划）。" },
+    "dispenseTarget": { "title": "出料目标", "short": "描述希望的出料方式（仅供规划）。" },
+    "mechanism": { "title": "机构", "short": "选择机构后会套用对应的预设设计。" },
+
+    "preset": { "title": "预设", "short": "预先定义的模板（托盘、出料器、视窗、盒子）。" },
+    "dimensionMode": { "title": "尺寸模式", "short": "选择 W/D/H 是指内尺寸或外尺寸。" },
+    "innerWidth": { "title": "内宽", "short": "盒／托盘内部的宽度。" },
+    "innerDepth": { "title": "内深", "short": "盒／托盘内部的深度（前到后）。" },
+    "innerHeight": { "title": "内高", "short": "盒／托盘内部的高度。" },
+    "thickness": { "title": "厚度", "short": "材料厚度。常见为 2–4mm。" },
+    "fit": { "title": "松紧", "short": "快速松紧设置：紧更牢固但更难组装；松更适合学生。" },
+
+    "sheetWidth": { "title": "板材宽度", "short": "用于排版的板材宽度。" },
+    "margin": { "title": "边界", "short": "板材边缘保留的空白。" },
+    "padding": { "title": "间距", "short": "零件之间的距离，避免重叠。" },
+    "stroke": { "title": "线宽", "short": "SVG 显示用线宽，通常不影响切割。" },
+    "labelsToggle": { "title": "标签", "short": "加上刻字标签（面板名称）以协助组装。" },
+    "lid": { "title": "上盖", "short": "在 box_with_lid 预设中加入上盖。" },
+    "holdingTabs": { "title": "固定小桥", "short": "加上小桥让零件切完仍留在板材上。" },
+    "tabWidth": { "title": "小桥宽度", "short": "每个小桥的宽度。" },
+
+    "kerf": { "title": "刀缝 Kerf", "short": "激光切割会移除的宽度（切缝）。建议用校准片测量。" },
+    "clearance": { "title": "接合间隙", "short": "接合的松动量；太紧就加大、太松就减小。" },
+    "calSet": { "title": "校准集合", "short": "选择学生用短列表或完整列表。" },
+    "fingerWidth": { "title": "目标榫宽", "short": "每个榫沿边的宽度。多数情况留空即可。" },
+    "minTabs": { "title": "最少榫数", "short": "每条接合边至少要有多少榫。" },
+
+    "frontHeight": { "title": "前板高度", "short": "调整前板高度（tray_open_front）。" },
+    "scoop": { "title": "挖勺", "short": "加入挖勺缺口，方便取用（tray_open_front）。" },
+    "scoopRadius": { "title": "挖勺半径", "short": "挖勺曲线半径。" },
+    "scoopDepth": { "title": "挖勺深度", "short": "挖勺切入的深度。" },
+    "slotWidth": { "title": "出料槽宽", "short": "出料槽宽度（dispenser_slot_front）。" },
+    "slotHeight": { "title": "出料槽高", "short": "出料槽高度（dispenser_slot_front）。" },
+    "slotY": { "title": "出料槽 Y", "short": "出料槽位置，自底部往上量。" }
+  }
+}
