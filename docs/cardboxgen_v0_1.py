@@ -41,7 +41,7 @@ import textwrap
 from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Optional, Tuple
 
-__version__ = "0.4"
+__version__ = "0.5"
 
 Point = Tuple[float, float]
 
@@ -375,6 +375,25 @@ def make_rect_cutout(x: float, y: float, w: float, h: float) -> CutPath:
     return CutPath(points=pts)
 
 
+def make_circle_cutout(cx: float, cy: float, r: float) -> CutPath:
+    """Create a circular cutout as an SVG path.
+
+    We use two arcs to form a circle, which most laser software accepts reliably.
+    """
+
+    rr = max(0.0, float(r))
+    if rr <= 0:
+        return CutPath(points=[])
+    x0 = cx - rr
+    x1 = cx + rr
+    d = (
+        f"M {fmt(x0)} {fmt(cy)} "
+        f"A {fmt(rr)} {fmt(rr)} 0 1 0 {fmt(x1)} {fmt(cy)} "
+        f"A {fmt(rr)} {fmt(rr)} 0 1 0 {fmt(x0)} {fmt(cy)} Z"
+    )
+    return CutPath(d=d)
+
+
 def arrange_panels(
     panels: List[Panel],
     *,
@@ -583,6 +602,40 @@ class BoxParams:
     slot_height: float = 18.0
     slot_y_from_bottom: float = 35.0
 
+    # v0.5 mechanism-specific params (optional)
+    # Divider rack
+    divider_bays: int = 3
+
+    # Card shoe (front draw)
+    card_width: float = 63.0
+    card_height: float = 88.0
+    capacity_cards: int = 60
+    side_clearance: float = 1.0
+    top_clearance: float = 2.0
+    back_clearance: float = 2.0
+    ramp_back_height: float = 25.0
+    draw_slot_height: float = 18.0
+    hold_down_gap: float = 2.0
+    follower_enabled: bool = False
+
+    # Flowing solids (candy-style)
+    max_piece_size: float = 18.0
+
+    # Rotary wheel candy
+    pocket_count: int = 8
+    wheel_thickness_layers: int = 3
+    axle_diameter: float = 6.0
+    handle_radius: float = 18.0
+    funnel_opening: float = 30.0
+    chute_width: float = 22.0
+    chute_height: float = 22.0
+    cup_bay_width: float = 70.0
+    cup_bay_depth: float = 60.0
+
+    # Plinko candy
+    ramp_count: int = 6
+    ramp_spacing: float = 18.0
+
     window_margin: float = 18.0
     window_corner_r: float = 6.0
     thumb_notch_radius: float = 10.0
@@ -765,13 +818,30 @@ def build_panels_for_preset(p: BoxParams) -> List[Panel]:
     )
 
     preset = p.preset
-    include_front = preset in ("dispenser_slot_front", "window_front", "tray_open_front", "box_with_lid")
+    include_front = preset in (
+        "dispenser_slot_front",
+        "window_front",
+        "tray_open_front",
+        "box_with_lid",
+        # v0.5 presets (all include a front panel)
+        "card_shoe_front_draw",
+        "divider_rack",
+        "candy_rotary_wheel",
+        "candy_plinko",
+    )
 
     front_h = p.front_height if p.front_height is not None else wall_h
-    if preset == "tray_open_front":
+    if preset == "tray_open_front" or preset == "divider_rack":
         # Default: lower front, but keep back full height.
         front_h = p.front_height if p.front_height is not None else max(t * 2, 0.55 * wall_h)
-    elif preset in ("dispenser_slot_front", "window_front", "box_with_lid"):
+    elif preset in (
+        "dispenser_slot_front",
+        "window_front",
+        "box_with_lid",
+        "card_shoe_front_draw",
+        "candy_rotary_wheel",
+        "candy_plinko",
+    ):
         front_h = wall_h
 
     edge_pairs = build_edge_pairs_for_box(
@@ -843,6 +913,15 @@ def build_panels_for_preset(p: BoxParams) -> List[Panel]:
         sy = max(t, wall_h - p.slot_y_from_bottom - sh)
         specs["FRONT"].cutouts.append(make_rect_cutout(sx, sy, sw, sh))
         specs["FRONT"].cutouts.append(make_thumb_notch(outer_w, 0.0, p.thumb_notch_radius, p.thumb_notch_depth))
+    elif preset == "card_shoe_front_draw":
+        # A front draw slot near the bottom. Defaults are tuned for cards.
+        sw = min(max(10.0, p.slot_width), outer_w - 2 * t)
+        sh = min(max(6.0, p.draw_slot_height), wall_h - 2 * t)
+        # Place the slot near the bottom, leaving some material.
+        sx = (outer_w - sw) / 2
+        sy = max(t, wall_h - (t + sh + max(0.0, p.slot_y_from_bottom * 0.0)))
+        specs["FRONT"].cutouts.append(make_rect_cutout(sx, sy, sw, sh))
+        specs["FRONT"].cutouts.append(make_thumb_notch(outer_w, 0.0, p.thumb_notch_radius, p.thumb_notch_depth))
     elif preset == "tray_open_front":
         if p.scoop:
             # Scoop cutout in the top edge of the lowered front.
@@ -862,6 +941,15 @@ def build_panels_for_preset(p: BoxParams) -> List[Panel]:
                 f"L {fmt(x1)} {fmt(y0)} Z"
             )
             specs["FRONT"].cutouts.append(CutPath(d=d))
+    elif preset in ("candy_rotary_wheel", "candy_plinko"):
+        # Wide outlet opening on front panel.
+        ow = max(10.0, float(p.chute_width if preset == "candy_rotary_wheel" else p.max_piece_size * 1.5))
+        oh = max(10.0, float(p.chute_height if preset == "candy_rotary_wheel" else p.max_piece_size * 1.2))
+        ow = min(ow, outer_w - 2 * t)
+        oh = min(oh, wall_h - 2 * t)
+        sx = (outer_w - ow) / 2
+        sy = max(t, wall_h - (oh + 2 * t))
+        specs["FRONT"].cutouts.append(make_rect_cutout(sx, sy, ow, oh))
 
     # Labels
     if p.labels:
@@ -874,6 +962,92 @@ def build_panels_for_preset(p: BoxParams) -> List[Panel]:
         panels.append(render_panel_from_spec(specs[name], joint_params=joint, edge_pairs=edge_pairs))
     if include_front:
         panels.append(render_panel_from_spec(specs["FRONT"], joint_params=joint, edge_pairs=edge_pairs))
+
+    # v0.5: add simple internal/mechanism parts. These are plain-cut parts intended
+    # to be assembled/glued/screwed inside the shell.
+    if preset == "divider_rack":
+        bays = max(1, int(p.divider_bays))
+        # Dividers count is bays-1.
+        divs = max(0, bays - 1)
+        div_h = max(10.0, p.inner_height)
+        div_d = max(10.0, p.inner_depth)
+        for i in range(divs):
+            spec = build_rect_panel_spec(f"DIVIDER_{i+1}", div_d, div_h)
+            if p.labels:
+                spec.labels = [(spec.name, (spec.width / 2, spec.height / 2))]
+            panels.append(render_panel_from_spec(spec, joint_params=joint, edge_pairs={}))
+
+    elif preset == "card_shoe_front_draw":
+        ramp_w = max(10.0, p.inner_width)
+        ramp_d = max(10.0, p.inner_depth)
+        # A rectangular ramp plate; students can mount it at an angle using spacers.
+        ramp = build_rect_panel_spec("RAMP", ramp_w, ramp_d)
+        lip = build_rect_panel_spec("HOLD_DOWN_LIP", ramp_w, max(10.0, float(p.thickness * 2)))
+        follower = build_rect_panel_spec("FOLLOWER", ramp_w, max(10.0, float(p.card_height * 0.6)))
+        specs_extra = [ramp, lip]
+        if p.follower_enabled:
+            specs_extra.append(follower)
+        for spec in specs_extra:
+            if p.labels:
+                spec.labels = [(spec.name, (spec.width / 2, spec.height / 2))]
+            panels.append(render_panel_from_spec(spec, joint_params=joint, edge_pairs={}))
+
+    elif preset == "candy_rotary_wheel":
+        # Minimal pocket wheel: a disc with axle hole and pocket cutouts.
+        # The wheel is approximated as a polygon for layout simplicity.
+        def circle_points(cx: float, cy: float, r: float, n: int = 48) -> List[Point]:
+            pts: List[Point] = []
+            for k in range(n):
+                a = 2 * math.pi * (k / n)
+                pts.append((cx + r * math.cos(a), cy + r * math.sin(a)))
+            return pts
+
+        piece = max(2.0, float(p.max_piece_size))
+        pocket_n = max(3, int(p.pocket_count))
+        axle_r = max(1.0, float(p.axle_diameter) / 2)
+        wheel_r = max(piece * 1.6, min(p.inner_width, p.inner_height, p.inner_depth) * 0.35)
+
+        disc_outline = circle_points(wheel_r, wheel_r, wheel_r)
+        disc = Panel(name="WHEEL_DISC", outline=disc_outline)
+
+        # Axle hole cutout.
+        disc.cutouts.append(make_circle_cutout(wheel_r, wheel_r, axle_r))
+        # Pocket holes arranged around.
+        pr = max(1.0, piece / 2)
+        ring_r = max(pr * 2.2, wheel_r * 0.55)
+        for k in range(pocket_n):
+            a = 2 * math.pi * (k / pocket_n)
+            px = wheel_r + ring_r * math.cos(a)
+            py = wheel_r + ring_r * math.sin(a)
+            disc.cutouts.append(make_circle_cutout(px, py, pr))
+
+        if p.labels:
+            disc.labels.append((disc.name, (wheel_r, wheel_r)))
+        panels.append(disc)
+
+        # Side plates with axle hole.
+        side_w = max(10.0, p.inner_depth)
+        side_h = max(10.0, p.inner_height)
+        for nm in ("WHEEL_SIDE_L", "WHEEL_SIDE_R"):
+            spec = build_rect_panel_spec(nm, side_w, side_h)
+            # Axle hole centered.
+            cx = side_w / 2
+            cy = side_h / 2
+            spec.cutouts.append(make_circle_cutout(cx, cy, axle_r))
+            if p.labels:
+                spec.labels = [(nm, (spec.width / 2, spec.height / 2))]
+            panels.append(render_panel_from_spec(spec, joint_params=joint, edge_pairs={}))
+
+    elif preset == "candy_plinko":
+        # Simple ramp strips that students can mount staggered.
+        n = max(1, int(p.ramp_count))
+        ramp_len = max(10.0, p.inner_width)
+        ramp_w = max(10.0, min(p.inner_depth * 0.35, max(12.0, float(p.max_piece_size) * 1.2)))
+        for i in range(n):
+            spec = build_rect_panel_spec(f"RAMP_{i+1}", ramp_len, ramp_w)
+            if p.labels:
+                spec.labels = [(spec.name, (spec.width / 2, spec.height / 2))]
+            panels.append(render_panel_from_spec(spec, joint_params=joint, edge_pairs={}))
 
     # Lid preset uses additional parts.
     if preset == "box_with_lid" and p.lid:
@@ -1121,7 +1295,8 @@ def parse_args() -> argparse.Namespace:
         formatter_class=argparse.RawTextHelpFormatter,
         description=(
             "Laser-cut card tray/box generator with deterministic finger-joint pairing.\n\n"
-            "Presets: tray_open_front, dispenser_slot_front, window_front, box_with_lid\n"
+            "Presets: tray_open_front, dispenser_slot_front, window_front, box_with_lid, "
+            "card_shoe_front_draw, divider_rack, candy_rotary_wheel, candy_plinko\n"
         ),
     )
 
@@ -1131,7 +1306,16 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument(
         "--preset",
         default=None,
-        choices=["tray_open_front", "dispenser_slot_front", "window_front", "box_with_lid"],
+        choices=[
+            "tray_open_front",
+            "dispenser_slot_front",
+            "window_front",
+            "box_with_lid",
+            "card_shoe_front_draw",
+            "divider_rack",
+            "candy_rotary_wheel",
+            "candy_plinko",
+        ],
         help="Design preset (preferred).",
     )
 

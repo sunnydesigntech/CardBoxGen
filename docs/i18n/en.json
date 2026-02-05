@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "Card Box / Tray SVG Generator",
-    "version": "v0.4",
+    "version": "v0.5",
     "subtitle": "Runs fully in your browser (Pyodide). Generates laser-cut SVG with deterministic finger joints."
   },
   "mode": {
@@ -25,6 +25,7 @@
     "advanced": "Advanced",
     "fitTools": "Fit tools (optional)",
     "presetOptions": "Preset options",
+    "mechanismSettings": "Mechanism settings",
     "preview": "Preview",
     "exports": "Export"
   },
@@ -60,7 +61,18 @@
     "dispenseType": "Dispense type",
     "storageTarget": "Storage target",
     "dispenseTarget": "Dispense target",
+    "dispenseTargetType": "Dispense target",
     "mechanism": "Mechanism",
+
+    "cardWidth": "Card width (mm)",
+    "cardHeight": "Card height (mm)",
+    "capacityCards": "Capacity (cards)",
+    "maxPieceSize": "Max piece size (mm)",
+
+    "dividerBays": "Divider bays",
+    "pocketCount": "Pocket count",
+    "axleDiameter": "Axle diameter (mm)",
+    "rampCount": "Ramp count",
 
     "preset": "Preset",
     "dimensionMode": "Dimension mode",
@@ -112,12 +124,74 @@
       "stacking": "Stacking (cards / tiles)",
       "flowing": "Flowing (dry solids only)"
     },
+    "dispenseTarget": {
+      "one": "One-at-a-time",
+      "grab": "Grab stack",
+      "multi": "Multi-category",
+      "counted": "Counted (per turn)",
+      "fun": "Fun chute (plinko)"
+    },
     "mechanism": {
+      "card_shoe_front_draw": "Card shoe (front draw)",
       "tray_open_front": "Open-front tray",
+      "divider_rack": "Divider rack",
+      "candy_rotary_wheel": "Rotary wheel candy",
+      "candy_plinko": "Plinko candy",
       "dispenser_slot_front": "Front slot dispenser",
       "window_front": "Window front",
       "box_with_lid": "Box with lid"
     }
+  },
+
+  "faq": {
+    "Troubleshooting": [
+      {
+        "q": "Why does my design jam (cards)?",
+        "a": "Common causes: draw slot too short/tight, hold-down gap too small (high friction), ramp too steep (binding), or box too wide (cards rotate). Start with the Card Shoe preset, use Normal/Loose fit, and increase draw slot height slightly."
+      },
+      {
+        "q": "Why does my candy stop flowing?",
+        "a": "Flowing solids can ‘bridge’ above a hole. Use a funnel/baffle, keep openings ≥ ~1.2–2× max piece size, and avoid sharp internal ledges."
+      }
+    ],
+    "Laser fit": [
+      {
+        "q": "What is kerf?",
+        "a": "Kerf is the width of material removed by the laser. Because kerf is centred on the cut line, holes cut larger and parts cut smaller than your file. Start with your lab’s suggested kerf and adjust after testing."
+      },
+      {
+        "q": "My joints are too tight—what do I change?",
+        "a": "Move Fit towards Loose first. If still tight, increase clearance slightly or update kerf (if kerf is underestimated)."
+      },
+      {
+        "q": "My joints are too loose—what do I change?",
+        "a": "Move Fit towards Tight. Decrease clearance slightly, and ensure thickness is correct."
+      },
+      {
+        "q": "Why are holes the wrong size?",
+        "a": "Kerf makes holes larger. If you need an accurate hole size, draw it slightly smaller (compensation depends on kerf)."
+      }
+    ],
+    "Preview": [
+      {
+        "q": "The preview is huge / tiny.",
+        "a": "Use Fit-to-view. v0.5 auto-fits on first render and keeps your manual zoom after you adjust."
+      }
+    ],
+    "Project": [
+      {
+        "q": "Which mechanism should I pick?",
+        "a": "Stacking + one-by-one = Card Shoe. Flowing + counted = Rotary Wheel. Flowing + fun/tolerant = Plinko. Multiple categories = Divider Rack."
+      },
+      {
+        "q": "Do I need glue?",
+        "a": "Not always. Friction fit can work, but tolerances are tight. For reliability, consider screws/bolts or a few glue points. Prototyping and iteration are normal."
+      },
+      {
+        "q": "What material should I choose?",
+        "a": "Plywood/MDF is forgiving. Acrylic is brittle—avoid over-tight press fits."
+      }
+    ]
   },
   "actions": {
     "generate": "Generate SVG",
@@ -479,6 +553,97 @@
       "pitfalls": ["Slot + height must stay within the front panel."],
       "wrong": ["Invalid slot placement will be warned/ignored."],
       "example": "Example: If inner height is 80mm, try slotY 30–40mm."
+    },
+
+    "dispenseTargetType": {
+      "title": "Dispense target",
+      "short": "Student Mode: what ‘one dispense’ means.",
+      "meaning": "This helps auto-select a mechanism and default settings.",
+      "decide": ["Cards: One-at-a-time or Grab stack.", "Candy: Counted (per turn) or Fun chute."],
+      "typical": ["Cards: One-at-a-time", "Candy: Counted (per turn)"],
+      "pitfalls": ["If you pick counted but want random pours, choose Fun chute instead."],
+      "wrong": ["Wrong target can pick a mechanism that doesn’t match your goal."],
+      "example": "Example: 1 candy per click → Counted (per turn)."
+    },
+    "cardWidth": {
+      "title": "Card width (mm)",
+      "short": "Measured width of one card.",
+      "meaning": "Used in Student Mode auto-design to size the cavity.",
+      "decide": ["Measure your real item; don’t assume standard sizes."],
+      "typical": ["Trading card ~63mm (varies)."],
+      "pitfalls": ["Too small jams; too large lets cards rotate/tilt."],
+      "wrong": ["If cards don’t fit, increase width or clearance."],
+      "example": "Example: 63mm."
+    },
+    "cardHeight": {
+      "title": "Card height (mm)",
+      "short": "Measured height of one card.",
+      "meaning": "Often sets depth for card mechanisms.",
+      "decide": ["Measure the longer side of the card."],
+      "typical": ["Trading card ~88mm (varies)."],
+      "pitfalls": ["If depth is too small, the deck won’t sit correctly."],
+      "wrong": ["If the deck sticks out, increase depth or reduce capacity."],
+      "example": "Example: 88mm."
+    },
+    "capacityCards": {
+      "title": "Capacity (cards)",
+      "short": "How many cards the design should hold.",
+      "meaning": "Used in Student Mode to estimate stack height.",
+      "decide": ["Pick a realistic target; overfilling increases friction."],
+      "typical": ["40–120."],
+      "pitfalls": ["Overfilling can jam dispensing mechanisms."],
+      "wrong": ["If loading is hard, reduce capacity or increase height."],
+      "example": "Example: 80."
+    },
+    "maxPieceSize": {
+      "title": "Max piece size (mm)",
+      "short": "Largest candy/piece size for flowing solids.",
+      "meaning": "Openings and chutes should be sized from this (worst case).",
+      "decide": ["Measure the biggest piece in your mix."],
+      "typical": ["8–18mm (varies)."],
+      "pitfalls": ["Undersizing causes jams/bridging."],
+      "wrong": ["If it jams, increase openings/chutes and reduce sharp ledges."],
+      "example": "Example: 12mm."
+    },
+    "dividerBays": {
+      "title": "Divider bays",
+      "short": "Number of lanes in the divider rack.",
+      "meaning": "Creates simple dividers between bays.",
+      "decide": ["Pick how many categories you need."],
+      "typical": ["3–6."],
+      "pitfalls": ["Too many bays makes thin dividers."],
+      "wrong": ["If dividers are fragile, reduce bay count."],
+      "example": "Example: 4 bays."
+    },
+    "pocketCount": {
+      "title": "Pocket count",
+      "short": "Number of pockets in the rotary wheel.",
+      "meaning": "More pockets = smaller turn per dispense.",
+      "decide": ["Use fewer pockets for stronger walls."],
+      "typical": ["6–12."],
+      "pitfalls": ["Too many pockets makes thin walls and weaker discs."],
+      "wrong": ["If wheel is weak, reduce pocket count."],
+      "example": "Example: 8."
+    },
+    "axleDiameter": {
+      "title": "Axle diameter (mm)",
+      "short": "Diameter of dowel/bolt used as the wheel axle.",
+      "meaning": "Match your available hardware for smooth rotation.",
+      "decide": ["Measure the real axle if possible."],
+      "typical": ["3–8mm."],
+      "pitfalls": ["Too tight increases friction; too loose wobbles."],
+      "wrong": ["If it binds, increase the axle hole slightly."],
+      "example": "Example: 6mm dowel."
+    },
+    "rampCount": {
+      "title": "Ramp count",
+      "short": "Number of ramp strips in the plinko mechanism.",
+      "meaning": "More ramps slows and guides falling pieces.",
+      "decide": ["Use more ramps for smaller pieces."],
+      "typical": ["4–10."],
+      "pitfalls": ["Too many ramps increases cutting time."],
+      "wrong": ["If it drops too fast, increase ramp count."],
+      "example": "Example: 6."
     },
     "troubleshooting": {
       "title": "Troubleshooting",

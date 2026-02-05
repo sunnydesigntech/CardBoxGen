@@ -3,7 +3,7 @@
 
 import { loadPyodide } from "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.mjs";
 
-const APP_VERSION = "0.4";
+const APP_VERSION = "0.5";
 const LANG_STORAGE_KEY = "cardboxgen.lang";
 
 let currentLang = "en";
@@ -31,6 +31,7 @@ async function loadLanguage(lang) {
   document.documentElement.lang = safeLang.startsWith("zh") ? "zh" : "en";
   applyTranslations();
   rebuildHelpContent();
+  rebuildFaqData();
   buildHelpDrawer();
   buildFaqDrawer();
   decorateHelpIcons();
@@ -84,9 +85,22 @@ const els = {
   studentMode: document.getElementById("studentMode"),
   wizard: document.getElementById("wizard"),
   dispenseType: document.getElementById("dispenseType"),
+  dispenseTargetType: document.getElementById("dispenseTargetType"),
   storageTarget: document.getElementById("storageTarget"),
   dispenseTarget: document.getElementById("dispenseTarget"),
   mechanism: document.getElementById("mechanism"),
+
+  // v0.5 Student item inputs
+  cardWidth: document.getElementById("cardWidth"),
+  cardHeight: document.getElementById("cardHeight"),
+  capacityCards: document.getElementById("capacityCards"),
+  maxPieceSize: document.getElementById("maxPieceSize"),
+
+  // v0.5 mechanism params
+  dividerBays: document.getElementById("dividerBays"),
+  pocketCount: document.getElementById("pocketCount"),
+  axleDiameter: document.getElementById("axleDiameter"),
+  rampCount: document.getElementById("rampCount"),
   preset: document.getElementById("preset"),
   dimMode: document.getElementById("dimMode"),
   innerWidth: document.getElementById("innerWidth"),
@@ -177,6 +191,11 @@ const HELP_CATEGORY_ORDER = [
 
 const HELP_CATEGORY_BY_KEY = {
   dispenseType: "Project",
+  dispenseTargetType: "Project",
+  cardWidth: "Project",
+  cardHeight: "Project",
+  capacityCards: "Project",
+  maxPieceSize: "Project",
   storageTarget: "Project",
   dispenseTarget: "Project",
   mechanism: "Project",
@@ -213,10 +232,66 @@ const HELP_CATEGORY_BY_KEY = {
   slotHeight: "Preset options",
   slotY: "Preset options",
 
+  dividerBays: "Preset options",
+  pocketCount: "Preset options",
+  axleDiameter: "Preset options",
+  rampCount: "Preset options",
+
   troubleshooting: "Troubleshooting",
 };
 
 let helpContent = {};
+
+const DEFAULT_FAQ_DATA = {
+  Project: [
+    {
+      q: "Internal vs external dimensions — which should I use?",
+      a: "Use Internal when you care about the space that must fit your items. Use External when you must match an outside footprint. Dimension mode converts for you using material thickness.",
+      links: ["dimensionMode", "thickness"],
+    },
+    {
+      q: "How do I size W/D/H from a storage target and dispense target?",
+      a: "Start with the item’s real size. Add a little clearance so items don’t jam. Decide the storage stack height and the dispense opening separately; then choose a mechanism/preset that matches the behavior you want.",
+      links: ["storageTarget", "dispenseTarget", "mechanism", "preset"],
+    },
+    {
+      q: "Which mechanism should I choose for flowing vs stacking items?",
+      a: "Stacking is for flat items (cards/tiles) and is more predictable. Flowing is only for dry solids that can pour; it’s not recommended for cards.",
+      links: ["dispenseType", "mechanism"],
+    },
+  ],
+  "Laser fit": [
+    {
+      q: "What is kerf? Why does it matter?",
+      a: "Kerf is the width of material removed by the laser cut. If you ignore it, tabs/slots won’t match the real cut size, and joints can become too tight or too loose.",
+      links: ["kerf"],
+    },
+    {
+      q: "What is joint clearance? Tight vs loose symptoms",
+      a: "Clearance controls how easily joints assemble. Too tight: hard to press together, material may tear. Too loose: wobbly joints and gaps. Adjust in small steps (e.g. 0.05mm).",
+      links: ["clearance", "fit"],
+    },
+    {
+      q: "My joints are too tight / too loose — what do I change?",
+      a: "Too tight: increase Joint clearance a little, or verify kerf with the Fit Test. Too loose: decrease Joint clearance. Keep thickness correct.",
+      links: ["clearance", "kerf", "thickness"],
+    },
+  ],
+  Preview: [
+    {
+      q: "Why preview scale looks wrong / how to check mm scale",
+      a: "The preview is for layout and sanity-checking. Always verify in your laser software that units are mm and that a known dimension matches (e.g. inner width). Use the Fit button to zoom to the drawing.",
+      links: ["innerWidth"],
+    },
+    {
+      q: "Preview/export troubleshooting",
+      a: "If your laser software changes size on import, confirm SVG units, viewBox handling, and any DPI import setting. Then measure a known dimension.",
+      links: [],
+    },
+  ],
+};
+
+let faqData = DEFAULT_FAQ_DATA;
 
 function arr(v) {
   return Array.isArray(v) ? v : [];
@@ -257,6 +332,15 @@ function rebuildHelpContent() {
   }
 
   helpContent = out;
+}
+
+function rebuildFaqData() {
+  const fromDict = getPath(dict, "faq");
+  if (fromDict && typeof fromDict === "object") {
+    faqData = fromDict;
+    return;
+  }
+  faqData = DEFAULT_FAQ_DATA;
 }
 
 function computeDerived() {
@@ -311,6 +395,105 @@ function setStudentMode(on) {
   if (adv) adv.open = !enabled;
 }
 
+function setStudentItemUi() {
+  const itemType = els.dispenseType?.value ?? "stacking";
+  const stacking = itemType !== "flowing";
+  document.getElementById("studentStackingSizeRow")?.toggleAttribute("hidden", !stacking);
+  document.getElementById("studentStackingSizeRow2")?.toggleAttribute("hidden", !stacking);
+  document.getElementById("studentStackingCapacityRow")?.toggleAttribute("hidden", !stacking);
+  document.getElementById("studentFlowingSizeRow")?.toggleAttribute("hidden", stacking);
+}
+
+function chooseMechanismFromStudentInputs() {
+  const itemType = els.dispenseType?.value ?? "stacking";
+  const target = els.dispenseTargetType?.value ?? "";
+
+  if (itemType === "flowing") {
+    if (target === "counted") return "candy_rotary_wheel";
+    return "candy_plinko";
+  }
+
+  if (target === "one") return "card_shoe_front_draw";
+  if (target === "multi") return "divider_rack";
+  return "tray_open_front";
+}
+
+function applyStudentAutoDesign() {
+  if (!els.studentMode?.checked) return;
+
+  const chosen = chooseMechanismFromStudentInputs();
+  if (els.mechanism && els.mechanism.value !== chosen) els.mechanism.value = chosen;
+  if (els.preset && els.preset.value !== chosen) els.preset.value = chosen;
+
+  // Always design around internal dimensions for item-fit.
+  if (els.dimMode) els.dimMode.value = "internal";
+
+  const t = num(els.thickness, 3);
+  const itemType = els.dispenseType?.value ?? "stacking";
+
+  if (itemType === "flowing") {
+    const s = Math.max(5, num(els.maxPieceSize, 18));
+    // Simple, safe-ish default hopper/cavity sizes.
+    els.innerWidth.value = String(Math.round(Math.max(80, s * 5)));
+    els.innerDepth.value = String(Math.round(Math.max(80, s * 5)));
+    els.innerHeight.value = String(Math.round(Math.max(120, s * 7)));
+
+    // Encourage outlet/chute size via existing slot fields (used for legacy presets too).
+    if (els.slotWidth) els.slotWidth.value = String(Math.round(Math.max(22, s * 1.6)));
+    if (els.slotHeight) els.slotHeight.value = String(Math.round(Math.max(18, s * 1.2)));
+    if (els.slotY) els.slotY.value = String(Math.round(Math.max(20, (s * 7) * 0.35)));
+  } else {
+    const cw = Math.max(10, num(els.cardWidth, 63));
+    const ch = Math.max(10, num(els.cardHeight, 88));
+    const cap = Math.max(1, Math.floor(num(els.capacityCards, 60)));
+
+    const sideClear = 1.0;
+    const backClear = 2.0;
+    const topClear = 3.0;
+
+    // Rough stack height estimate (mm per card). Student-friendly and deterministic.
+    const perCard = 0.32;
+    const stackH = cap * perCard;
+
+    const w = cw + 2 * sideClear;
+    const d = ch + backClear;
+    const h = Math.max(25, stackH + topClear);
+
+    els.innerWidth.value = String((Math.round(w * 10) / 10).toFixed(1));
+    els.innerDepth.value = String((Math.round(d * 10) / 10).toFixed(1));
+    els.innerHeight.value = String((Math.round(h * 10) / 10).toFixed(1));
+
+    // For card shoe, make a reasonable draw slot.
+    if (chosen === "card_shoe_front_draw") {
+      if (els.slotWidth) els.slotWidth.value = String((Math.round((cw - 4) * 10) / 10).toFixed(1));
+      if (els.slotHeight) els.slotHeight.value = String(18);
+      if (els.slotY) els.slotY.value = String(35);
+    }
+  }
+
+  // Keep divider bays in sync with student multi-category intent.
+  if (chosen === "divider_rack" && els.dividerBays) {
+    els.dividerBays.value = String(Math.max(2, Math.floor(num(els.dividerBays, 3))));
+  }
+
+  computeDerived();
+}
+
+let autoGenTimer = null;
+function scheduleStudentAutoGenerate() {
+  if (!els.studentMode?.checked) return;
+  if (autoGenTimer) clearTimeout(autoGenTimer);
+  autoGenTimer = setTimeout(async () => {
+    autoGenTimer = null;
+    try {
+      applyStudentAutoDesign();
+      await generateSvg();
+    } catch (e) {
+      console.error(e);
+    }
+  }, 120);
+}
+
 async function init() {
   setStatusKey("status.loadingPyodide");
   pyodide = await loadPyodide({});
@@ -342,7 +525,14 @@ async function init() {
 }
 
 function updateStepBadges() {
-  const step1Complete = !!els.storageTarget.value.trim() && !!els.dispenseTarget.value.trim();
+  const itemType = els.dispenseType?.value ?? "stacking";
+  const dispTarget = els.dispenseTargetType?.value ?? "";
+
+  const stackingOk =
+    Number(num(els.cardWidth, 0)) > 0 && Number(num(els.cardHeight, 0)) > 0 && Number(num(els.capacityCards, 0)) > 0;
+  const flowingOk = Number(num(els.maxPieceSize, 0)) > 0;
+  const step1Complete = !!dispTarget && (itemType === "flowing" ? flowingOk : stackingOk);
+
   const step2Complete = !!(els.mechanism?.value ?? "").trim();
   const thicknessSet = (els.thickness.value ?? "").trim() !== "";
   const kerfKnown = (els.kerf.value ?? "").trim() !== "";
@@ -455,6 +645,18 @@ function buildParams() {
     slot_width: num(els.slotWidth, 86),
     slot_height: num(els.slotHeight, 18),
     slot_y_from_bottom: num(els.slotY, 38),
+
+    // v0.5 mechanism params
+    divider_bays: num(els.dividerBays, 3),
+
+    card_width: num(els.cardWidth, 63),
+    card_height: num(els.cardHeight, 88),
+    capacity_cards: num(els.capacityCards, 60),
+
+    max_piece_size: num(els.maxPieceSize, 18),
+    pocket_count: num(els.pocketCount, 8),
+    axle_diameter: num(els.axleDiameter, 6),
+    ramp_count: num(els.rampCount, 6),
   };
   return p;
 }
@@ -959,62 +1161,13 @@ function buildHelpDrawer() {
   els.helpDrawerBody.innerHTML = html || `<p class="hint">${escapeHtml(t("helpUi.noResults"))}</p>`;
 }
 
-const FAQ_DATA = {
-  Project: [
-    {
-      q: "Internal vs external dimensions — which should I use?",
-      a: "Use Internal when you care about the space that must fit your items. Use External when you must match an outside footprint. Dimension mode converts for you using material thickness.",
-      links: ["dimensionMode", "thickness"],
-    },
-    {
-      q: "How do I size W/D/H from a storage target and dispense target?",
-      a: "Start with the item’s real size. Add a little clearance so items don’t jam. Decide the storage stack height and the dispense opening separately; then choose a mechanism/preset that matches the behavior you want.",
-      links: ["storageTarget", "dispenseTarget", "mechanism", "preset"],
-    },
-    {
-      q: "Which mechanism should I choose for flowing vs stacking items?",
-      a: "Stacking is for flat items (cards/tiles) and is more predictable. Flowing is only for dry solids that can pour; it’s not recommended for cards.",
-      links: ["dispenseType", "mechanism"],
-    },
-  ],
-  "Laser fit": [
-    {
-      q: "What is kerf? Why does it matter?",
-      a: "Kerf is the width of material removed by the laser cut. If you ignore it, tabs/slots won’t match the real cut size, and joints can become too tight or too loose.",
-      links: ["kerf"],
-    },
-    {
-      q: "What is joint clearance? Tight vs loose symptoms",
-      a: "Clearance controls how easily joints assemble. Too tight: hard to press together, material may tear. Too loose: wobbly joints and gaps. Adjust in small steps (e.g. 0.05mm).",
-      links: ["clearance", "fit"],
-    },
-    {
-      q: "My joints are too tight / too loose — what do I change?",
-      a: "Too tight: increase Joint clearance a little, or verify kerf with the Fit Test. Too loose: decrease Joint clearance. Keep thickness correct.",
-      links: ["clearance", "kerf", "thickness"],
-    },
-  ],
-  Preview: [
-    {
-      q: "Why preview scale looks wrong / how to check mm scale",
-      a: "The preview is for layout and sanity-checking. Always verify in your laser software that units are mm and that a known dimension matches (e.g. inner width). Use the Fit button to zoom to the drawing.",
-      links: ["innerWidth"],
-    },
-    {
-      q: "Preview/export troubleshooting",
-      a: "If your laser software changes size on import, confirm SVG units, viewBox handling, and any DPI import setting. Then measure a known dimension.",
-      links: [],
-    },
-  ],
-};
-
 function buildFaqDrawer() {
   if (!els.faqDrawerBody) return;
   const q = (els.faqSearch?.value || "").trim().toLowerCase();
-  const cats = Object.keys(FAQ_DATA);
+  const cats = Object.keys(faqData || {});
   const blocks = cats
     .map((cat) => {
-      const items = (FAQ_DATA[cat] || []).filter((it) => {
+      const items = (faqData[cat] || []).filter((it) => {
         if (!q) return true;
         const hay = `${it.q}\n${it.a}`.toLowerCase();
         return hay.includes(q);
@@ -1141,7 +1294,22 @@ document.addEventListener("click", (e) => {
 els.studentMode?.addEventListener("change", () => setStudentMode(els.studentMode.checked));
 els.mechanism?.addEventListener("change", () => {
   els.preset.value = els.mechanism.value;
+  if (els.studentMode?.checked) scheduleStudentAutoGenerate();
 });
+
+els.dispenseType?.addEventListener("change", () => {
+  setStudentItemUi();
+  scheduleStudentAutoGenerate();
+});
+els.dispenseTargetType?.addEventListener("change", scheduleStudentAutoGenerate);
+els.cardWidth?.addEventListener("input", scheduleStudentAutoGenerate);
+els.cardHeight?.addEventListener("input", scheduleStudentAutoGenerate);
+els.capacityCards?.addEventListener("input", scheduleStudentAutoGenerate);
+els.maxPieceSize?.addEventListener("input", scheduleStudentAutoGenerate);
+els.dividerBays?.addEventListener("input", scheduleStudentAutoGenerate);
+els.pocketCount?.addEventListener("input", scheduleStudentAutoGenerate);
+els.axleDiameter?.addEventListener("input", scheduleStudentAutoGenerate);
+els.rampCount?.addEventListener("input", scheduleStudentAutoGenerate);
 
 els.fit?.addEventListener("input", () => setFitPreset(Number(els.fit.value)));
 els.clearance?.addEventListener("input", () => {

@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "卡盒／托盤 SVG 產生器",
-    "version": "v0.4",
+    "version": "v0.5",
     "subtitle": "完全在瀏覽器中執行（Pyodide）。產生可雷切的 SVG，並使用可重現的指接結構。"
   },
   "mode": {
@@ -26,6 +26,7 @@
     "advanced": "進階",
     "fitTools": "配合工具（選填）",
     "presetOptions": "預設選項",
+    "mechanismSettings": "機構設定",
     "preview": "預覽",
     "exports": "匯出"
   },
@@ -48,7 +49,18 @@
     "dispenseType": "出料類型",
     "storageTarget": "儲存目標",
     "dispenseTarget": "出料目標",
+    "dispenseTargetType": "出料目標",
     "mechanism": "機構",
+
+    "cardWidth": "卡片寬度（mm）",
+    "cardHeight": "卡片高度（mm）",
+    "capacityCards": "容量（張數）",
+    "maxPieceSize": "最大顆粒尺寸（mm）",
+
+    "dividerBays": "分格數",
+    "pocketCount": "轉輪口袋數",
+    "axleDiameter": "軸徑（mm）",
+    "rampCount": "斜板數量",
 
     "preset": "預設",
     "dimensionMode": "尺寸模式",
@@ -100,12 +112,66 @@
       "stacking": "堆疊出料（卡片／板片）",
       "flowing": "流動式（僅乾燥顆粒）"
     },
+    "dispenseTarget": {
+      "one": "一次一個（一次一張）",
+      "grab": "直接抓取一疊",
+      "multi": "多分類（多格）",
+      "counted": "計數出料（每轉一次）",
+      "fun": "好玩滑道（Plinko）"
+    },
     "mechanism": {
+      "card_shoe_front_draw": "卡片出牌器（前抽）",
       "tray_open_front": "開口托盤",
+      "divider_rack": "分格架",
+      "candy_rotary_wheel": "糖果轉輪",
+      "candy_plinko": "Plinko 糖果",
       "dispenser_slot_front": "前方出料槽",
       "window_front": "前方視窗",
       "box_with_lid": "含上蓋盒"
     }
+  },
+
+  "faq": {
+    "疑難排解": [
+      {
+        "q": "卡片會卡住怎麼辦？",
+        "a": "常見原因：出牌口太低/太緊、壓牌間隙太小（摩擦大）、斜坡太陡（卡住）、盒子太寬（卡片轉向）。先用「卡片出牌器」模板，Fit 用 Normal/Loose，再微調出牌口高度。"
+      },
+      {
+        "q": "糖果為什麼不流？",
+        "a": "流動物常在洞口上方「架橋」堵住。加漏斗/擋板、開口至少大於最大顆粒尺寸約 1.2–2 倍，避免內部有尖角台階。"
+      }
+    ],
+    "雷切配合": [
+      {
+        "q": "什麼是 Kerf？",
+        "a": "Kerf 是雷射切割燒掉的寬度。因為 kerf 在切線中心，孔會比檔案大、零件會比檔案小。先用學校建議值，再用測試微調。"
+      },
+      {
+        "q": "榫接太緊怎麼調？",
+        "a": "先把 Fit 往 Loose。還是太緊就增加間隙或修正 kerf（kerf 估太小會變緊）。壓克力不要硬塞。"
+      },
+      {
+        "q": "榫接太鬆怎麼調？",
+        "a": "把 Fit 往 Tight，並稍微減少間隙，確認材料厚度輸入正確。"
+      }
+    ],
+    "預覽": [
+      {
+        "q": "預覽太大/太小？",
+        "a": "按 Fit-to-view。v0.5 會第一次生成自動 Fit，手動縮放後保持。"
+      }
+    ],
+    "專案": [
+      {
+        "q": "機構怎麼選？",
+        "a": "堆疊+一次一個=卡片出牌器；流動+計數=糖果轉輪；流動+好玩/容錯=Plinko；多分類=分格架。"
+      },
+      {
+        "q": "一定要用膠水嗎？",
+        "a": "不一定，但緊配容差很敏感。要更可靠可用螺絲/螺母，或少量點膠。迭代測試很正常。"
+      }
+    ]
   },
   "actions": {
     "generate": "產生 SVG",
@@ -201,6 +267,65 @@
     "scoopDepth": { "title": "挖勺深度", "short": "挖勺切入的深度。" },
     "slotWidth": { "title": "出料槽寬", "short": "出料槽寬度（dispenser_slot_front）。" },
     "slotHeight": { "title": "出料槽高", "short": "出料槽高度（dispenser_slot_front）。" },
-    "slotY": { "title": "出料槽 Y", "short": "出料槽位置，自底部往上量。" }
+    "slotY": { "title": "出料槽 Y", "short": "出料槽位置，自底部往上量。" },
+
+    "dispenseTargetType": {
+      "title": "出料目標",
+      "short": "學生模式：定義一次出料是什麼。",
+      "decide": ["卡片：一次一張或直接抓取。", "糖果：計數（每轉一次）或 Plinko 滑道。"],
+      "pitfalls": ["目標選錯會讓自動選機構不符合需求。"],
+      "example": "例：每轉一次 1 顆 → 計數出料。"
+    },
+    "cardWidth": {
+      "title": "卡片寬度（mm)",
+      "short": "一張卡片的實際寬度。",
+      "decide": ["量真實物品，不要只用標準尺寸。"],
+      "pitfalls": ["太緊會卡；太寬會歪。"],
+      "example": "例：63mm。"
+    },
+    "cardHeight": {
+      "title": "卡片高度（mm)",
+      "short": "一張卡片的實際高度。",
+      "decide": ["量長邊。"],
+      "pitfalls": ["深度太小會影響出牌順暢。"],
+      "example": "例：88mm。"
+    },
+    "capacityCards": {
+      "title": "容量（張數)",
+      "short": "希望可容納的卡片張數。",
+      "pitfalls": ["塞太滿摩擦變大，容易卡。"],
+      "example": "例：80 張。"
+    },
+    "maxPieceSize": {
+      "title": "最大顆粒尺寸（mm)",
+      "short": "流動物的最大顆粒尺寸（最壞情況）。",
+      "decide": ["量最大那顆/那個。"],
+      "pitfalls": ["開口太小會堵住或架橋。"],
+      "example": "例：12mm。"
+    },
+    "dividerBays": {
+      "title": "分格數",
+      "short": "分格架的格數/通道數。",
+      "pitfalls": ["太多格會讓隔板變薄、容易斷。"],
+      "example": "例：4 格。"
+    },
+    "pocketCount": {
+      "title": "轉輪口袋數",
+      "short": "轉輪上的口袋數量。",
+      "pitfalls": ["太多口袋會讓壁太薄。"],
+      "example": "例：8。"
+    },
+    "axleDiameter": {
+      "title": "軸徑（mm)",
+      "short": "轉輪軸使用的圓棒/螺栓直徑。",
+      "pitfalls": ["太緊會增加摩擦；太鬆會晃。"],
+      "example": "例：6mm。"
+    },
+    "rampCount": {
+      "title": "斜板數量",
+      "short": "Plinko 內部斜板條數量。",
+      "pitfalls": ["太多會增加切割時間。"],
+      "example": "例：6。"
+    }
   }
 }

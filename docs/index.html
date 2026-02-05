@@ -12,7 +12,7 @@
         <div class="headerTitle">
           <h1>
             <span data-i18n="app.title">Card Box / Tray SVG Generator</span>
-            <span class="ver" data-i18n="app.version">v0.4</span>
+            <span class="ver" data-i18n="app.version">v0.5</span>
           </h1>
           <p class="sub" data-i18n="app.subtitle">
             Runs fully in your browser (Pyodide). Generates laser-cut SVG with deterministic finger joints.
@@ -71,6 +71,45 @@
                 <option value="flowing" data-i18n="options.dispense.flowing">Flowing (dry solids only)</option>
               </select>
             </div>
+
+            <div class="row" id="studentStackingSizeRow">
+              <label for="cardWidth" data-help="cardWidth">
+                <span data-i18n="labels.cardWidth">Card width (mm)</span>
+              </label>
+              <input id="cardWidth" type="number" value="63" step="0.1" min="1" />
+            </div>
+            <div class="row" id="studentStackingSizeRow2">
+              <label for="cardHeight" data-help="cardHeight">
+                <span data-i18n="labels.cardHeight">Card height (mm)</span>
+              </label>
+              <input id="cardHeight" type="number" value="88" step="0.1" min="1" />
+            </div>
+            <div class="row" id="studentFlowingSizeRow" hidden>
+              <label for="maxPieceSize" data-help="maxPieceSize">
+                <span data-i18n="labels.maxPieceSize">Max piece size (mm)</span>
+              </label>
+              <input id="maxPieceSize" type="number" value="18" step="0.1" min="1" />
+            </div>
+
+            <div class="row">
+              <label for="dispenseTargetType" data-help="dispenseTargetType">
+                <span data-i18n="labels.dispenseTargetType">Dispense target</span>
+              </label>
+              <select id="dispenseTargetType">
+                <option value="one" selected data-i18n="options.dispenseTarget.one">One-at-a-time</option>
+                <option value="grab" data-i18n="options.dispenseTarget.grab">Grab stack</option>
+                <option value="multi" data-i18n="options.dispenseTarget.multi">Multi-category</option>
+                <option value="counted" data-i18n="options.dispenseTarget.counted">Counted (per turn)</option>
+                <option value="fun" data-i18n="options.dispenseTarget.fun">Fun chute (plinko)</option>
+              </select>
+            </div>
+
+            <div class="row" id="studentStackingCapacityRow">
+              <label for="capacityCards" data-help="capacityCards">
+                <span data-i18n="labels.capacityCards">Capacity (cards)</span>
+              </label>
+              <input id="capacityCards" type="number" value="60" step="1" min="1" />
+            </div>
             <div class="row">
               <label for="storageTarget" data-help="storageTarget">
                 <span data-i18n="labels.storageTarget">Storage target</span>
@@ -95,7 +134,12 @@
                 <span data-i18n="labels.mechanism">Mechanism</span>
               </label>
               <select id="mechanism">
-                <option value="tray_open_front" selected data-i18n="options.mechanism.tray_open_front">Open-front tray</option>
+                <option value="card_shoe_front_draw" selected data-i18n="options.mechanism.card_shoe_front_draw">Card shoe (front draw)</option>
+                <option value="tray_open_front" data-i18n="options.mechanism.tray_open_front">Open-front tray</option>
+                <option value="divider_rack" data-i18n="options.mechanism.divider_rack">Divider rack</option>
+                <option value="candy_rotary_wheel" data-i18n="options.mechanism.candy_rotary_wheel">Rotary wheel candy</option>
+                <option value="candy_plinko" data-i18n="options.mechanism.candy_plinko">Plinko candy</option>
+
                 <option value="dispenser_slot_front" data-i18n="options.mechanism.dispenser_slot_front">Front slot dispenser</option>
                 <option value="window_front" data-i18n="options.mechanism.window_front">Window front</option>
                 <option value="box_with_lid" data-i18n="options.mechanism.box_with_lid">Box with lid</option>
@@ -131,7 +175,11 @@
           <div class="row">
           <label for="preset" data-help="preset"><span data-i18n="labels.preset">Preset</span></label>
           <select id="preset">
+            <option value="card_shoe_front_draw">card_shoe_front_draw</option>
             <option value="tray_open_front">tray_open_front</option>
+            <option value="divider_rack">divider_rack</option>
+            <option value="candy_rotary_wheel">candy_rotary_wheel</option>
+            <option value="candy_plinko">candy_plinko</option>
             <option value="dispenser_slot_front">dispenser_slot_front</option>
             <option value="window_front">window_front</option>
             <option value="box_with_lid">box_with_lid</option>
@@ -297,6 +345,27 @@
           <div class="row">
             <label for="slotY" data-help="slotY"><span data-i18n="labels.slotY">Slot Y from bottom (mm)</span></label>
             <input id="slotY" type="number" value="38" step="0.1" />
+          </div>
+        </details>
+
+        <details class="section">
+          <summary data-i18n="sections.mechanismSettings">Mechanism settings</summary>
+
+          <div class="row">
+            <label for="dividerBays" data-help="dividerBays"><span data-i18n="labels.dividerBays">Divider bays</span></label>
+            <input id="dividerBays" type="number" value="3" step="1" min="1" />
+          </div>
+          <div class="row">
+            <label for="pocketCount" data-help="pocketCount"><span data-i18n="labels.pocketCount">Pocket count</span></label>
+            <input id="pocketCount" type="number" value="8" step="1" min="3" />
+          </div>
+          <div class="row">
+            <label for="axleDiameter" data-help="axleDiameter"><span data-i18n="labels.axleDiameter">Axle diameter (mm)</span></label>
+            <input id="axleDiameter" type="number" value="6" step="0.1" min="1" />
+          </div>
+          <div class="row">
+            <label for="rampCount" data-help="rampCount"><span data-i18n="labels.rampCount">Ramp count</span></label>
+            <input id="rampCount" type="number" value="6" step="1" min="1" />
           </div>
         </details>
 

@@ -8,6 +8,12 @@
 - Calibration moved to optional Fit tools (Fit Test) instead of a primary action
 - Preview zoom behavior improved: clamped zoom and smarter auto-fit on resize
 
+## v0.5
+
+- Student Mode auto-design: item inputs drive mechanism + dimensions
+- New dispenser presets for cards and flowing solids (candy-style)
+- Help + FAQ expanded and aligned with Student Mode + mechanisms
+
 ## v0.3.1
 
 - Documentation refresh (README + Pages docs + changelog)
