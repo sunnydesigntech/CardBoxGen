@@ -41,7 +41,7 @@ import textwrap
 from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Optional, Tuple
 
-__version__ = "0.5"
+__version__ = "0.6"
 
 Point = Tuple[float, float]
 

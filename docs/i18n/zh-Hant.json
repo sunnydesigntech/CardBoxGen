@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "卡盒／托盤 SVG 產生器",
-    "version": "v0.5",
+    "version": "v0.6",
     "subtitle": "完全在瀏覽器中執行（Pyodide）。產生可雷切的 SVG，並使用可重現的指接結構。"
   },
   "mode": {
@@ -30,15 +30,30 @@
     "preview": "預覽",
     "exports": "匯出"
   },
+  "actions": {
+    "generate": "產生 SVG",
+    "calibration": "產生校正 SVG",
+    "fitTest": "配合測試（選填）",
+    "bundle": "下載打包（zip）",
+    "projectPack": "產生專案包（zip）",
+    "downloadSvg": "下載 SVG",
+    "downloadCalibration": "下載校正 SVG",
+    "fit": "自動縮放",
+    "zoomIn": "+",
+    "zoomOut": "−",
+    "controls": "控制"
+  },
   "steps": {
-    "title": "學生模式（3 步驟）",
+    "title": "學生模式（4 步驟）",
     "complete": "完成",
     "incomplete": "未完成",
-    "step1": "步驟 1 — 定義需求",
-    "step2": "步驟 2 — 選擇機構",
-    "step3": "步驟 3 — 製作設定",
+    "step1": "步驟 1 — 客戶與情境",
+    "step2": "步驟 2 — 需求",
+    "step3": "步驟 3 — 機構選擇",
+    "step4": "步驟 4 — 自動定尺寸與檢視",
     "step2Hint": "選擇機構會自動設定下方的預設。",
     "step3Hint": "如果不知道刀縫（kerf），先跑配合測試（進階 → 配合工具），切割後選擇最合適的標籤。",
+    "step4Hint": "準備好後，按下「產生專案包（zip）」。",
     "checklistTitle": "校正檢查清單",
     "check1": "跑配合測試（選填）",
     "check2": "切割它",
@@ -46,6 +61,19 @@
     "check4": "套用數值並重新產生最終 SVG"
   },
   "labels": {
+    "clientContext": "客戶／情境",
+    "problemStatement": "問題描述",
+    "constraintNoCoins": "不使用硬幣",
+    "constraintNoLiquids": "不使用液體",
+    "constraintPersonalUse": "個人使用",
+    "irregularShape": "不規則形狀",
+    "successMetrics": "成功指標（至少選 2 個）",
+    "metricJam": "卡料／堵塞率",
+    "metricConsistency": "份量一致性",
+    "metricRefill": "補充時間",
+    "metricDurability": "耐用度",
+    "mechanismJustification": "理由（1–2 句）",
+    "exportAllLanguages": "匯出所有語言",
     "dispenseType": "出料類型",
     "storageTarget": "儲存目標",
     "dispenseTarget": "出料目標",
@@ -103,6 +131,9 @@
     "labelsLayer": "標籤"
   },
   "placeholders": {
+    "clientContext": "例如：桌面個人使用",
+    "problemStatement": "例如：份量不一致；收納凌亂",
+    "mechanismJustification": "為什麼這個機構符合你的需求",
     "storageTarget": "例如：150 張卡",
     "dispenseTarget": "例如：每次抽 1 張",
     "auto": "（自動）"
@@ -128,6 +159,25 @@
       "dispenser_slot_front": "前方出料槽",
       "window_front": "前方視窗",
       "box_with_lid": "含上蓋盒"
+    }
+  },
+  "readouts": {
+    "jointRule": "接合規則：繪製槽深 = 厚度 + 間隙 − kerf = {{drawn}}mm。預期實際槽寬 ≈ 厚度 + 間隙 = {{final}}mm。",
+    "computedExternal": "計算外尺寸 ≈ W {{w}} × D {{d}} × H {{h}}（mm）",
+    "computedInternal": "計算內尺寸 ≈ W {{w}} × D {{d}} × H {{h}}（mm）",
+    "derivedInternal": "推導內尺寸：W {{w}} × D {{d}} × H {{h}}（mm）",
+    "derivedExternal": "推導外尺寸：W {{w}} × D {{d}} × H {{h}}（mm）",
+    "derivedOpenings": "關鍵開口（{{preset}}）：出料槽 W {{w}} × H {{h}}（mm）"
+  },
+  "recs": {
+    "title": "前三名推薦",
+    "reason": {
+      "flowingCounted": "適合計數出料（每轉一次一顆）",
+      "flowingTolerant": "更能容忍不規則形狀；適合第一次原型",
+      "fallbackPrototype": "早期原型的簡單備案",
+      "stackingOne": "可控制一次一個的輸出",
+      "stackingGrab": "製作簡單、取用快速",
+      "stackingMulti": "多分類收納與取用"
     }
   },
 
@@ -173,18 +223,6 @@
       }
     ]
   },
-  "actions": {
-    "generate": "產生 SVG",
-    "calibration": "產生校正 SVG",
-    "fitTest": "配合測試（選填）",
-    "bundle": "下載打包（zip）",
-    "downloadSvg": "下載 SVG",
-    "downloadCalibration": "下載校正 SVG",
-    "fit": "自動縮放",
-    "zoomIn": "+",
-    "zoomOut": "−",
-    "controls": "參數"
-  },
   "helpUi": {
     "searchPlaceholder": "搜尋說明…",
     "noResults": "找不到符合的主題。"
@@ -217,17 +255,24 @@
     "loose": "鬆緊：鬆（適合課堂）",
     "custom": "鬆緊：自訂（使用接合間隙）"
   },
-  "readouts": {
-    "jointRule": "接合規則：繪製的槽深 = 厚度 + 間隙 − kerf = {{drawn}}mm。預期完成後槽寬 ≈ 厚度 + 間隙 = {{final}}mm。",
-    "computedExternal": "推算外尺寸 ≈ W {{w}} × D {{d}} × H {{h}}（mm）",
-    "computedInternal": "推算內尺寸 ≈ W {{w}} × D {{d}} × H {{h}}（mm）"
-  },
   "warnings": {
     "title": "警告",
     "kerfTooBig": "刀縫（kerf）大於或等於厚度，接合可能失效。",
     "clearanceLarge": "接合間隙看起來偏大，作品可能鬆動。",
     "slotInvalid": "出料槽尺寸不合理或超出前板範圍。",
-    "minTabs": "最少榫數小於 3，接合可能過弱或不對齊。"
+    "minTabs": "最少榫數小於 3，接合可能過弱或不對齊。",
+
+    "vagueClientContext": "需求檢查：客戶／情境有點模糊。請補上誰／在哪裡／怎麼用（例如：家中桌面個人使用）。",
+    "vagueProblemStatement": "需求檢查：問題描述有點模糊。請描述可量測的痛點（卡料、凌亂、份量不一致、不好拿）。",
+    "vagueStorageTarget": "需求檢查：儲存目標沒有數字。請補上張數／顆數／克數／容量（例如：150 張卡）。",
+    "vagueDispenseTarget": "需求檢查：出料目標（細節）有點模糊。請補上『一次出料』的定義（例如：每轉一次 1 顆）。",
+
+    "flowingBridgingRisk": "設計檢視：流動式物品有架橋／卡料風險。開口／漏斗可能太接近最大顆粒尺寸。修正：加大內部寬深、降低最大顆粒尺寸，或先用更保守（更鬆）的開口做原型。",
+    "rotaryPocketWallsThin": "設計檢視：轉輪口袋隔牆可能太薄。修正：減少口袋數或加大尺寸／增加厚度。",
+    "cardShoeFrontTooTall": "設計檢視：卡片出牌器前板高度偏高。風險：可能一次掉出多張。修正：降低前板高度。",
+    "cardShoeFrontTooShort": "設計檢視：卡片出牌器前板高度偏低。風險：可能卡住／不好抽。修正：提高前板高度。",
+    "tallWallsFlexRisk": "設計檢視：高牆配薄材料可能彎曲／變形。修正：增加厚度、增加榫數，或降低高度。",
+    "paddingTooSmall": "設計檢視：排版間距偏小。風險：零件可能重疊或切割不乾淨。修正：增加間距（Padding）。"
   },
   "footer": {
     "tip": "提示：部署到 GitHub Pages 後可完全在瀏覽器端執行，不需要伺服器。"
@@ -237,6 +282,14 @@
     "storageTarget": { "title": "儲存目標", "short": "描述想要存放的數量（僅供規劃）。" },
     "dispenseTarget": { "title": "出料目標", "short": "描述希望的出料方式（僅供規劃）。" },
     "mechanism": { "title": "機構", "short": "選擇機構後會套用對應的預設設計。" },
+
+    "clientContext": { "title": "客戶／情境", "short": "這個設計給誰用、在哪裡用？" },
+    "problemStatement": { "title": "問題描述", "short": "你想解決什麼問題（份量不一致／收納凌亂／不好拿）？" },
+    "constraints": { "title": "限制確認", "short": "課程規則（不硬幣、不液體、個人使用）。" },
+    "successMetrics": { "title": "成功指標", "short": "至少選 2 個可量測的目標，方便測試與迭代。" },
+    "irregularShape": { "title": "不規則形狀", "short": "顆粒不一致時更容易架橋卡料，需要更保守的開口／漏斗。" },
+    "mechanismJustification": { "title": "理由", "short": "用 1–2 句說明為什麼選這個機構（必填）。" },
+    "exportAllLanguages": { "title": "匯出所有語言", "short": "在 zip 內額外輸出 EN/繁/簡 的文件翻譯。" },
 
     "preset": { "title": "預設", "short": "預先定義的模板（托盤、出料器、視窗、盒子）。" },
     "dimensionMode": { "title": "尺寸模式", "short": "選擇 W/D/H 是指內尺寸或外尺寸。" },

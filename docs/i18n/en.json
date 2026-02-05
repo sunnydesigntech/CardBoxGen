@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "Card Box / Tray SVG Generator",
-    "version": "v0.5",
+    "version": "v0.6",
     "subtitle": "Runs fully in your browser (Pyodide). Generates laser-cut SVG with deterministic finger joints."
   },
   "mode": {
@@ -33,14 +33,16 @@
     "hint": "Generate a small test cut to measure kerf and pick a joint clearance that feels right."
   },
   "steps": {
-    "title": "Student Mode (3 steps)",
+    "title": "Student Mode (4 steps)",
     "complete": "Complete",
     "incomplete": "Incomplete",
-    "step1": "Step 1 — Define the problem",
-    "step2": "Step 2 — Choose a mechanism",
-    "step3": "Step 3 — Fabrication setup",
+    "step1": "Step 1 — Client & context",
+    "step2": "Step 2 — Requirements",
+    "step3": "Step 3 — Mechanism choice",
+    "step4": "Step 4 — Auto-dimensioning & review",
     "step2Hint": "Choosing a mechanism will set the preset below.",
     "step3Hint": "If you don’t know kerf yet, use the optional Fit Test (Advanced → Fit tools), cut it, then pick the best label.",
+    "step4Hint": "When ready, press Generate Project Pack (zip).",
     "checklistTitle": "Calibration checklist",
     "check1": "Run Fit Test (optional)",
     "check2": "Cut it",
@@ -58,6 +60,19 @@
     "troubleshootingShort": "Common symptoms and what to change."
   },
   "labels": {
+    "clientContext": "Client & context",
+    "problemStatement": "Problem statement",
+    "constraintNoCoins": "No coins",
+    "constraintNoLiquids": "No liquids",
+    "constraintPersonalUse": "Personal use",
+    "irregularShape": "Irregular shape",
+    "successMetrics": "Success metrics (pick at least 2)",
+    "metricJam": "Jam rate",
+    "metricConsistency": "Portion consistency",
+    "metricRefill": "Refill time",
+    "metricDurability": "Durability",
+    "mechanismJustification": "Justification (1–2 sentences)",
+    "exportAllLanguages": "Export all languages",
     "dispenseType": "Dispense type",
     "storageTarget": "Storage target",
     "dispenseTarget": "Dispense target",
@@ -115,6 +130,9 @@
     "labelsLayer": "LABELS"
   },
   "placeholders": {
+    "clientContext": "e.g., personal use at desk",
+    "problemStatement": "e.g., inconsistent portions; messy storage",
+    "mechanismJustification": "Why this mechanism fits your requirements",
     "storageTarget": "e.g., 150 cards",
     "dispenseTarget": "e.g., 1 card per pull",
     "auto": "(auto)"
@@ -198,6 +216,7 @@
     "calibration": "Generate calibration SVG",
     "fitTest": "Fit Test (optional)",
     "bundle": "Download bundle (zip)",
+    "projectPack": "Generate Project Pack (zip)",
     "downloadSvg": "Download SVG",
     "downloadCalibration": "Download calibration SVG",
     "fit": "Fit",
@@ -227,14 +246,40 @@
   "readouts": {
     "jointRule": "Joint rule: drawn slot depth = thickness + clearance − kerf = {{drawn}}mm. Expected final slot ≈ thickness + clearance = {{final}}mm.",
     "computedExternal": "Computed external size ≈ W {{w}} × D {{d}} × H {{h}} (mm)",
-    "computedInternal": "Computed internal size ≈ W {{w}} × D {{d}} × H {{h}} (mm)"
+    "computedInternal": "Computed internal size ≈ W {{w}} × D {{d}} × H {{h}} (mm)",
+    "derivedInternal": "Derived internal size: W {{w}} × D {{d}} × H {{h}} (mm)",
+    "derivedExternal": "Derived external size: W {{w}} × D {{d}} × H {{h}} (mm)",
+    "derivedOpenings": "Key openings ({{preset}}): slot W {{w}} × H {{h}} (mm)"
+  },
+  "recs": {
+    "title": "Top 3 recommendations",
+    "reason": {
+      "flowingCounted": "Best for counted dispensing (one per turn)",
+      "flowingTolerant": "More tolerant to irregular shapes; good first prototype",
+      "fallbackPrototype": "Simple fallback for early prototypes",
+      "stackingOne": "Controlled one-at-a-time output",
+      "stackingGrab": "Fast access and simple build",
+      "stackingMulti": "Multi-category organization and access"
+    }
   },
   "warnings": {
     "title": "Warnings",
     "kerfTooBig": "Kerf is greater than or equal to thickness. Joints may not work.",
     "clearanceLarge": "Joint clearance looks large for this thickness. Parts may be loose.",
     "slotInvalid": "Slot dimensions are invalid or exceed the front panel.",
-    "minTabs": "Min tabs is less than 3. Joints may be weak or misaligned."
+    "minTabs": "Min tabs is less than 3. Joints may be weak or misaligned.",
+
+    "vagueClientContext": "Requirements check: Client & context looks vague. Add who/where/how it will be used (e.g., ‘personal desk use at home’).",
+    "vagueProblemStatement": "Requirements check: Problem statement looks vague. Describe a measurable pain (jams, mess, inconsistent portions, hard access).",
+    "vagueStorageTarget": "Requirements check: Storage target has no number. Add a count/grams/volume (e.g., ‘150 cards’).",
+    "vagueDispenseTarget": "Requirements check: Dispense target detail looks vague. Add what ‘one dispense’ means (e.g., ‘1 candy per turn’).",
+
+    "flowingBridgingRisk": "Design review: Bridging/jam risk for flowing items. Openings/funnels may be too close to max piece size. Fix: increase internal width/depth, reduce max piece size, or prototype with looser openings.",
+    "rotaryPocketWallsThin": "Design review: Rotary wheel pocket walls may be too thin. Fix: reduce pocket count or increase overall size/thickness.",
+    "cardShoeFrontTooTall": "Design review: Card shoe front height looks high. Risk: multiple cards may spill. Fix: reduce Front height.",
+    "cardShoeFrontTooShort": "Design review: Card shoe front height looks low. Risk: cards may jam / be hard to pull. Fix: increase Front height.",
+    "tallWallsFlexRisk": "Design review: Tall walls with thin material can flex/warp. Fix: increase thickness, increase tab count, or reduce height.",
+    "paddingTooSmall": "Design review: Layout padding looks small. Risk: parts may overlap or be hard to cut cleanly. Fix: increase Padding."
   },
   "footer": {
     "tip": "Tip: If you deploy this on GitHub Pages, it runs client-side and doesn’t need a server."
@@ -279,6 +324,76 @@
       "pitfalls": ["Slot mechanisms require valid slot dimensions."],
       "wrong": ["Wrong mechanism can block access or dispense too fast."],
       "example": "Example: Classroom card tray → Open-front tray."
+    },
+    "clientContext": {
+      "title": "Client & context",
+      "short": "Who is it for and where will it be used?",
+      "meaning": "This drives clearer requirements and more realistic testing.",
+      "decide": ["Write a concrete use context (desk, classroom, workshop)."],
+      "typical": ["Personal desk use; shared classroom demo; workshop bench."],
+      "pitfalls": ["Avoid vague words like ‘somewhere’ or ‘maybe’."],
+      "wrong": ["If context is vague, success criteria and tests will be vague too."],
+      "example": "Example: Personal use at desk; dispensing into a small cup."
+    },
+    "problemStatement": {
+      "title": "Problem statement",
+      "short": "What problem are you solving?",
+      "meaning": "A good problem statement makes it easier to pick a mechanism and write success metrics.",
+      "decide": ["Describe the current pain: messy, inconsistent portions, hard access, jams."],
+      "typical": ["Inconsistent portions; messy storage; hard to grab one item."],
+      "pitfalls": ["Avoid ‘nice’ / ‘better’ without saying what changes."],
+      "wrong": ["If the problem is unclear, the design can’t be evaluated."],
+      "example": "Example: ‘Portions vary a lot; I want 1 candy per turn.’"
+    },
+    "constraints": {
+      "title": "Constraints acknowledgement",
+      "short": "Course rules you must follow.",
+      "meaning": "These are locked rules for the assignment (no coins, no liquids, personal use).",
+      "decide": ["Check the boxes to confirm you understand the rules."],
+      "typical": ["All checked."],
+      "pitfalls": ["If any are not met, the project may be out of scope."],
+      "wrong": ["You may build something that cannot be submitted."],
+      "example": "Example: Dry solids only; no coin mechanisms."
+    },
+    "successMetrics": {
+      "title": "Success metrics",
+      "short": "Pick at least 2 measurable outcomes.",
+      "meaning": "Metrics turn a vague goal into a testable prototype.",
+      "decide": ["Choose metrics you can test with a simple table."],
+      "typical": ["Jam rate + portion consistency."],
+      "pitfalls": ["Avoid metrics you can’t measure in class."],
+      "wrong": ["If you can’t measure it, you can’t improve it."],
+      "example": "Example: ≤1 jam per 20 dispenses; ±1 item per action."
+    },
+    "irregularShape": {
+      "title": "Irregular shape",
+      "short": "Are pieces non-uniform?",
+      "meaning": "Irregular solids bridge/jam more; mechanisms need larger openings and gentler funnels.",
+      "decide": ["Turn on if pieces vary a lot in shape."],
+      "typical": ["Off for uniform candies; on for mixed snacks."],
+      "pitfalls": ["If unsure, turn it on and prototype with loose fit."],
+      "wrong": ["Too-tight openings can cause bridging and jams."],
+      "example": "Example: Jelly beans (irregular) → On."
+    },
+    "mechanismJustification": {
+      "title": "Justification",
+      "short": "Explain why you chose this mechanism.",
+      "meaning": "This is required for learning outcomes (not autopilot).",
+      "decide": ["Write 1–2 sentences linking requirements → mechanism."],
+      "typical": ["Chosen because it matches counted/one-by-one and reduces jams."],
+      "pitfalls": ["Avoid repeating the mechanism name without reasons."],
+      "wrong": ["Without justification, the project pack export stays locked."],
+      "example": "Example: ‘Plinko tolerates irregular pieces and is easy to test.’"
+    },
+    "exportAllLanguages": {
+      "title": "Export all languages",
+      "short": "Include translated docs in the zip.",
+      "meaning": "When enabled, the pack adds docs/translations/<lang>/... for EN/繁/简.",
+      "decide": ["Turn on for classroom sharing or instructor review."],
+      "typical": ["Off for personal use; on for teaching."],
+      "pitfalls": ["Larger zip size."],
+      "wrong": ["Not an issue; it only affects docs."],
+      "example": "Example: Export EN + 繁體 + 简体 for students."
     },
 
     "preset": {

@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "卡盒／托盘 SVG 生成器",
-    "version": "v0.5",
+    "version": "v0.6",
     "subtitle": "完全在浏览器中运行（Pyodide）。生成可激光切割的 SVG，并使用可复现的指接结构。"
   },
   "mode": {
@@ -31,14 +31,16 @@
     "exports": "导出"
   },
   "steps": {
-    "title": "学生模式（3 步）",
+    "title": "学生模式（4 步）",
     "complete": "完成",
     "incomplete": "未完成",
-    "step1": "步骤 1 — 定义需求",
-    "step2": "步骤 2 — 选择机构",
-    "step3": "步骤 3 — 制作设置",
+    "step1": "步骤 1 — 客户与情境",
+    "step2": "步骤 2 — 需求",
+    "step3": "步骤 3 — 机构选择",
+    "step4": "步骤 4 — 自动定尺寸与检查",
     "step2Hint": "选择机构会自动设置下方的预设。",
     "step3Hint": "如果不知道刀缝（kerf），先跑配合测试（高级 → 配合工具），切割后选择最合适的标签。",
+    "step4Hint": "准备好后，按下「生成项目包（zip）」。",
     "checklistTitle": "校准检查清单",
     "check1": "跑配合测试（选填）",
     "check2": "切割它",
@@ -46,6 +48,19 @@
     "check4": "应用数值并重新生成最终 SVG"
   },
   "labels": {
+    "clientContext": "客户／情境",
+    "problemStatement": "问题描述",
+    "constraintNoCoins": "不使用硬币",
+    "constraintNoLiquids": "不使用液体",
+    "constraintPersonalUse": "个人使用",
+    "irregularShape": "不规则形状",
+    "successMetrics": "成功指标（至少选 2 个）",
+    "metricJam": "卡料／堵塞率",
+    "metricConsistency": "份量一致性",
+    "metricRefill": "补充时间",
+    "metricDurability": "耐用度",
+    "mechanismJustification": "理由（1–2 句）",
+    "exportAllLanguages": "导出所有语言",
     "dispenseType": "出料类型",
     "storageTarget": "存储目标",
     "dispenseTarget": "出料目标",
@@ -103,6 +118,9 @@
     "labelsLayer": "标签"
   },
   "placeholders": {
+    "clientContext": "例如：桌面个人使用",
+    "problemStatement": "例如：份量不一致；收纳凌乱",
+    "mechanismJustification": "为什么这个机构符合你的需求",
     "storageTarget": "例如：150 张卡",
     "dispenseTarget": "例如：每次抽 1 张",
     "auto": "（自动）"
@@ -183,7 +201,8 @@
     "fit": "自适应",
     "zoomIn": "+",
     "zoomOut": "−",
-    "controls": "参数"
+    "controls": "参数",
+    "projectPack": "生成项目包（zip）"
   },
   "helpUi": {
     "searchPlaceholder": "搜索说明…",
@@ -220,14 +239,40 @@
   "readouts": {
     "jointRule": "接合规则：绘制的槽深 = 厚度 + 间隙 − kerf = {{drawn}}mm。预期完成后槽宽 ≈ 厚度 + 间隙 = {{final}}mm。",
     "computedExternal": "推算外尺寸 ≈ W {{w}} × D {{d}} × H {{h}}（mm）",
-    "computedInternal": "推算内尺寸 ≈ W {{w}} × D {{d}} × H {{h}}（mm）"
+    "computedInternal": "推算内尺寸 ≈ W {{w}} × D {{d}} × H {{h}}（mm）",
+    "derivedInternal": "推导内尺寸：W {{w}} × D {{d}} × H {{h}}（mm）",
+    "derivedExternal": "推导外尺寸：W {{w}} × D {{d}} × H {{h}}（mm）",
+    "derivedOpenings": "关键开口（{{preset}}）：出料槽 W {{w}} × H {{h}}（mm）"
+  },
+  "recs": {
+    "title": "前三名推荐",
+    "reason": {
+      "flowingCounted": "适合计数出料（每转一次一颗）",
+      "flowingTolerant": "更能容忍不规则形状；适合第一次原型",
+      "fallbackPrototype": "早期原型的简单备选",
+      "stackingOne": "可控制一次一个的输出",
+      "stackingGrab": "制作简单、取用快速",
+      "stackingMulti": "多分类收纳与取用"
+    }
   },
   "warnings": {
     "title": "警告",
     "kerfTooBig": "刀缝（kerf）大于或等于厚度，接合可能失效。",
     "clearanceLarge": "接合间隙看起来偏大，作品可能松动。",
     "slotInvalid": "出料槽尺寸不合理或超出前板范围。",
-    "minTabs": "最少榫数小于 3，接合可能过弱或不对齐。"
+    "minTabs": "最少榫数小于 3，接合可能过弱或不对齐。",
+
+    "vagueClientContext": "需求检查：客户／情境有点模糊。请补上谁／在哪里／怎么用（例如：家中桌面个人使用）。",
+    "vagueProblemStatement": "需求检查：问题描述有点模糊。请描述可量测的痛点（卡料、凌乱、份量不一致、不好拿）。",
+    "vagueStorageTarget": "需求检查：存储目标没有数字。请补上张数／颗数／克数／容量（例如：150 张卡）。",
+    "vagueDispenseTarget": "需求检查：出料目标（细节）有点模糊。请补上『一次出料』的定义（例如：每转一次 1 颗）。",
+
+    "flowingBridgingRisk": "设计检查：流动式物品有架桥／卡料风险。开口／漏斗可能太接近最大颗粒尺寸。修正：加大内部宽深、降低最大颗粒尺寸，或先用更保守（更松）的开口做原型。",
+    "rotaryPocketWallsThin": "设计检查：转轮口袋隔墙可能太薄。修正：减少口袋数或加大尺寸／增加厚度。",
+    "cardShoeFrontTooTall": "设计检查：卡片出牌器前板高度偏高。风险：可能一次掉出多张。修正：降低前板高度。",
+    "cardShoeFrontTooShort": "设计检查：卡片出牌器前板高度偏低。风险：可能卡住／不好抽。修正：提高前板高度。",
+    "tallWallsFlexRisk": "设计检查：高墙配薄材料可能弯曲／变形。修正：增加厚度、增加榫数，或降低高度。",
+    "paddingTooSmall": "设计检查：排版间距偏小。风险：零件可能重叠或切割不干净。修正：增加间距（Padding）。"
   },
   "footer": {
     "tip": "提示：部署到 GitHub Pages 后可完全在浏览器端运行，不需要服务器。"
@@ -237,6 +282,14 @@
     "storageTarget": { "title": "存储目标", "short": "描述想要存放的数量（仅供规划）。" },
     "dispenseTarget": { "title": "出料目标", "short": "描述希望的出料方式（仅供规划）。" },
     "mechanism": { "title": "机构", "short": "选择机构后会套用对应的预设设计。" },
+
+    "clientContext": { "title": "客户／情境", "short": "这个设计给谁用、在哪里用？" },
+    "problemStatement": { "title": "问题描述", "short": "你想解决什么问题（份量不一致／收纳凌乱／不好拿）？" },
+    "constraints": { "title": "限制确认", "short": "课程规则（不硬币、不液体、个人使用）。" },
+    "successMetrics": { "title": "成功指标", "short": "至少选 2 个可量测的目标，方便测试与迭代。" },
+    "irregularShape": { "title": "不规则形状", "short": "颗粒不一致更容易架桥卡料，需要更保守的开口／漏斗。" },
+    "mechanismJustification": { "title": "理由", "short": "用 1–2 句说明为什么选这个机构（必填）。" },
+    "exportAllLanguages": { "title": "导出所有语言", "short": "在 zip 内额外导出 EN/繁/简 的文件翻译。" },
 
     "preset": { "title": "预设", "short": "预先定义的模板（托盘、出料器、视窗、盒子）。" },
     "dimensionMode": { "title": "尺寸模式", "short": "选择 W/D/H 是指内尺寸或外尺寸。" },

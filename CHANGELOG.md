@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.6
+
+- Project Pack export: ZIP contains cut files + docs + config + share link
+- Student Mode workflow expanded into a learning scaffold (requirements, success metrics, justification)
+- Deterministic guidance checks and export-ready documentation templates (EN / 繁 / 简)
+
+## v0.5
+
+- Student Mode auto-design: item inputs drive mechanism + dimensions
+- New dispenser presets for cards and flowing solids (candy-style)
+- Help + FAQ expanded and aligned with Student Mode + mechanisms
+
 ## v0.4
 
 - Info popover hover + click-to-pin stability (popover stays open when moving into it)
@@ -7,12 +19,6 @@
 - New FAQ drawer: searchable Q&A with links into Help topics
 - Calibration moved to optional Fit tools (Fit Test) instead of a primary action
 - Preview zoom behavior improved: clamped zoom and smarter auto-fit on resize
-
-## v0.5
-
-- Student Mode auto-design: item inputs drive mechanism + dimensions
-- New dispenser presets for cards and flowing solids (candy-style)
-- Help + FAQ expanded and aligned with Student Mode + mechanisms
 
 ## v0.3.1
 

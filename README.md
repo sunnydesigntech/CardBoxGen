@@ -8,7 +8,7 @@ This project focuses on:
 - **Practical kerf + fit** handling for press-fit / friction-fit
 - **Browser-first workflow** via a static Pyodide web app (GitHub Pages)
 
-Current version: **v0.5**
+Current version: **v0.6**
 
 Live web app:
 - https://sunnydesigntech.github.io/CardBoxGen/

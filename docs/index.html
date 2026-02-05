@@ -12,7 +12,7 @@
         <div class="headerTitle">
           <h1>
             <span data-i18n="app.title">Card Box / Tray SVG Generator</span>
-            <span class="ver" data-i18n="app.version">v0.5</span>
+            <span class="ver" data-i18n="app.version">v0.6</span>
           </h1>
           <p class="sub" data-i18n="app.subtitle">
             Runs fully in your browser (Pyodide). Generates laser-cut SVG with deterministic finger joints.
@@ -42,9 +42,9 @@
       </div>
 
       <div class="headerSticky">
-        <button id="mobileGenerate" type="button" class="primaryBtn" data-i18n="actions.generate">Generate SVG</button>
+        <button id="mobileGenerate" type="button" class="ghostBtn" data-i18n="actions.generate">Generate SVG</button>
         <button id="mobileDownload" type="button" class="ghostBtn" disabled data-i18n="actions.downloadSvg">Download SVG</button>
-        <button id="mobileBundle" type="button" class="ghostBtn" disabled data-i18n="actions.bundle">Download bundle (zip)</button>
+        <button id="mobileBundle" type="button" class="primaryBtn" disabled data-i18n="actions.projectPack">Generate Project Pack (zip)</button>
       </div>
     </header>
 
@@ -54,14 +54,51 @@
 
         <details id="wizard" class="wizard section" open>
           <summary>
-            <span data-i18n="steps.title">Student Mode (3 steps)</span>
+            <span data-i18n="steps.title">Student Mode (4 steps)</span>
           </summary>
 
           <div class="step">
             <div class="stepTitle">
-              <span data-i18n="steps.step1">Step 1 — Define the problem</span>
+              <span data-i18n="steps.step1">Step 1 — Client & context</span>
               <span class="badge" id="step1Badge"></span>
             </div>
+
+            <div class="row">
+              <label for="clientContext" data-help="clientContext">
+                <span data-i18n="labels.clientContext">Client & context</span>
+              </label>
+              <input id="clientContext" type="text" data-i18n-placeholder="placeholders.clientContext" placeholder="e.g., personal use at desk" />
+            </div>
+
+            <div class="row">
+              <label for="problemStatement" data-help="problemStatement">
+                <span data-i18n="labels.problemStatement">Problem statement</span>
+              </label>
+              <textarea id="problemStatement" rows="3" data-i18n-placeholder="placeholders.problemStatement" placeholder="e.g., inconsistent portions; messy storage"></textarea>
+            </div>
+
+            <div class="row inline">
+              <label class="check" data-help="constraints">
+                <input id="constraintNoCoins" type="checkbox" />
+                <span data-i18n="labels.constraintNoCoins">No coins</span>
+              </label>
+              <label class="check" data-help="constraints">
+                <input id="constraintNoLiquids" type="checkbox" />
+                <span data-i18n="labels.constraintNoLiquids">No liquids</span>
+              </label>
+              <label class="check" data-help="constraints">
+                <input id="constraintPersonalUse" type="checkbox" />
+                <span data-i18n="labels.constraintPersonalUse">Personal use</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="stepTitle">
+              <span data-i18n="steps.step2">Step 2 — Requirements</span>
+              <span class="badge" id="step2Badge"></span>
+            </div>
+
             <div class="row">
               <label for="dispenseType" data-help="dispenseType">
                 <span data-i18n="labels.dispenseType">Dispense type</span>
@@ -91,6 +128,13 @@
               <input id="maxPieceSize" type="number" value="18" step="0.1" min="1" />
             </div>
 
+            <div class="row inline" id="studentFlowingFlagsRow" hidden>
+              <label class="check" data-help="irregularShape">
+                <input id="irregularShape" type="checkbox" />
+                <span data-i18n="labels.irregularShape">Irregular shape</span>
+              </label>
+            </div>
+
             <div class="row">
               <label for="dispenseTargetType" data-help="dispenseTargetType">
                 <span data-i18n="labels.dispenseTargetType">Dispense target</span>
@@ -116,19 +160,45 @@
               </label>
               <input id="storageTarget" type="text" data-i18n-placeholder="placeholders.storageTarget" placeholder="e.g., 150 cards" />
             </div>
+
             <div class="row">
               <label for="dispenseTarget" data-help="dispenseTarget">
-                <span data-i18n="labels.dispenseTarget">Dispense target</span>
+                <span data-i18n="labels.dispenseTarget">Dispense target (detail)</span>
               </label>
-              <input id="dispenseTarget" type="text" data-i18n-placeholder="placeholders.dispenseTarget" placeholder="e.g., 1 card per pull" />
+              <input id="dispenseTarget" type="text" data-i18n-placeholder="placeholders.dispenseTarget" placeholder="e.g., 1 item per turn" />
+            </div>
+
+            <div class="row">
+              <div class="checklistTitle" data-i18n="labels.successMetrics">Success metrics (pick at least 2)</div>
+              <div class="row inline">
+                <label class="check" data-help="successMetrics">
+                  <input id="metricJam" type="checkbox" value="jam_rate" />
+                  <span data-i18n="labels.metricJam">Jam rate</span>
+                </label>
+                <label class="check" data-help="successMetrics">
+                  <input id="metricConsistency" type="checkbox" value="portion_consistency" />
+                  <span data-i18n="labels.metricConsistency">Portion consistency</span>
+                </label>
+                <label class="check" data-help="successMetrics">
+                  <input id="metricRefill" type="checkbox" value="refill_time" />
+                  <span data-i18n="labels.metricRefill">Refill time</span>
+                </label>
+                <label class="check" data-help="successMetrics">
+                  <input id="metricDurability" type="checkbox" value="durability_cycles" />
+                  <span data-i18n="labels.metricDurability">Durability</span>
+                </label>
+              </div>
             </div>
           </div>
 
           <div class="step">
             <div class="stepTitle">
-              <span data-i18n="steps.step2">Step 2 — Choose a mechanism</span>
-              <span class="badge" id="step2Badge"></span>
+              <span data-i18n="steps.step3">Step 3 — Mechanism choice</span>
+              <span class="badge" id="step3Badge"></span>
             </div>
+
+            <div id="mechanismRecs" class="hint"></div>
+
             <div class="row">
               <label for="mechanism" data-help="mechanism">
                 <span data-i18n="labels.mechanism">Mechanism</span>
@@ -145,14 +215,34 @@
                 <option value="box_with_lid" data-i18n="options.mechanism.box_with_lid">Box with lid</option>
               </select>
             </div>
-            <p class="hint" data-i18n="steps.step2Hint">Choosing a mechanism will set the preset below.</p>
+
+            <div class="row">
+              <label for="mechanismJustification" data-help="mechanismJustification">
+                <span data-i18n="labels.mechanismJustification">Justification (1–2 sentences)</span>
+              </label>
+              <textarea id="mechanismJustification" rows="3" data-i18n-placeholder="placeholders.mechanismJustification" placeholder="Why this mechanism fits your requirements"></textarea>
+            </div>
           </div>
 
           <div class="step">
             <div class="stepTitle">
-              <span data-i18n="steps.step3">Step 3 — Fabrication setup</span>
-              <span class="badge" id="step3Badge"></span>
+              <span data-i18n="steps.step4">Step 4 — Auto-dimensioning & review</span>
+              <span class="badge" id="step4Badge"></span>
             </div>
+
+            <div class="readout" id="reasoningInternal"></div>
+            <div class="readout" id="reasoningExternal"></div>
+            <div class="readout" id="reasoningOpenings"></div>
+
+            <div class="row inline">
+              <label class="check" data-help="exportAllLanguages">
+                <input id="exportAllLanguages" type="checkbox" />
+                <span data-i18n="labels.exportAllLanguages">Export all languages</span>
+              </label>
+            </div>
+
+            <p class="hint" data-i18n="steps.step4Hint">When ready, press Generate Project Pack (zip).</p>
+
             <p class="hint" data-i18n="steps.step3Hint">
               If you don’t know kerf yet, use the optional Fit Test (Advanced → Fit tools), cut it, then pick the best label.
             </p>
@@ -370,8 +460,8 @@
         </details>
 
         <div class="actions">
+          <button id="btnBundle" disabled data-i18n="actions.projectPack">Generate Project Pack (zip)</button>
           <button id="btnGenerate" disabled data-i18n="status.loadingPyodide">Loading Python…</button>
-          <button id="btnBundle" disabled data-i18n="actions.bundle">Download bundle (zip)</button>
         </div>
 
         <p class="status" id="status" data-i18n="status.initializing">Initializing…</p>
