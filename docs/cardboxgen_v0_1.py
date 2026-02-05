@@ -406,12 +406,13 @@ def svg_footer() -> str:
     return "</svg>\n"
 
 
-def svg_layer_styles() -> str:
+def svg_layer_styles(*, stroke_mm: float = 0.2) -> str:
+    s = max(0.001, float(stroke_mm))
     return (
         "  <style>\n"
-        "    .cut { fill: none; stroke: #ff0000; stroke-width: 0.2; }\n"
-        "    .score { fill: none; stroke: #0000ff; stroke-width: 0.2; stroke-dasharray: 2 2; }\n"
-        "    .engrave { fill: none; stroke: #000000; stroke-width: 0.2; }\n"
+        f"    .cut {{ fill: none; stroke: #ff0000; stroke-width: {fmt(s)}; }}\n"
+        f"    .score {{ fill: none; stroke: #0000ff; stroke-width: {fmt(s)}; stroke-dasharray: 2 2; }}\n"
+        f"    .engrave {{ fill: none; stroke: #000000; stroke-width: {fmt(s)}; }}\n"
         "    .text { fill: #000000; font-family: Arial, sans-serif; font-size: 4px; }\n"
         "  </style>\n"
     )
@@ -458,12 +459,20 @@ def make_svg(
     labels: bool,
     offset_kerf: bool,
     kerf_mm: float,
+    layout_margin_mm: float = 10.0,
+    layout_padding_mm: float = 12.0,
+    stroke_mm: float = 0.2,
     holding_tabs: bool = False,
     tab_width_mm: float = 2.0,
 ) -> str:
-    placed, W, H = arrange_panels(panels, sheet_width=sheet_width)
+    placed, W, H = arrange_panels(
+        panels,
+        sheet_width=sheet_width,
+        margin=float(layout_margin_mm),
+        gap=float(layout_padding_mm),
+    )
     meta_comment = "\n".join(textwrap.wrap(json.dumps(meta, ensure_ascii=False), width=120))
-    out: List[str] = [svg_header(W, H), svg_layer_styles()]
+    out: List[str] = [svg_header(W, H), svg_layer_styles(stroke_mm=stroke_mm)]
     out.append(f"  <!-- params: {meta_comment} -->\n")
 
     label_items: List[Tuple[str, float, float]] = []
@@ -573,6 +582,9 @@ class BoxParams:
 
     labels: bool = True
     sheet_width: float = 320.0
+    layout_margin_mm: float = 10.0
+    layout_padding_mm: float = 12.0
+    stroke_mm: float = 0.2
     export: str = "single_svg"  # single_svg | per_panel_svgs
     offset_kerf: bool = False
     holding_tabs: bool = False
@@ -1024,6 +1036,9 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--thumb-notch-depth", type=float, default=8.0)
 
     ap.add_argument("--sheet-width", type=float, default=320.0, help="Layout wrap width (mm)")
+    ap.add_argument("--margin-mm", type=float, default=10.0, help="Outer layout margin (mm)")
+    ap.add_argument("--padding-mm", type=float, default=12.0, help="Spacing between parts in layout (mm)")
+    ap.add_argument("--stroke-mm", type=float, default=0.2, help="SVG stroke width for CUT/SCORE/ENGRAVE (mm)")
     ap.add_argument("--export", choices=["single_svg", "per_panel_svgs"], default="single_svg")
     ap.add_argument("--offset-kerf", action="store_true", help="If pyclipper is installed, offset cut paths by kerf/2")
     ap.add_argument("--holding-tabs", action="store_true", help="Leave small uncut gaps (bridges) on polygon cuts")
@@ -1097,6 +1112,9 @@ def main():
         thumb_notch_depth=args.thumb_notch_depth,
         labels=not args.no_labels,
         sheet_width=args.sheet_width,
+        layout_margin_mm=args.margin_mm,
+        layout_padding_mm=args.padding_mm,
+        stroke_mm=args.stroke_mm,
         export=args.export,
         offset_kerf=args.offset_kerf,
         holding_tabs=args.holding_tabs,
@@ -1120,6 +1138,9 @@ def main():
             labels=p.labels,
             offset_kerf=p.offset_kerf,
             kerf_mm=p.kerf_mm,
+            layout_margin_mm=p.layout_margin_mm,
+            layout_padding_mm=p.layout_padding_mm,
+            stroke_mm=p.stroke_mm,
             holding_tabs=p.holding_tabs,
             tab_width_mm=p.tab_width_mm,
         )
@@ -1139,6 +1160,9 @@ def main():
             labels=p.labels,
             offset_kerf=p.offset_kerf,
             kerf_mm=p.kerf_mm,
+            layout_margin_mm=p.layout_margin_mm,
+            layout_padding_mm=p.layout_padding_mm,
+            stroke_mm=p.stroke_mm,
             holding_tabs=p.holding_tabs,
             tab_width_mm=p.tab_width_mm,
         )
