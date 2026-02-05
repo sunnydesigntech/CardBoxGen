@@ -99,9 +99,9 @@ Standardise warnings:
 4. `card_shoe` (front-draw)  
    - Use case: one-at-a-time card pull / controlled access.
    - Mechanism: draw slot + retention lip + internal ramp + stabilisers.
-5. `rotary_wheel` (candy/beans)  
+5. `candy_machine_rotary_layered` (candy/beans)  
    - Use case: portioning dry solids.
-   - Mechanism: rotating pocket wheel + chute + knob/axle.
+   - Mechanism: layered pocket wheel + internal cavities + screw-clamped sandwich housing + knob/axle.
 
 ### 4.2 Template “contract” (must pass before stable)
 Each stable template must:
@@ -135,7 +135,7 @@ Use this rule everywhere for divider slots, tab receivers, axle holes (if releva
 Implement a deterministic mapping (no LLM required):
 - If `stacking` and “one-at-a-time” → suggest `card_shoe` (primary) + `tray_open_front` (fallback)
 - If `stacking` and “organise compartments” → `divider_rack`
-- If `flowing` and needs portions → `rotary_wheel` (primary)
+- If `flowing` and needs portions → `candy_machine_rotary_layered` (primary)
 - If “visibility/inventory” → `window_front`
 
 **UX:** show 2–3 recommendations with short reasons:

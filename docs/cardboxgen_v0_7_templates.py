@@ -7,7 +7,7 @@ This file provides mechanism-first templates with validation:
 - divider_rack         (stacking access tray + slotted dividers)
 - window_front         (storage box with window)
 - card_shoe            (stacking cards, front-draw with ramp support)
-- rotary_wheel         (flowing solids, rotary pocket wheel module)
+- candy_machine_rotary_layered (flowing solids, layered rotary wheel candy machine)
 
 Outputs: laser-cut SVG (mm units) with labelled parts laid out.
 """
@@ -265,12 +265,28 @@ def generate_svg(template_id: str, params: dict) -> dict:
             **common,
         )
     elif tid == "rotary_wheel":
-        panels, warns, meta = build_rotary_wheel_candy(
+        # Legacy ID: previously pointed at a simplified prototype that is not mechanically valid.
+        # Keep backward-compat for old links by generating the real mechanism, but block export.
+        panels, warns, meta = build_candy_machine_rotary_layered(
             max_piece=float(params.get("max_piece", 18.0)),
             irregular=bool(params.get("irregular", False)),
+            hopper_h=float(params.get("hopper_h", 120.0)),
+            depth_layers_total=int(params.get("depth_layers_total", 8)),
+            wheel_layers=int(params.get("wheel_layers", 3)),
+            screw_d=float(params.get("screw_d", 3.2)),
+            screw_margin=float(params.get("screw_margin", 6.0)),
             axle_d=float(params.get("axle_d", 3.2)),
+            add_feet=bool(params.get("add_feet", False)),
             **common,
         )
+        warns = [
+            WarningMsg(
+                "error",
+                "TEMPLATE_DEPRECATED",
+                "Template 'rotary_wheel' is deprecated/disabled. Use 'candy_machine_rotary_layered' instead.",
+                "Switch template_id to 'candy_machine_rotary_layered' (Student Mode does this automatically).",
+            )
+        ] + (warns or [])
     elif tid == "candy_machine_rotary_layered":
         panels, warns, meta = build_candy_machine_rotary_layered(
             max_piece=float(params.get("max_piece", 18.0)),
@@ -1012,7 +1028,11 @@ def build_candy_machine_rotary_layered(
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--template", choices=["tray_open_front", "divider_rack", "window_front", "card_shoe", "rotary_wheel"], required=True)
+    ap.add_argument(
+        "--template",
+        choices=["tray_open_front", "divider_rack", "window_front", "card_shoe", "candy_machine_rotary_layered"],
+        required=True,
+    )
     ap.add_argument("--out", required=True, help="Output SVG path")
 
     ap.add_argument("--thickness", type=float, default=3.0)
