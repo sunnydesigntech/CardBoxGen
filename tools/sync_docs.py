@@ -14,11 +14,15 @@ from pathlib import Path
 
 def main() -> None:
     root = Path(__file__).resolve().parent.parent
-    src = root / "cardboxgen_v0_1.py"
-    dst = root / "docs" / "cardboxgen_v0_1.py"
-    dst.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(src, dst)
-    print(f"Synced {src} -> {dst}")
+    targets = [
+        (root / "cardboxgen_v0_1.py", root / "docs" / "cardboxgen_v0_1.py"),
+        (root / "cardboxgen_v0_7_templates.py", root / "docs" / "cardboxgen_v0_7_templates.py"),
+    ]
+
+    for src, dst in targets:
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, dst)
+        print(f"Synced {src} -> {dst}")
 
 
 if __name__ == "__main__":

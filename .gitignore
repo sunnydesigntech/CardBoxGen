@@ -3,3 +3,9 @@ __pycache__/
 *.pyc
 .DS_Store
 .pytest_cache/
+
+# Generated outputs
+artifacts/
+
+# Local sample bundle outputs (not required for the web app)
+cardboxgen_v0_7_templates_bundle/

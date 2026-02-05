@@ -1,0 +1,19 @@
+{
+  "template_id": "card_shoe",
+  "params": {
+    "card_w": 63.0,
+    "card_h": 88.0,
+    "card_t": 0.35,
+    "capacity": 60,
+    "ramp_angle_deg": 12.0,
+
+    "thickness": 3.0,
+    "kerf": 0.2,
+    "fit_clearance": 0.15,
+
+    "max_row_width": 340.0,
+    "gap": 12.0,
+    "stroke_mm": 0.2,
+    "labels": true
+  }
+}

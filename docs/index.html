@@ -12,7 +12,7 @@
         <div class="headerTitle">
           <h1>
             <span data-i18n="app.title">Card Box / Tray SVG Generator</span>
-            <span class="ver" data-i18n="app.version">v0.6</span>
+            <span class="ver" data-i18n="app.version">v0.7</span>
           </h1>
           <p class="sub" data-i18n="app.subtitle">
             Runs fully in your browser (Pyodide). Generates laser-cut SVG with deterministic finger joints.
@@ -43,8 +43,7 @@
 
       <div class="headerSticky">
         <button id="mobileGenerate" type="button" class="ghostBtn" data-i18n="actions.generate">Generate SVG</button>
-        <button id="mobileDownload" type="button" class="ghostBtn" disabled data-i18n="actions.downloadSvg">Download SVG</button>
-        <button id="mobileBundle" type="button" class="primaryBtn" disabled data-i18n="actions.projectPack">Generate Project Pack (zip)</button>
+        <button id="mobileBundle" type="button" class="primaryBtn" disabled data-i18n="actions.projectPack">Download project pack (ZIP)</button>
       </div>
     </header>
 
@@ -120,6 +119,12 @@
                 <span data-i18n="labels.cardHeight">Card height (mm)</span>
               </label>
               <input id="cardHeight" type="number" value="88" step="0.1" min="1" />
+            </div>
+            <div class="row" id="studentStackingThicknessRow">
+              <label for="cardThickness" data-help="cardThickness">
+                <span data-i18n="labels.cardThickness">Card thickness (mm)</span>
+              </label>
+              <input id="cardThickness" type="number" value="0.35" step="0.01" min="0.05" />
             </div>
             <div class="row" id="studentFlowingSizeRow" hidden>
               <label for="maxPieceSize" data-help="maxPieceSize">
@@ -204,15 +209,11 @@
                 <span data-i18n="labels.mechanism">Mechanism</span>
               </label>
               <select id="mechanism">
-                <option value="card_shoe_front_draw" selected data-i18n="options.mechanism.card_shoe_front_draw">Card shoe (front draw)</option>
+                <option value="card_shoe" selected data-i18n="options.mechanism.card_shoe">Card shoe (front draw)</option>
                 <option value="tray_open_front" data-i18n="options.mechanism.tray_open_front">Open-front tray</option>
                 <option value="divider_rack" data-i18n="options.mechanism.divider_rack">Divider rack</option>
-                <option value="candy_rotary_wheel" data-i18n="options.mechanism.candy_rotary_wheel">Rotary wheel candy</option>
-                <option value="candy_plinko" data-i18n="options.mechanism.candy_plinko">Plinko candy</option>
-
-                <option value="dispenser_slot_front" data-i18n="options.mechanism.dispenser_slot_front">Front slot dispenser</option>
                 <option value="window_front" data-i18n="options.mechanism.window_front">Window front</option>
-                <option value="box_with_lid" data-i18n="options.mechanism.box_with_lid">Box with lid</option>
+                <option value="candy_machine_rotary_layered" data-i18n="options.mechanism.candy_machine_rotary_layered">Candy machine (layered rotary wheel)</option>
               </select>
             </div>
 
@@ -234,28 +235,7 @@
             <div class="readout" id="reasoningExternal"></div>
             <div class="readout" id="reasoningOpenings"></div>
 
-            <div class="row inline">
-              <label class="check" data-help="exportAllLanguages">
-                <input id="exportAllLanguages" type="checkbox" />
-                <span data-i18n="labels.exportAllLanguages">Export all languages</span>
-              </label>
-            </div>
-
-            <p class="hint" data-i18n="steps.step4Hint">When ready, press Generate Project Pack (zip).</p>
-
-            <p class="hint" data-i18n="steps.step3Hint">
-              If you don’t know kerf yet, use the optional Fit Test (Advanced → Fit tools), cut it, then pick the best label.
-            </p>
-
-            <div class="checklist">
-              <div class="checklistTitle" data-i18n="steps.checklistTitle">Calibration checklist</div>
-              <ol class="checklistList">
-                <li data-i18n="steps.check1">Run Fit Test (optional)</li>
-                <li data-i18n="steps.check2">Cut it</li>
-                <li data-i18n="steps.check3">Choose best label</li>
-                <li data-i18n="steps.check4">Apply values and regenerate final SVG</li>
-              </ol>
-            </div>
+            <p class="hint" data-i18n="steps.step4Hint">When ready, press Download project pack (ZIP).</p>
           </div>
         </details>
 
@@ -265,14 +245,11 @@
           <div class="row">
           <label for="preset" data-help="preset"><span data-i18n="labels.preset">Preset</span></label>
           <select id="preset">
-            <option value="card_shoe_front_draw">card_shoe_front_draw</option>
+            <option value="card_shoe">card_shoe</option>
             <option value="tray_open_front">tray_open_front</option>
             <option value="divider_rack">divider_rack</option>
-            <option value="candy_rotary_wheel">candy_rotary_wheel</option>
-            <option value="candy_plinko">candy_plinko</option>
-            <option value="dispenser_slot_front">dispenser_slot_front</option>
             <option value="window_front">window_front</option>
-            <option value="box_with_lid">box_with_lid</option>
+            <option value="candy_machine_rotary_layered">candy_machine_rotary_layered</option>
           </select>
           </div>
 
@@ -344,19 +321,6 @@
               <input id="labels" type="checkbox" checked />
               <span data-i18n="labels.labelsToggle">Labels</span>
             </label>
-            <label class="check" data-help="lid">
-              <input id="lid" type="checkbox" />
-              <span data-i18n="labels.lid">Lid (only for box_with_lid)</span>
-            </label>
-          </div>
-
-          <div class="row inline">
-            <label class="check" data-help="holdingTabs">
-              <input id="holdingTabs" type="checkbox" />
-              <span data-i18n="labels.holdingTabs">Holding tabs</span>
-            </label>
-            <label for="tabWidth" data-help="tabWidth"><span data-i18n="labels.tabWidth">Tab width (mm)</span></label>
-            <input id="tabWidth" type="number" value="2" step="0.1" min="0" />
           </div>
 
         </details>
@@ -366,7 +330,7 @@
 
           <div class="row">
             <label for="kerf" data-help="kerf"><span data-i18n="labels.kerf">Kerf (mm)</span></label>
-            <input id="kerf" type="number" value="" placeholder="0.2" step="0.01" min="0" />
+            <input id="kerf" type="number" value="0.2" placeholder="0.2" step="0.01" min="0" />
           </div>
           <div class="row">
             <label for="clearance" data-help="clearance"><span data-i18n="labels.clearance">Joint clearance (mm)</span></label>
@@ -375,21 +339,7 @@
 
           <div class="readout" id="jointRule"></div>
 
-          <div class="row">
-            <label for="calSet" data-help="calSet"><span data-i18n="labels.calSet">Calibration set</span></label>
-            <select id="calSet">
-              <option value="student" selected data-i18n="labels.calStudent">Student (tight/normal/loose)</option>
-              <option value="full" data-i18n="labels.calFull">Full list</option>
-            </select>
-          </div>
-
-          <details class="section fitTools">
-            <summary data-i18n="sections.fitTools">Fit tools (optional)</summary>
-            <p class="hint" data-i18n="fitTools.hint">Generate a small test cut to measure kerf and pick a joint clearance that feels right.</p>
-            <div class="actions">
-              <button id="btnCalibration" disabled data-i18n="actions.fitTest">Fit Test (optional)</button>
-            </div>
-          </details>
+          
 
           <div class="row">
             <label for="fingerWidth" data-help="fingerWidth"><span data-i18n="labels.fingerWidth">Target tab width (mm)</span></label>
@@ -425,16 +375,8 @@
           </div>
 
           <div class="row">
-            <label for="slotWidth" data-help="slotWidth"><span data-i18n="labels.slotWidth">Slot width (mm)</span></label>
-            <input id="slotWidth" type="number" value="86" step="0.1" />
-          </div>
-          <div class="row">
-            <label for="slotHeight" data-help="slotHeight"><span data-i18n="labels.slotHeight">Slot height (mm)</span></label>
-            <input id="slotHeight" type="number" value="18" step="0.1" />
-          </div>
-          <div class="row">
-            <label for="slotY" data-help="slotY"><span data-i18n="labels.slotY">Slot Y from bottom (mm)</span></label>
-            <input id="slotY" type="number" value="38" step="0.1" />
+            <label for="windowMargin" data-help="windowMargin"><span data-i18n="labels.windowMargin">Window margin (mm)</span></label>
+            <input id="windowMargin" type="number" value="12" step="0.1" min="0" />
           </div>
         </details>
 
@@ -446,26 +388,50 @@
             <input id="dividerBays" type="number" value="3" step="1" min="1" />
           </div>
           <div class="row">
-            <label for="pocketCount" data-help="pocketCount"><span data-i18n="labels.pocketCount">Pocket count</span></label>
-            <input id="pocketCount" type="number" value="8" step="1" min="3" />
-          </div>
-          <div class="row">
             <label for="axleDiameter" data-help="axleDiameter"><span data-i18n="labels.axleDiameter">Axle diameter (mm)</span></label>
             <input id="axleDiameter" type="number" value="6" step="0.1" min="1" />
           </div>
+
           <div class="row">
-            <label for="rampCount" data-help="rampCount"><span data-i18n="labels.rampCount">Ramp count</span></label>
-            <input id="rampCount" type="number" value="6" step="1" min="1" />
+            <label for="hopperHeight" data-help="hopperHeight"><span data-i18n="labels.hopperHeight">Hopper height (mm)</span></label>
+            <input id="hopperHeight" type="number" value="90" step="1" min="10" />
+          </div>
+          <div class="row">
+            <label for="depthLayersTotal" data-help="depthLayersTotal"><span data-i18n="labels.depthLayersTotal">Total depth layers</span></label>
+            <input id="depthLayersTotal" type="number" value="8" step="1" min="2" />
+          </div>
+          <div class="row">
+            <label for="wheelLayers" data-help="wheelLayers"><span data-i18n="labels.wheelLayers">Wheel layers</span></label>
+            <input id="wheelLayers" type="number" value="3" step="1" min="1" />
+          </div>
+          <div class="row">
+            <label for="screwDiameter" data-help="screwDiameter"><span data-i18n="labels.screwDiameter">Screw hole diameter (mm)</span></label>
+            <input id="screwDiameter" type="number" value="3.2" step="0.1" min="1" />
+          </div>
+          <div class="row">
+            <label for="screwMargin" data-help="screwMargin"><span data-i18n="labels.screwMargin">Screw margin (mm)</span></label>
+            <input id="screwMargin" type="number" value="6" step="0.5" min="0" />
+          </div>
+          <div class="row inline">
+            <label class="check" data-help="addFeet">
+              <input id="addFeet" type="checkbox" />
+              <span data-i18n="labels.addFeet">Add feet</span>
+            </label>
+          </div>
+          <div class="row">
+            <label for="rampAngle" data-help="rampAngle"><span data-i18n="labels.rampAngle">Ramp angle (degrees)</span></label>
+            <input id="rampAngle" type="number" value="12" step="0.5" min="0" max="45" />
           </div>
         </details>
 
+        <p class="hint" id="exportHint" hidden></p>
+
         <div class="actions">
-          <button id="btnBundle" disabled data-i18n="actions.projectPack">Generate Project Pack (zip)</button>
+          <button id="btnBundle" disabled data-i18n="actions.projectPack">Download project pack (ZIP)</button>
           <button id="btnGenerate" disabled data-i18n="status.loadingPyodide">Loading Python…</button>
         </div>
 
         <p class="status" id="status" data-i18n="status.initializing">Initializing…</p>
-        <a class="download" id="download" download="out.svg" hidden data-i18n="actions.downloadSvg">Download SVG</a>
         <div class="warnings" id="warnings" hidden></div>
       </section>
 

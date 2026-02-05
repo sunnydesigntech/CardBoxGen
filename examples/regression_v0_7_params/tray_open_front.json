@@ -1,0 +1,21 @@
+{
+  "template_id": "tray_open_front",
+  "params": {
+    "inner_w": 135.0,
+    "inner_d": 90.0,
+    "inner_h": 80.0,
+    "front_h": 30.0,
+    "scoop": true,
+    "scoop_r": 22.0,
+    "scoop_depth": 16.0,
+
+    "thickness": 3.0,
+    "kerf": 0.2,
+    "fit_clearance": 0.15,
+
+    "max_row_width": 340.0,
+    "gap": 12.0,
+    "stroke_mm": 0.2,
+    "labels": true
+  }
+}

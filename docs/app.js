@@ -3,7 +3,7 @@
 
 import { loadPyodide } from "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.mjs";
 
-const APP_VERSION = "0.6";
+const APP_VERSION = "0.7";
 const LANG_STORAGE_KEY = "cardboxgen.lang";
 
 let currentLang = "en";
@@ -98,7 +98,6 @@ const els = {
   controlsToggle: document.getElementById("controlsToggle"),
   controlsPanel: document.getElementById("controlsPanel"),
   mobileGenerate: document.getElementById("mobileGenerate"),
-  mobileDownload: document.getElementById("mobileDownload"),
   mobileBundle: document.getElementById("mobileBundle"),
 
   studentMode: document.getElementById("studentMode"),
@@ -134,14 +133,19 @@ const els = {
   // v0.5 Student item inputs
   cardWidth: document.getElementById("cardWidth"),
   cardHeight: document.getElementById("cardHeight"),
+  cardThickness: document.getElementById("cardThickness"),
   capacityCards: document.getElementById("capacityCards"),
   maxPieceSize: document.getElementById("maxPieceSize"),
 
   // v0.5 mechanism params
   dividerBays: document.getElementById("dividerBays"),
-  pocketCount: document.getElementById("pocketCount"),
   axleDiameter: document.getElementById("axleDiameter"),
-  rampCount: document.getElementById("rampCount"),
+  hopperHeight: document.getElementById("hopperHeight"),
+  depthLayersTotal: document.getElementById("depthLayersTotal"),
+  wheelLayers: document.getElementById("wheelLayers"),
+  screwDiameter: document.getElementById("screwDiameter"),
+  screwMargin: document.getElementById("screwMargin"),
+  addFeet: document.getElementById("addFeet"),
   preset: document.getElementById("preset"),
   dimMode: document.getElementById("dimMode"),
   innerWidth: document.getElementById("innerWidth"),
@@ -154,7 +158,6 @@ const els = {
   kerf: document.getElementById("kerf"),
   clearance: document.getElementById("clearance"),
   jointRule: document.getElementById("jointRule"),
-  calSet: document.getElementById("calSet"),
   fingerWidth: document.getElementById("fingerWidth"),
   minFingers: document.getElementById("minFingers"),
   sheetWidth: document.getElementById("sheetWidth"),
@@ -162,29 +165,23 @@ const els = {
   paddingMm: document.getElementById("paddingMm"),
   strokeMm: document.getElementById("strokeMm"),
   labels: document.getElementById("labels"),
-  lid: document.getElementById("lid"),
-  holdingTabs: document.getElementById("holdingTabs"),
-  tabWidth: document.getElementById("tabWidth"),
   frontHeight: document.getElementById("frontHeight"),
   scoop: document.getElementById("scoop"),
   scoopRadius: document.getElementById("scoopRadius"),
   scoopDepth: document.getElementById("scoopDepth"),
-  slotWidth: document.getElementById("slotWidth"),
-  slotHeight: document.getElementById("slotHeight"),
-  slotY: document.getElementById("slotY"),
+  windowMargin: document.getElementById("windowMargin"),
   btnGenerate: document.getElementById("btnGenerate"),
-  btnCalibration: document.getElementById("btnCalibration"),
   btnBundle: document.getElementById("btnBundle"),
   status: document.getElementById("status"),
+  exportHint: document.getElementById("exportHint"),
   preview: document.getElementById("preview"),
-  download: document.getElementById("download"),
   warnings: document.getElementById("warnings"),
 
   // v0.6 Step 4 — Reasoning + export
   reasoningInternal: document.getElementById("reasoningInternal"),
   reasoningExternal: document.getElementById("reasoningExternal"),
   reasoningOpenings: document.getElementById("reasoningOpenings"),
-  exportAllLanguages: document.getElementById("exportAllLanguages"),
+  rampAngle: document.getElementById("rampAngle"),
 
   step1Badge: document.getElementById("step1Badge"),
   step2Badge: document.getElementById("step2Badge"),
@@ -206,6 +203,28 @@ function setStatusKey(key, vars = null) {
   setStatus(t(key, vars));
 }
 
+function hasBlockingErrors() {
+  return (pythonWarnings || []).some((w) => String(w?.severity || "").toLowerCase() === "error");
+}
+
+function updateExportUi() {
+  const blocked = hasBlockingErrors();
+  const canExport = !!lastSvg && !blocked;
+
+  if (els.exportHint) {
+    if (blocked) {
+      els.exportHint.hidden = false;
+      els.exportHint.textContent = t("status.fixErrorsToExport");
+    } else {
+      els.exportHint.hidden = true;
+      els.exportHint.textContent = "";
+    }
+  }
+
+  if (els.btnBundle) els.btnBundle.disabled = !canExport;
+  if (els.mobileBundle) els.mobileBundle.disabled = !canExport;
+}
+
 function num(el, fallback = null) {
   const v = el.value.trim();
   if (v === "") return fallback;
@@ -225,10 +244,13 @@ function escapeHtmlWithBreaks(s) {
 let pyodide = null;
 let lastSvg = null;
 let lastParams = null;
+let lastMeta = null;
 let lastDownloadFilename = null;
 let lastDownloadUrl = null;
 let pythonWarnings = [];
-let calibrationGeneratedOnce = false;
+
+let autoFitNextRender = true;
+let lastRenderedTemplateId = null;
 
 let lastDerived = null;
 let lastAutoMechanism = null;
@@ -263,7 +285,6 @@ const HELP_CATEGORY_BY_KEY = {
   dispenseTarget: "Project",
   mechanism: "Project",
   mechanismJustification: "Project",
-  exportAllLanguages: "Export",
   preset: "Project",
 
   dimensionMode: "Dimensions",
@@ -275,7 +296,6 @@ const HELP_CATEGORY_BY_KEY = {
   fit: "Laser fit",
   kerf: "Laser fit",
   clearance: "Laser fit",
-  calSet: "Laser fit",
   fingerWidth: "Laser fit",
   minTabs: "Laser fit",
 
@@ -301,6 +321,13 @@ const HELP_CATEGORY_BY_KEY = {
   pocketCount: "Preset options",
   axleDiameter: "Preset options",
   rampCount: "Preset options",
+
+  hopperHeight: "Preset options",
+  depthLayersTotal: "Preset options",
+  wheelLayers: "Preset options",
+  screwDiameter: "Preset options",
+  screwMargin: "Preset options",
+  addFeet: "Preset options",
 
   troubleshooting: "Troubleshooting",
 };
@@ -440,12 +467,6 @@ function computeDerived() {
     });
   }
 
-  const openings = {
-    slot_w: num(els.slotWidth, 0),
-    slot_h: num(els.slotHeight, 0),
-    slot_y: num(els.slotY, 0),
-  };
-
   lastDerived = {
     thickness,
     kerf,
@@ -456,7 +477,7 @@ function computeDerived() {
     },
     internal,
     external,
-    openings,
+    openings: null,
   };
 
   if (els.reasoningInternal) {
@@ -473,14 +494,7 @@ function computeDerived() {
       h: external.h.toFixed(1),
     });
   }
-  if (els.reasoningOpenings) {
-    const preset = els.preset?.value ?? "";
-    els.reasoningOpenings.textContent = t("readouts.derivedOpenings", {
-      preset,
-      w: Number.isFinite(openings.slot_w) ? openings.slot_w.toFixed(1) : "",
-      h: Number.isFinite(openings.slot_h) ? openings.slot_h.toFixed(1) : "",
-    });
-  }
+  if (els.reasoningOpenings) els.reasoningOpenings.textContent = "";
 
   updateStepBadges();
   renderWarnings();
@@ -516,6 +530,7 @@ function setStudentItemUi() {
   const stacking = itemType !== "flowing";
   document.getElementById("studentStackingSizeRow")?.toggleAttribute("hidden", !stacking);
   document.getElementById("studentStackingSizeRow2")?.toggleAttribute("hidden", !stacking);
+  document.getElementById("studentStackingThicknessRow")?.toggleAttribute("hidden", !stacking);
   document.getElementById("studentStackingCapacityRow")?.toggleAttribute("hidden", !stacking);
   document.getElementById("studentFlowingSizeRow")?.toggleAttribute("hidden", stacking);
   document.getElementById("studentFlowingFlagsRow")?.toggleAttribute("hidden", stacking);
@@ -529,39 +544,42 @@ function recommendMechanismsFromStudentInputs() {
   const itemType = els.dispenseType?.value ?? "stacking";
   const target = els.dispenseTargetType?.value ?? "";
   const irregular = !!els.irregularShape?.checked;
+  const storage = String(els.storageTarget?.value ?? "").toLowerCase();
+  const problem = String(els.problemStatement?.value ?? "").toLowerCase();
+  const wantsVisibility = /(window|visible|see|inventory|display)/i.test(`${storage} ${problem}`);
 
   const out = [];
   const push = (id, reasonKey) => out.push({ id, reasonKey });
 
   if (itemType === "flowing") {
-    if (target === "counted" && !irregular) {
-      push("candy_rotary_wheel", "recs.reason.flowingCounted");
-      push("candy_plinko", "recs.reason.flowingTolerant");
-    } else {
-      push("candy_plinko", "recs.reason.flowingTolerant");
-      push("candy_rotary_wheel", "recs.reason.flowingCounted");
-    }
-    // Third option: keep a simple open-front tray as a fallback for non-dispensing storage prototypes.
+    // v0.7: controlled portioning via layered rotary wheel candy machine.
+    push(
+      "candy_machine_rotary_layered",
+      target === "counted" && !irregular ? "recs.reason.flowingCounted" : "recs.reason.flowingPortions"
+    );
+    if (wantsVisibility) push("window_front", "recs.reason.visibility");
     push("tray_open_front", "recs.reason.fallbackPrototype");
     return out.slice(0, 3);
   }
 
   // Stacking (cards / flat items)
   if (target === "one") {
-    push("card_shoe_front_draw", "recs.reason.stackingOne");
+    push("card_shoe", "recs.reason.stackingOne");
+    if (wantsVisibility) push("window_front", "recs.reason.visibility");
     push("tray_open_front", "recs.reason.stackingGrab");
-    push("divider_rack", "recs.reason.stackingMulti");
     return out;
   }
   if (target === "multi") {
     push("divider_rack", "recs.reason.stackingMulti");
+    if (wantsVisibility) push("window_front", "recs.reason.visibility");
     push("tray_open_front", "recs.reason.stackingGrab");
-    push("card_shoe_front_draw", "recs.reason.stackingOne");
+    push("card_shoe", "recs.reason.stackingOne");
     return out;
   }
   // grab / default
   push("tray_open_front", "recs.reason.stackingGrab");
-  push("card_shoe_front_draw", "recs.reason.stackingOne");
+  if (wantsVisibility) push("window_front", "recs.reason.visibility");
+  push("card_shoe", "recs.reason.stackingOne");
   push("divider_rack", "recs.reason.stackingMulti");
   return out;
 }
@@ -579,6 +597,11 @@ function rebuildMechanismRecommendations() {
     return;
   }
 
+  const chosen = chooseMechanismFromStudentInputs();
+  const chosenReasonKey = recs.find((r) => r.id === chosen)?.reasonKey || recs[0]?.reasonKey || "";
+  const chosenName = t(`options.mechanism.${chosen}`);
+  const chosenReason = chosenReasonKey ? t(chosenReasonKey) : "";
+
   const html =
     `<div><strong>${escapeHtml(t("recs.title"))}</strong></div>` +
     `<ol>` +
@@ -589,7 +612,9 @@ function rebuildMechanismRecommendations() {
         return `<li><strong>${escapeHtml(name)}</strong>${reason ? ` — ${escapeHtml(reason)}` : ""}</li>`;
       })
       .join("") +
-    `</ol>`;
+    `</ol>` +
+    `<div class="hint"><strong>${escapeHtml(t("recs.selectedTitle"))}</strong> ${escapeHtml(chosenName)}${chosenReason ? ` — ${escapeHtml(chosenReason)}` : ""}</div>`;
+
   els.mechanismRecs.innerHTML = html;
 }
 
@@ -620,22 +645,26 @@ function applyStudentAutoDesign() {
     els.innerDepth.value = String(Math.round(Math.max(80, s * 5)));
     els.innerHeight.value = String(Math.round(Math.max(120, s * 7)));
 
-    // Encourage outlet/chute size via existing slot fields (used for legacy presets too).
-    if (els.slotWidth) els.slotWidth.value = String(Math.round(Math.max(22, s * 1.6)));
-    if (els.slotHeight) els.slotHeight.value = String(Math.round(Math.max(18, s * 1.2)));
-    if (els.slotY) els.slotY.value = String(Math.round(Math.max(20, (s * 7) * 0.35)));
+    // Candy machine defaults.
+    if (els.axleDiameter) els.axleDiameter.value = String(3.2);
+    if (els.hopperHeight) els.hopperHeight.value = String(Math.round(Math.max(70, s * 6)));
+    if (els.depthLayersTotal) els.depthLayersTotal.value = String(8);
+    if (els.wheelLayers) els.wheelLayers.value = String(3);
+    if (els.screwDiameter) els.screwDiameter.value = String(3.2);
+    if (els.screwMargin) els.screwMargin.value = String(6);
+    if (els.addFeet) els.addFeet.checked = false;
   } else {
     const cw = Math.max(10, num(els.cardWidth, 63));
     const ch = Math.max(10, num(els.cardHeight, 88));
+    const ct = Math.max(0.08, num(els.cardThickness, 0.35));
     const cap = Math.max(1, Math.floor(num(els.capacityCards, 60)));
 
     const sideClear = 1.0;
     const backClear = 2.0;
     const topClear = 3.0;
 
-    // Rough stack height estimate (mm per card). Student-friendly and deterministic.
-    const perCard = 0.32;
-    const stackH = cap * perCard;
+    // Stack height estimate from thickness.
+    const stackH = cap * ct;
 
     const w = cw + 2 * sideClear;
     const d = ch + backClear;
@@ -645,11 +674,8 @@ function applyStudentAutoDesign() {
     els.innerDepth.value = String((Math.round(d * 10) / 10).toFixed(1));
     els.innerHeight.value = String((Math.round(h * 10) / 10).toFixed(1));
 
-    // For card shoe, make a reasonable draw slot.
-    if (chosen === "card_shoe_front_draw") {
-      if (els.slotWidth) els.slotWidth.value = String((Math.round((cw - 4) * 10) / 10).toFixed(1));
-      if (els.slotHeight) els.slotHeight.value = String(18);
-      if (els.slotY) els.slotY.value = String(35);
+    if (chosen === "card_shoe") {
+      if (els.rampAngle) els.rampAngle.value = String(12);
     }
   }
 
@@ -681,16 +707,15 @@ async function init() {
   pyodide = await loadPyodide({});
 
   setStatusKey("status.loadingModule");
-  const resp = await fetch("./cardboxgen_v0_1.py", { cache: "no-store" });
+  const resp = await fetch("./cardboxgen_v0_7_templates.py", { cache: "no-store" });
   if (!resp.ok) throw new Error(`Failed to load Python module: ${resp.status}`);
   const code = await resp.text();
 
   // Write into the virtual FS and import as a module so it doesn't run the CLI.
-  pyodide.FS.writeFile("cardboxgen_v0_1.py", code);
-  await pyodide.runPythonAsync(`import importlib\ncard = importlib.import_module('cardboxgen_v0_1')`);
+  pyodide.FS.writeFile("cardboxgen_v0_7_templates.py", code);
+  await pyodide.runPythonAsync(`import importlib\ntmpl = importlib.import_module('cardboxgen_v0_7_templates')`);
 
   els.btnGenerate.disabled = false;
-  if (els.btnCalibration) els.btnCalibration.disabled = false;
   els.btnBundle.disabled = false;
   els.btnGenerate.textContent = t("actions.generate");
 
@@ -738,42 +763,28 @@ function updateStepBadges() {
   const thicknessSet = nonEmpty(els.thickness?.value);
   const kerfKnown = nonEmpty(els.kerf?.value);
   const hasCut = !!lastSvg;
-  const step4Complete = !inStudent || (step3Complete && thicknessSet && (kerfKnown || calibrationGeneratedOnce) && hasCut);
+  const hasErrors = hasBlockingErrors();
+  const step4Complete = !inStudent || (step3Complete && thicknessSet && kerfKnown && hasCut && !hasErrors);
 
   if (els.step1Badge) els.step1Badge.textContent = step1Complete ? t("steps.complete") : t("steps.incomplete");
   if (els.step2Badge) els.step2Badge.textContent = step2Complete ? t("steps.complete") : t("steps.incomplete");
   if (els.step3Badge) els.step3Badge.textContent = step3Complete ? t("steps.complete") : t("steps.incomplete");
   if (els.step4Badge) els.step4Badge.textContent = step4Complete ? t("steps.complete") : t("steps.incomplete");
 
-  // In student mode, gate Project Pack export on Step 4.
-  if (els.btnBundle) els.btnBundle.disabled = inStudent ? !step4Complete : false;
-  if (els.mobileBundle) els.mobileBundle.disabled = inStudent ? !step4Complete : false;
+  if (els.btnBundle) els.btnBundle.disabled = hasErrors || !lastSvg || (inStudent ? !step4Complete : false);
+  if (els.mobileBundle) els.mobileBundle.disabled = hasErrors || !lastSvg || (inStudent ? !step4Complete : false);
+
+  updateExportUi();
 }
 
 function collectUiWarningKeys(p) {
   const keys = [];
-  if (p.kerf_mm >= p.thickness) keys.push("warnings.kerfTooBig");
+  if (p.kerf >= p.thickness) keys.push("warnings.kerfTooBig");
 
   // Heuristic: for ~3mm stock, >0.4mm clearance is usually overly loose.
-  if (p.thickness <= 3.5 && p.clearance_mm > 0.4) keys.push("warnings.clearanceLarge");
+  if (p.thickness <= 3.5 && p.fit_clearance > 0.4) keys.push("warnings.clearanceLarge");
 
   if ((p.min_fingers ?? 3) < 3) keys.push("warnings.minTabs");
-
-  if (p.preset === "dispenser_slot_front") {
-    const sw = p.slot_width;
-    const sh = p.slot_height;
-    const sy = p.slot_y_from_bottom;
-    const ok =
-      Number.isFinite(sw) &&
-      Number.isFinite(sh) &&
-      Number.isFinite(sy) &&
-      sw > 0 &&
-      sh > 0 &&
-      sy >= 0 &&
-      sw <= p.inner_width &&
-      sy + sh <= p.inner_height;
-    if (!ok) keys.push("warnings.slotInvalid");
-  }
 
   // v0.6 coach layer: deterministic design review + requirements quality checks.
   const inStudent = !!els.studentMode?.checked;
@@ -802,32 +813,18 @@ function collectUiWarningKeys(p) {
   const itemType = els.dispenseType?.value ?? "stacking";
   const irregular = !!els.irregularShape?.checked;
 
-  if (itemType === "flowing" && Number.isFinite(p.max_piece_size) && p.max_piece_size > 0) {
-    const funnel = Math.min(p.inner_width, p.inner_depth);
-    const ratio = funnel / p.max_piece_size;
+  if (itemType === "flowing" && Number.isFinite(p.max_piece) && p.max_piece > 0) {
+    const funnel = Math.min(p.inner_w, p.inner_d);
+    const ratio = funnel / p.max_piece;
     const threshold = irregular ? 5.0 : 4.0;
     if (ratio > 0 && ratio < threshold) keys.push("warnings.flowingBridgingRisk");
   }
 
-  if (p.preset === "candy_rotary_wheel") {
-    const pc = Number(p.pocket_count ?? 0);
-    if (pc >= 10 && Number.isFinite(p.inner_width) && p.inner_width > 0) {
-      const estPitch = p.inner_width / pc;
-      if (estPitch < p.thickness * 1.3) keys.push("warnings.rotaryPocketWallsThin");
-    }
-  }
-
-  if (p.preset === "card_shoe_front_draw" && Number.isFinite(p.card_height) && p.card_height > 0) {
-    const fh = Number(p.front_height ?? 0);
-    if (fh > 0 && fh > p.card_height * 0.85) keys.push("warnings.cardShoeFrontTooTall");
-    if (fh > 0 && fh < p.card_height * 0.35) keys.push("warnings.cardShoeFrontTooShort");
-  }
-
-  if (Number.isFinite(p.inner_height) && p.inner_height >= 200 && p.thickness <= 3.2) {
+  if (Number.isFinite(p.inner_h) && p.inner_h >= 200 && p.thickness <= 3.2) {
     keys.push("warnings.tallWallsFlexRisk");
   }
 
-  if (Number.isFinite(p.layout_padding_mm) && p.layout_padding_mm > 0 && p.layout_padding_mm < 6) {
+  if (Number.isFinite(p.gap) && p.gap > 0 && p.gap < 6) {
     keys.push("warnings.paddingTooSmall");
   }
 
@@ -838,7 +835,6 @@ const UI_WARNING_HELP_KEY = {
   "warnings.kerfTooBig": "kerf",
   "warnings.clearanceLarge": "clearance",
   "warnings.minTabs": "minTabs",
-  "warnings.slotInvalid": "slotHeight",
 
   "warnings.vagueClientContext": "clientContext",
   "warnings.vagueProblemStatement": "problemStatement",
@@ -846,9 +842,6 @@ const UI_WARNING_HELP_KEY = {
   "warnings.vagueDispenseTarget": "dispenseTarget",
 
   "warnings.flowingBridgingRisk": "maxPieceSize",
-  "warnings.rotaryPocketWallsThin": "pocketCount",
-  "warnings.cardShoeFrontTooTall": "frontHeight",
-  "warnings.cardShoeFrontTooShort": "frontHeight",
   "warnings.tallWallsFlexRisk": "innerHeight",
   "warnings.paddingTooSmall": "padding",
 };
@@ -859,7 +852,21 @@ function renderWarnings() {
   const uiWarnings = uiKeys.map((k) => ({ text: t(k), helpKey: UI_WARNING_HELP_KEY[k] || null }));
 
   const allPython = Array.isArray(pythonWarnings) ? pythonWarnings : [];
-  const hasAny = uiWarnings.length || allPython.length;
+  const pyWarnings = allPython
+    .map((w) => {
+      const sev = String(w?.severity || "warn").toLowerCase();
+      const code = String(w?.code || "").trim();
+      const msg = String(w?.message || "").trim();
+      const fix = String(w?.fix || "").trim();
+      return { severity: sev, code, message: msg, fix };
+    })
+    .filter((w) => w.message);
+
+  const pyErrors = pyWarnings.filter((w) => w.severity === "error");
+  const pyWarns = pyWarnings.filter((w) => w.severity === "warn");
+  const pyInfos = pyWarnings.filter((w) => w.severity === "info");
+
+  const hasAny = uiWarnings.length || pyWarnings.length;
   if (!hasAny) {
     els.warnings.hidden = true;
     els.warnings.innerHTML = "";
@@ -877,81 +884,102 @@ function renderWarnings() {
         .join("")}</ul></div>`
     : "";
 
-  const pyList = allPython.length
-    ? `<div class="warnBlock"><strong>${escapeHtml(t("warnings.title"))}</strong><ul>${allPython
-        .map((w) => `<li>${escapeHtml(String(w))}</li>`)
-        .join("")}</ul></div>`
+  const renderPyItem = (w) => {
+    const code = w.code ? ` <code>${escapeHtml(w.code)}</code>` : "";
+    const fix = w.fix ? `<div class="hint">${escapeHtml(t("warnings.fix"))}: ${escapeHtmlWithBreaks(w.fix)}</div>` : "";
+    return `<li><strong>${escapeHtml(w.severity.toUpperCase())}</strong>${code}: ${escapeHtmlWithBreaks(w.message)}${fix}</li>`;
+  };
+
+  const pyList = pyWarnings.length
+    ? `<div class="warnBlock"><strong>${escapeHtml(t("warnings.title"))}</strong>` +
+      (pyErrors.length ? `<div class="hint">${escapeHtml(t("warnings.blocking"))}</div><ul>${pyErrors.map(renderPyItem).join("")}</ul>` : "") +
+      (pyWarns.length ? `<ul>${pyWarns.map(renderPyItem).join("")}</ul>` : "") +
+      (pyInfos.length ? `<ul>${pyInfos.map(renderPyItem).join("")}</ul>` : "") +
+      `</div>`
     : "";
 
   els.warnings.hidden = false;
   els.warnings.innerHTML = uiList + pyList;
+
+  updateExportUi();
 }
 
 function buildParams() {
-  const preset = els.preset.value;
-  const dimMode = els.dimMode.value;
+  const inStudent = !!els.studentMode?.checked;
+  const templateId = String((inStudent ? els.mechanism?.value : els.preset?.value) || "tray_open_front").trim();
+  const dimMode = els.dimMode?.value || "internal";
 
   let innerW = num(els.innerWidth, 135);
   let innerD = num(els.innerDepth, 90);
-  let innerH = num(els.innerHeight, 225);
-  const t = num(els.thickness, 3);
+  let innerH = num(els.innerHeight, 80);
+  const thickness = num(els.thickness, 3);
 
   // If user entered external sizes, convert to internal before sending to generator.
   if (dimMode === "external") {
-    innerW = innerW - 2 * t;
-    innerD = innerD - 2 * t;
-    innerH = innerH - t;
+    innerW = innerW - 2 * thickness;
+    innerD = innerD - 2 * thickness;
+    innerH = innerH - thickness;
   }
 
-  const p = {
-    preset,
-    inner_width: innerW,
-    inner_depth: innerD,
-    inner_height: innerH,
-    thickness: t,
-    kerf_mm: num(els.kerf, 0.2),
-    clearance_mm: num(els.clearance, 0.1),
-    finger_width: num(els.fingerWidth, null),
+  return {
+    template_id: templateId,
+
+    // Fabrication
+    thickness,
+    kerf: num(els.kerf, 0.2),
+    fit_clearance: num(els.clearance, 0.1),
+    finger_w: num(els.fingerWidth, null),
     min_fingers: num(els.minFingers, 3),
-    sheet_width: num(els.sheetWidth, 340),
-    layout_margin_mm: num(els.marginMm, 10),
-    layout_padding_mm: num(els.paddingMm, 12),
+
+    // Layout / styling
+    max_row_width: num(els.sheetWidth, 340),
+    gap: num(els.paddingMm, 12),
     stroke_mm: num(els.strokeMm, 0.2),
-    labels: !!els.labels.checked,
-    lid: preset === "box_with_lid" ? !!els.lid.checked : false,
+    labels: !!els.labels?.checked,
 
-    holding_tabs: !!els.holdingTabs.checked,
-    tab_width_mm: num(els.tabWidth, 2.0),
+    // Common box/tray sizes
+    inner_w: innerW,
+    inner_d: innerD,
+    inner_h: innerH,
 
-    // Optional preset params
-    front_height: num(els.frontHeight, null),
-    scoop: !!els.scoop.checked,
-    scoop_radius: num(els.scoopRadius, 22),
-    scoop_depth: num(els.scoopDepth, 18),
+    // tray_open_front
+    front_h: num(els.frontHeight, 30),
+    scoop: !!els.scoop?.checked,
+    scoop_r: num(els.scoopRadius, 22),
+    scoop_depth: num(els.scoopDepth, 16),
 
-    slot_width: num(els.slotWidth, 86),
-    slot_height: num(els.slotHeight, 18),
-    slot_y_from_bottom: num(els.slotY, 38),
+    // divider_rack
+    divider_count: num(els.dividerBays, 3),
 
-    // v0.5 mechanism params
-    divider_bays: num(els.dividerBays, 3),
+    // window_front
+    window_margin: num(els.windowMargin, 12),
 
-    card_width: num(els.cardWidth, 63),
-    card_height: num(els.cardHeight, 88),
-    capacity_cards: num(els.capacityCards, 60),
+    // card_shoe
+    card_w: num(els.cardWidth, 63),
+    card_h: num(els.cardHeight, 88),
+    card_t: num(els.cardThickness, 0.35),
+    capacity: num(els.capacityCards, 60),
+    ramp_angle_deg: num(els.rampAngle, 12),
 
-    max_piece_size: num(els.maxPieceSize, 18),
-    pocket_count: num(els.pocketCount, 8),
-    axle_diameter: num(els.axleDiameter, 6),
-    ramp_count: num(els.rampCount, 6),
+    // rotary_wheel
+    max_piece: num(els.maxPieceSize, 18),
+    irregular: !!els.irregularShape?.checked,
+    axle_d: num(els.axleDiameter, 3.2),
+
+    // candy_machine_rotary_layered
+    hopper_h: num(els.hopperHeight, 90),
+    depth_layers_total: num(els.depthLayersTotal, 8),
+    wheel_layers: num(els.wheelLayers, 3),
+    screw_d: num(els.screwDiameter, 3.2),
+    screw_margin: num(els.screwMargin, 6),
+    add_feet: !!els.addFeet?.checked,
   };
-  return p;
 }
 
 async function generateSvg() {
-  els.download.hidden = true;
   els.preview.textContent = "";
   pythonWarnings = [];
+  lastMeta = null;
   renderWarnings();
 
   const p = buildParams();
@@ -962,88 +990,45 @@ async function generateSvg() {
 
   const resultJson = await pyodide.runPythonAsync(`
 import json
-from cardboxgen_v0_1 import BoxParams, generate_svg_with_warnings
+from cardboxgen_v0_7_templates import generate_svg
 
-p = BoxParams(**json.loads(p_json))
-svg, warnings = generate_svg_with_warnings(p)
-json.dumps({"svg": svg, "warnings": warnings})
+params = json.loads(p_json)
+template_id = params.pop('template_id', None)
+out = generate_svg(template_id, params)
+json.dumps(out, ensure_ascii=False)
 `);
 
   const parsed = JSON.parse(resultJson);
   const svg = parsed.svg;
   const warnings = parsed.warnings || [];
+  const meta = parsed.meta || null;
 
   lastSvg = svg;
   lastParams = p;
   pythonWarnings = warnings;
+  lastMeta = meta;
 
   renderWarnings();
 
-  // Preview (inline SVG) + download.
+  // Preview (inline SVG).
   // Wrap for pan/zoom transforms.
   els.preview.innerHTML = `<div id="svgWrap">${svg}</div>`;
   applyLayerToggles();
   attachHoverHighlight();
-  userZoomed = false;
-  fitToView();
-  const blob = new Blob([svg], { type: "image/svg+xml" });
-  const url = URL.createObjectURL(blob);
-  if (lastDownloadUrl) URL.revokeObjectURL(lastDownloadUrl);
-  lastDownloadUrl = url;
-  lastDownloadFilename = `cardbox_${p.preset}.svg`;
 
-  els.download.href = url;
-  els.download.hidden = false;
-  els.download.textContent = t("actions.downloadSvg");
-  els.download.download = lastDownloadFilename;
+  const templateId = p.template_id || "design";
+  const templateChanged = lastRenderedTemplateId !== null && lastRenderedTemplateId !== templateId;
+  lastRenderedTemplateId = templateId;
 
-  if (els.mobileDownload) els.mobileDownload.disabled = false;
+  if (autoFitNextRender || templateChanged) {
+    userZoomed = false;
+    fitToView();
+    autoFitNextRender = false;
+  }
 
-  setStatusKey("status.readyFile", { filename: lastDownloadFilename });
+  setStatusKey("status.readyFile", { filename: `${templateId}.svg` });
   updateStepBadges();
-}
-
-async function getCalibrationSvgString() {
-  const thickness = num(els.thickness, 3);
-  const kerf = num(els.kerf, 0.2);
-  const calSet = els.calSet?.value ?? "student";
-
-  calibrationGeneratedOnce = true;
-  updateStepBadges();
-
-  pyodide.globals.set("thickness", thickness);
-  pyodide.globals.set("kerf", kerf);
-  pyodide.globals.set("cal_set", calSet);
-
-  return await pyodide.runPythonAsync(`
-from cardboxgen_v0_1 import build_calibration_svg
-path = '/tmp/calibration.svg'
-named = [('tight',0.00),('normal',0.10),('loose',0.20)] if cal_set == 'student' else None
-vals = [-0.10,-0.05,0.0,0.05,0.10,0.15,0.20]
-build_calibration_svg(thickness=thickness, kerf_mm=kerf, clearance_values=vals, out_path=path, named_presets=named)
-open(path, 'r', encoding='utf-8').read()
-`);
-}
-
-function buildReadmeMarkdown(params) {
-  const t = params.thickness;
-  const kerf = params.kerf_mm;
-  const c = params.clearance_mm;
-  const drawnSlot = (t + c - kerf).toFixed(2);
-  const expectedFinalSlot = (t + c).toFixed(2);
-
-  return `# CardBoxGen Bundle\n\n` +
-    `Preset: **${params.preset}**\n\n` +
-    `## Joint rule\n` +
-    `- Drawn slot depth = thickness + clearance − kerf = **${drawnSlot}mm**\n` +
-    `- Expected final slot ≈ thickness + clearance = **${expectedFinalSlot}mm**\n\n` +
-    `## Parameters\n` +
-    "```json\n" + JSON.stringify(params, null, 2) + "\n```\n\n" +
-    `## Fabrication checklist\n` +
-    `1) If kerf is unknown: cut calibration.svg once\n` +
-    `2) Pick the best-fitting label\n` +
-    `3) If too tight: increase Joint clearance by 0.05mm\n` +
-    `4) If too loose: reduce Joint clearance by 0.05mm\n`;
+  updateExportUi();
 }
 
 function pad2(n) {
@@ -1101,7 +1086,6 @@ function collectProjectConfig() {
       studentMode: !!els.studentMode?.checked,
       dimMode: els.dimMode?.value ?? "internal",
       fitIndex: Number(els.fit?.value ?? 1),
-      exportAllLanguages: !!els.exportAllLanguages?.checked,
     },
 
     student: {
@@ -1478,29 +1462,36 @@ function applyProjectToUi(project) {
   if (els.irregularShape) els.irregularShape.checked = !!project?.student?.requirements?.irregular_shape;
   setVal(els.dispenseTargetType, project?.student?.requirements?.dispense_target_type);
 
-  // Prefer generator_params for geometric fields.
+  // Prefer generator_params for geometric fields (v0.7 names).
   const p = project?.generator_params || {};
-  setVal(els.preset, p.preset);
-  setVal(els.innerWidth, p.inner_width);
-  setVal(els.innerDepth, p.inner_depth);
-  setVal(els.innerHeight, p.inner_height);
+  setVal(els.preset, p.template_id);
+  setVal(els.innerWidth, p.inner_w);
+  setVal(els.innerDepth, p.inner_d);
+  setVal(els.innerHeight, p.inner_h);
   setVal(els.thickness, p.thickness);
-  setVal(els.kerf, p.kerf_mm);
-  setVal(els.clearance, p.clearance_mm);
-  setVal(els.sheetWidth, p.sheet_width);
-  setVal(els.marginMm, p.layout_margin_mm);
-  setVal(els.paddingMm, p.layout_padding_mm);
+  setVal(els.kerf, p.kerf);
+  setVal(els.clearance, p.fit_clearance);
+  setVal(els.sheetWidth, p.max_row_width);
+  setVal(els.paddingMm, p.gap);
   setVal(els.strokeMm, p.stroke_mm);
+  if (els.labels) els.labels.checked = !!p.labels;
+
+  // Template options
+  setVal(els.frontHeight, p.front_h);
+  if (els.scoop) els.scoop.checked = !!p.scoop;
+  setVal(els.scoopRadius, p.scoop_r);
+  setVal(els.scoopDepth, p.scoop_depth);
+  setVal(els.windowMargin, p.window_margin);
+  setVal(els.dividerBays, p.divider_count);
 
   // Student item parameters
-  setVal(els.cardWidth, p.card_width);
-  setVal(els.cardHeight, p.card_height);
-  setVal(els.capacityCards, p.capacity_cards);
-  setVal(els.maxPieceSize, p.max_piece_size);
-  setVal(els.dividerBays, p.divider_bays);
-  setVal(els.pocketCount, p.pocket_count);
-  setVal(els.axleDiameter, p.axle_diameter);
-  setVal(els.rampCount, p.ramp_count);
+  setVal(els.cardWidth, p.card_w);
+  setVal(els.cardHeight, p.card_h);
+  setVal(els.cardThickness, p.card_t);
+  setVal(els.capacityCards, p.capacity);
+  setVal(els.maxPieceSize, p.max_piece);
+  setVal(els.axleDiameter, p.axle_d);
+  setVal(els.rampAngle, p.ramp_angle_deg);
 
   // Mechanism choice should be treated as manual.
   const mechId = project?.student?.mechanism_choice?.mechanism_id;
@@ -1519,52 +1510,32 @@ function applyProjectToUi(project) {
 async function downloadProjectPackZip() {
   if (!pyodide) throw new Error("Pyodide not ready");
 
+  const hasErrors = hasBlockingErrors();
+  if (hasErrors) throw new Error(t("status.fixErrorsToExport"));
+
   // Ensure we have a fresh SVG snapshot.
   if (!lastSvg || !lastParams) {
     await generateSvg();
   }
   if (!lastSvg || !lastParams) throw new Error("No SVG available");
 
+  const hasErrorsAfter = hasBlockingErrors();
+  if (hasErrorsAfter) throw new Error(t("status.fixErrorsToExport"));
+
   const JSZipLib = globalThis.JSZip;
   if (!JSZipLib) throw new Error("JSZip failed to load");
   const zip = new JSZipLib();
 
   const project = collectProjectConfig();
-  const mechId = (project?.student?.mechanism_choice?.mechanism_id || project?.generator_params?.preset || "design").trim();
+  const templateId = String(project?.generator_params?.template_id || project?.student?.mechanism_choice?.mechanism_id || "design").trim();
   const date = project?.date_ymd || formatDateYYYYMMDD(new Date());
-  const rootName = `ProjectPack_${slugify(mechId)}_${date}`;
+  const rootName = `CardBoxGen_${slugify(templateId)}_${date}`;
 
-  const root = zip.folder(rootName);
-  const cut = root.folder("cut_files");
-  const docs = root.folder("docs");
-  const config = root.folder("config");
-  const assets = root.folder("assets");
-
-  cut.file("design.svg", lastSvg);
-  cut.file("layer_guide.md", buildLayerGuideMarkdown(currentLang));
-
-  // Docs (selected language in docs/ root)
-  const selectedDocs = buildProjectDocs(project, currentLang, dict);
-  Object.entries(selectedDocs).forEach(([name, content]) => docs.file(name, content));
-
-  // Optional: export all languages into docs/translations/<lang>/...
-  if (els.exportAllLanguages?.checked) {
-    const transRoot = docs.folder("translations");
-    for (const lng of ["en", "zh-Hant", "zh-Hans"]) {
-      if (lng === currentLang) continue;
-      const folder = transRoot.folder(lng);
-      const d = await getI18nDict(lng);
-      const files = buildProjectDocs(project, lng, d);
-      Object.entries(files).forEach(([name, content]) => folder.file(name, content));
-    }
-  }
-
-  // Config + share link
-  config.file("project.json", JSON.stringify(project, null, 2));
-  config.file("share_link.txt", buildShareLink(project));
-
-  // Assets
-  assets.file("preview.svg", lastSvg);
+  zip.file("cut.svg", lastSvg);
+  zip.file("project_summary.md", buildProjectSummaryMarkdown(project));
+  zip.file("assembly_guide.md", buildAssemblyGuideMarkdown(project));
+  zip.file("bom.md", buildBomMarkdown(project));
+  zip.file("teacher_notes.md", buildTeacherNotesMarkdown(project));
 
   const blob = await zip.generateAsync({ type: "blob" });
   const url = URL.createObjectURL(blob);
@@ -1582,50 +1553,234 @@ async function downloadBundleZip() {
   return downloadProjectPackZip();
 }
 
-async function generateCalibration() {
-  setStatusKey("status.generatingCalibration");
-  const thickness = num(els.thickness, 3);
-  const kerf = num(els.kerf, 0.2);
-  const calSet = els.calSet?.value ?? "student";
+function buildProjectSummaryMarkdown(project) {
+  const p = project?.generator_params || {};
+  const student = project?.student || {};
+  const req = student?.requirements || {};
+  const warns = project?.warnings?.python_warnings || [];
+  const errors = (warns || []).filter((w) => String(w?.severity || "").toLowerCase() === "error");
+  const warnings = (warns || []).filter((w) => String(w?.severity || "").toLowerCase() === "warn");
 
-  calibrationGeneratedOnce = true;
-  updateStepBadges();
+  return (
+    `# CardBoxGen Project Summary\n\n` +
+    `Template: **${escapeMarkdown(p.template_id || "")}**\n\n` +
+    `## Student inputs\n` +
+    `- Client & context: ${escapeMarkdown(student.client_context || "")}\n` +
+    `- Problem statement: ${escapeMarkdown(student.problem_statement || "")}\n` +
+    `- Dispense type: ${escapeMarkdown(req.item_type || "")}\n` +
+    `- Storage target: ${escapeMarkdown(req.storage_target || "")}\n` +
+    `- Dispense target: ${escapeMarkdown(req.dispense_target_type || "")}\n\n` +
+    `## Fabrication\n` +
+    `- Thickness (mm): ${escapeMarkdown(String(p.thickness ?? ""))}\n` +
+    `- Kerf (mm): ${escapeMarkdown(String(p.kerf ?? ""))}\n` +
+    `- Fit/clearance (mm): ${escapeMarkdown(String(p.fit_clearance ?? ""))}\n\n` +
+    `## Derived parameters (auto)\n` +
+    "```json\n" +
+    JSON.stringify(p, null, 2) +
+    "\n```\n\n" +
+    `## Validation\n` +
+    (errors.length ? `### Errors (fix before export)\n${errors.map((w) => `- ${escapeMarkdown(w.code || "ERROR")}: ${escapeMarkdown(w.message || "")} (Fix: ${escapeMarkdown(w.fix || "")})`).join("\n")}\n\n` : "") +
+    (warnings.length ? `### Warnings\n${warnings.map((w) => `- ${escapeMarkdown(w.code || "WARN")}: ${escapeMarkdown(w.message || "")} (Fix: ${escapeMarkdown(w.fix || "")})`).join("\n")}\n\n` : "")
+  );
+}
 
-  pyodide.globals.set("thickness", thickness);
-  pyodide.globals.set("kerf", kerf);
-  pyodide.globals.set("cal_set", calSet);
+function buildAssemblyGuideMarkdown(project) {
+  const tid = String(project?.generator_params?.template_id || "");
+  const base =
+    `# Assembly Guide\n\n` +
+    `Cut the included cut.svg. Dry-fit first; only glue when fit is correct.\n\n` +
+    `## If joints are too tight or too loose\n` +
+    `- Too tight: increase Fit/clearance by 0.05–0.10mm, or re-check Kerf\n` +
+    `- Too loose: decrease Fit/clearance by 0.05–0.10mm\n` +
+    `- Always confirm Thickness is correct (measure your material)\n\n`;
 
-  const svg = await pyodide.runPythonAsync(`
-import textwrap, json
-from cardboxgen_v0_1 import build_calibration_svg
+  if (tid === "tray_open_front") {
+    return (
+      base +
+      `## What this mechanism does\n` +
+      `A simple open-front tray for easy access to a stack of flat items.\n\n` +
+      `## How it dispenses\n` +
+      `You grab items from the open front.\n\n` +
+      `## Steps\n` +
+      `1) Assemble BOTTOM + LEFT/RIGHT + BACK\n` +
+      `2) Attach FRONT_LIP (align to bottom edge)\n` +
+      `3) Check scoop notch clearance (optional)\n\n` +
+      `## Troubleshooting\n` +
+      `- Front lip too high: reduce Front height\n` +
+      `- Hard to grab: increase Front height or enable Scoop\n`
+    );
+  }
+  if (tid === "divider_rack") {
+    return (
+      base +
+      `## What this mechanism does\n` +
+      `A tray with dividers to organise items into compartments.\n\n` +
+      `## How it dispenses\n` +
+      `You grab items from the compartment you want.\n\n` +
+      `## Steps\n` +
+      `1) Assemble the outer tray (BOTTOM + walls)\n` +
+      `2) Insert DIVIDERS into divider slots\n` +
+      `3) Confirm dividers are square before gluing\n\n` +
+      `## Troubleshooting\n` +
+      `- Divider slots too tight: increase Fit/clearance by 0.1mm\n` +
+      `- Dividers wobble: reduce Fit/clearance by 0.1mm\n`
+    );
+  }
+  if (tid === "window_front") {
+    return (
+      base +
+      `## What this mechanism does\n` +
+      `A box with a window so you can see the remaining inventory.\n\n` +
+      `## How it dispenses\n` +
+      `You grab items from the opening while keeping a clear view of stock.\n\n` +
+      `## Steps\n` +
+      `1) Assemble BOTTOM + LEFT/RIGHT + BACK\n` +
+      `2) Attach FRONT (with window cutout)\n` +
+      `3) Optional: add a clear window sheet behind the cutout\n\n` +
+      `## Troubleshooting\n` +
+      `- Window edge burns/chars: add Window margin or adjust laser settings\n` +
+      `- Window weakens the front: increase Thickness or reduce window size\n`
+    );
+  }
+  if (tid === "card_shoe") {
+    return (
+      base +
+      `## What this mechanism does\n` +
+      `A “card shoe” that guides cards so they come out one-at-a-time.\n\n` +
+      `## How it dispenses\n` +
+      `Cards slide down a ramp and exit at the front opening.\n\n` +
+      `## Steps\n` +
+      `1) Assemble outer box panels\n` +
+      `2) Install internal ramp/support parts\n` +
+      `3) Test draw: should be one-at-a-time\n\n` +
+      `## Troubleshooting\n` +
+      `- Jams: increase Fit/clearance by 0.05mm; check ramp alignment; ensure cards are not bent\n` +
+      `- Multi-feeds (two cards): reduce the exit opening, reduce Ramp angle, or increase any retention/stop feature\n`
+    );
+  }
+  if (tid === "candy_machine_rotary_layered") {
+    const p = project?.generator_params || {};
+    const wheelLayers = Number(p.wheel_layers ?? 0);
+    const totalLayers = Number(p.depth_layers_total ?? 0);
+    const hopperLayers = Math.max(0, totalLayers - wheelLayers);
+    return (
+      base +
+      `## What this mechanism does\n` +
+      `A layered “sandwich” housing with a rotary wheel that dispenses portions when turned.\n\n` +
+      `## Parts overview\n` +
+      `- FRONT_ACRYLIC (front plate with axle + screw holes)\n` +
+      `- BACK_PLATE\n` +
+      `- HOPPER_SPACER_* (x${hopperLayers || "?"})\n` +
+      `- WHEEL_SPACER_* (x${wheelLayers || "?"})\n` +
+      `- WHEEL\n` +
+      `- KNOB\n` +
+      `- Optional: FOOT_1 / FOOT_2\n\n` +
+      `## Stack order (front → back)\n` +
+      `1) FRONT_ACRYLIC\n` +
+      `2) HOPPER_SPACER_1 … HOPPER_SPACER_${hopperLayers || "N"}\n` +
+      `3) WHEEL_SPACER_1 … WHEEL_SPACER_${wheelLayers || "M"}\n` +
+      `4) BACK_PLATE\n\n` +
+      `Then insert axle through the axle hole, place WHEEL on the axle inside the wheel cavity, and attach KNOB.\n\n` +
+      `## Fast checks before tightening\n` +
+      `- Wheel spins freely (no rubbing).\n` +
+      `- Feed window aligns with hopper cavity.\n` +
+      `- Exit window aligns with the chute opening.\n\n` +
+      `## Troubleshooting\n` +
+      `- Bridging/jams: increase openings, increase Hopper height, or reduce Max piece size.\n` +
+      `- Wheel rubs: increase clearance, or check spacer count and axle alignment.\n` +
+      `- Cracks near screws: increase Screw margin or reduce tightening force.\n`
+    );
+  }
+  if (tid === "rotary_wheel") {
+    return (
+      base +
+      `## What this mechanism does\n` +
+      `A wheel with pockets that dispenses portions when you turn it.\n\n` +
+      `## How it dispenses\n` +
+      `Each turn releases about one pocket of items into the chute.\n\n` +
+      `## Steps\n` +
+      `1) Assemble the housing + chute panels\n` +
+      `2) Stack wheel layers/spacers and insert axle\n` +
+      `3) Attach knob and test turn\n\n` +
+      `## Troubleshooting\n` +
+      `- Bridging/jams: increase internal width/depth, reduce Max piece size, or simplify chute\n` +
+      `- Wheel rubs: increase Fit/clearance slightly; ensure spacers are used; check axle alignment\n`
+    );
+  }
 
-# build_calibration_svg writes to a file, so we call its internal logic by
-# generating it to /tmp then reading.
-path = '/tmp/calibration.svg'
-named = [('tight',0.00),('normal',0.10),('loose',0.20)] if cal_set == 'student' else None
-vals = [-0.10,-0.05,0.0,0.05,0.10,0.15,0.20]
-build_calibration_svg(thickness=thickness, kerf_mm=kerf, clearance_values=vals, out_path=path, named_presets=named)
-open(path, 'r', encoding='utf-8').read()
-`);
+  return base + `## Steps\n1) Assemble panels\n`;
+}
 
-  els.preview.innerHTML = `<div id="svgWrap">${svg}</div>`;
-  applyLayerToggles();
-  attachHoverHighlight();
-  userZoomed = false;
-  fitToView();
-  const blob = new Blob([svg], { type: "image/svg+xml" });
-  const url = URL.createObjectURL(blob);
-  if (lastDownloadUrl) URL.revokeObjectURL(lastDownloadUrl);
-  lastDownloadUrl = url;
-  lastDownloadFilename = `calibration.svg`;
-  els.download.href = url;
-  els.download.hidden = false;
-  els.download.textContent = t("actions.downloadCalibration");
-  els.download.download = lastDownloadFilename;
+function buildBomMarkdown(project) {
+  const tid = String(project?.generator_params?.template_id || "");
+  const lines = [
+    "# Bill of Materials",
+    "",
+    "- Sheet material (e.g., 3mm board/acrylic)",
+    "- Wood glue (if using glue)",
+    "- Sandpaper (optional)",
+  ];
+  if (tid === "candy_machine_rotary_layered") {
+    lines.push("- Axle/dowel (diameter matches axle_d)");
+    lines.push("- Screws + nuts (e.g., M3; length depends on total layer stack)");
+    lines.push("- Optional: acrylic front plate (use FRONT_ACRYLIC panel as template)");
+  } else if (tid === "rotary_wheel") {
+    lines.push("- Axle/dowel (diameter matches axle_d)");
+  }
+  return lines.join("\n") + "\n";
+}
 
-  if (els.mobileDownload) els.mobileDownload.disabled = false;
+function buildTeacherNotesMarkdown(project) {
+  const tid = String(project?.generator_params?.template_id || "");
+  const base =
+    `# Teacher Notes\n\n` +
+    `## What to look for during testing\n` +
+    `- Students should test 10–20 dispenses and record jams + portion consistency\n` +
+    `- Encourage one change at a time (small steps)\n\n` +
+    `## Joint fit (applies to all templates)\n` +
+    `- Too tight: increase Fit/clearance by 0.05–0.10mm, or verify Kerf\n` +
+    `- Too loose: decrease Fit/clearance by 0.05–0.10mm\n` +
+    `- Verify Thickness is measured, not assumed\n\n`;
 
-  setStatusKey("status.readyFile", { filename: lastDownloadFilename });
+  if (tid === "card_shoe") {
+    return (
+      base +
+      `## Card shoe-specific\n` +
+      `- Jams: reduce ramp angle, increase clearance slightly, ensure ramp is square\n` +
+      `- Multi-feeds: tighten the exit opening / add retention, reduce ramp angle\n` +
+      `- Tip: bent cards cause false jams—test with flat cards\n`
+    );
+  }
+
+  if (tid === "candy_machine_rotary_layered") {
+    return (
+      base +
+      `## Candy machine (layered rotary)\n` +
+      `- Bridging is the main failure mode; require students to test with larger openings first\n` +
+      `- Wheel rub is the main mechanical failure; check spacer counts and screw tightening pattern\n` +
+      `- Tip: irregular shapes are much harder—prototype with uniform pieces first\n`
+    );
+  }
+
+  if (tid === "rotary_wheel") {
+    return (
+      base +
+      `## Rotary wheel-specific\n` +
+      `- Bridging: increase internal width/depth, reduce Max piece size, simplify chute path\n` +
+      `- Wheel rubs: add spacers, check axle alignment, increase clearance slightly\n` +
+      `- Tip: irregular shapes are much harder—prototype with regular pieces first\n`
+    );
+  }
+
+  if (tid === "window_front") {
+    return base + `## Window front-specific\n- Window weakens the front: increase thickness or reduce window size\n`;
+  }
+
+  if (tid === "divider_rack") {
+    return base + `## Divider rack-specific\n- Divider fit: adjust Fit/clearance; ensure dividers are square before glue\n`;
+  }
+
+  return base;
 }
 
 const MIN_SCALE = 0.1;
@@ -1776,8 +1931,6 @@ const popoverState = {
   key: null,
   anchorEl: null,
   pinned: false,
-  hoverIcon: false,
-  hoverPopover: false,
   closeTimer: null,
 };
 
@@ -1790,8 +1943,6 @@ function clearPopoverCloseTimer() {
 
 function closePopoverAndClearPin() {
   popoverState.pinned = false;
-  popoverState.hoverIcon = false;
-  popoverState.hoverPopover = false;
   clearPopoverCloseTimer();
   closePopover();
   popoverState.key = null;
@@ -1799,12 +1950,8 @@ function closePopoverAndClearPin() {
 }
 
 function schedulePopoverClose() {
-  clearPopoverCloseTimer();
-  popoverState.closeTimer = setTimeout(() => {
-    popoverState.closeTimer = null;
-    if (popoverState.pinned || popoverState.hoverIcon || popoverState.hoverPopover) return;
-    closePopoverAndClearPin();
-  }, POPOVER_CLOSE_DELAY_MS);
+  // v0.7: popover is click-to-toggle and stays open.
+  return;
 }
 
 function openPopover(helpKey, anchorEl) {
@@ -1827,34 +1974,16 @@ function decorateHelpIcons() {
     btn.className = "infoBtn";
     btn.textContent = "i";
     btn.setAttribute("aria-label", `Info: ${helpKey}`);
-    btn.addEventListener("pointerenter", () => {
-      popoverState.hoverIcon = true;
-      clearPopoverCloseTimer();
-      openPopover(helpKey, btn);
-    });
-    btn.addEventListener("pointerleave", () => {
-      popoverState.hoverIcon = false;
-      if (!popoverState.pinned) schedulePopoverClose();
-    });
-    btn.addEventListener("focus", () => {
-      popoverState.hoverIcon = true;
-      clearPopoverCloseTimer();
-      openPopover(helpKey, btn);
-    });
-    btn.addEventListener("blur", () => {
-      popoverState.hoverIcon = false;
-      if (!popoverState.pinned) schedulePopoverClose();
-    });
     btn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
 
-      const same = popoverState.key === helpKey;
-      if (same && popoverState.pinned) {
-        popoverState.pinned = false;
-        if (!(popoverState.hoverIcon || popoverState.hoverPopover)) closePopoverAndClearPin();
+      const same = popoverState.key === helpKey && !!els.popover && !els.popover.hidden;
+      if (same) {
+        closePopoverAndClearPin();
         return;
       }
+
       popoverState.pinned = true;
       openPopover(helpKey, btn);
     });
@@ -1996,14 +2125,6 @@ els.btnGenerate.addEventListener("click", () => {
   });
 });
 
-els.btnCalibration?.addEventListener("click", () => {
-  generateCalibration().catch((e) => {
-    console.error(e);
-    setStatusKey("status.error", { message: e?.message ?? e });
-    els.preview.innerHTML = `<pre>${escapeHtml(String(e?.stack ?? e))}</pre>`;
-  });
-});
-
 els.btnBundle?.addEventListener("click", () => {
   downloadBundleZip().catch((e) => {
     console.error(e);
@@ -2014,10 +2135,6 @@ els.btnBundle?.addEventListener("click", () => {
 
 els.mobileGenerate?.addEventListener("click", () => els.btnGenerate?.click());
 els.mobileBundle?.addEventListener("click", () => els.btnBundle?.click());
-els.mobileDownload?.addEventListener("click", () => {
-  if (els.download?.hidden) return;
-  els.download?.click();
-});
 
 els.controlsToggle?.addEventListener("click", () => {
   document.body.classList.toggle("drawerOpen");
@@ -2040,13 +2157,23 @@ els.faqDrawerClose?.addEventListener("click", () => closeFaqDrawer());
 els.helpSearch?.addEventListener("input", () => buildHelpDrawer());
 els.faqSearch?.addEventListener("input", () => buildFaqDrawer());
 
-els.popover?.addEventListener("pointerenter", () => {
-  popoverState.hoverPopover = true;
-  clearPopoverCloseTimer();
+// v0.7: click-to-toggle only; keep popover open while reading.
+
+document.addEventListener("pointerdown", (e) => {
+  if (!els.popover || els.popover.hidden) return;
+  const target = e.target;
+  if (els.popover.contains(target)) return;
+  if (target?.closest?.(".infoBtn")) return;
+  closePopoverAndClearPin();
 });
-els.popover?.addEventListener("pointerleave", () => {
-  popoverState.hoverPopover = false;
-  if (!popoverState.pinned) schedulePopoverClose();
+
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  closePopoverAndClearPin();
+  document.body.classList.remove("drawerOpen");
+  closeHelpDrawer();
+  closeFaqDrawer();
+  syncOverlay();
 });
 
 els.popover?.addEventListener("click", (e) => {
@@ -2169,6 +2296,14 @@ els.fitView?.addEventListener("click", () => {
 els.showCut?.addEventListener("change", applyLayerToggles);
 els.showLabels?.addEventListener("change", applyLayerToggles);
 
+const markTemplateChanged = () => {
+  autoFitNextRender = true;
+  lastRenderedTemplateId = null;
+};
+
+els.preset?.addEventListener("change", markTemplateChanged);
+els.mechanism?.addEventListener("change", markTemplateChanged);
+
 async function main() {
   // Share-link support: allow cfg/lang in URL to override initial language.
   const url = new URL(window.location.href);
@@ -2181,8 +2316,6 @@ async function main() {
 
   // Apply loaded config (if any) after i18n is ready.
   if (projectFromUrl) applyProjectToUi(projectFromUrl);
-
-  if (els.mobileDownload) els.mobileDownload.disabled = true;
 
   els.langSelect?.addEventListener("change", async () => {
     const v = els.langSelect.value;

@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "卡盒／托盘 SVG 生成器",
-    "version": "v0.6",
+    "version": "v0.7",
     "subtitle": "完全在浏览器中运行（Pyodide）。生成可激光切割的 SVG，并使用可复现的指接结构。"
   },
   "mode": {
@@ -33,14 +33,10 @@
   "steps": {
     "title": "学生模式（4 步）",
     "complete": "完成",
-    "incomplete": "未完成",
     "step1": "步骤 1 — 客户与情境",
     "step2": "步骤 2 — 需求",
     "step3": "步骤 3 — 机构选择",
-    "step4": "步骤 4 — 自动定尺寸与检查",
-    "step2Hint": "选择机构会自动设置下方的预设。",
-    "step3Hint": "如果不知道刀缝（kerf），先跑配合测试（高级 → 配合工具），切割后选择最合适的标签。",
-    "step4Hint": "准备好后，按下「生成项目包（zip）」。",
+    "step4Hint": "准备好后，按下「下载项目包（ZIP）」。",
     "checklistTitle": "校准检查清单",
     "check1": "跑配合测试（选填）",
     "check2": "切割它",
@@ -55,7 +51,7 @@
     "constraintPersonalUse": "个人使用",
     "irregularShape": "不规则形状",
     "successMetrics": "成功指标（至少选 2 个）",
-    "metricJam": "卡料／堵塞率",
+    "metricJam": "卡料率",
     "metricConsistency": "份量一致性",
     "metricRefill": "补充时间",
     "metricDurability": "耐用度",
@@ -115,7 +111,14 @@
     "slotY": "出料槽 Y（自底部起，mm）",
 
     "cut": "切割",
-    "labelsLayer": "标签"
+    "labelsLayer": "标签",
+
+    "hopperHeight": "料斗高度（mm）",
+    "depthLayersTotal": "总深度层数",
+    "wheelLayers": "转轮层数",
+    "screwDiameter": "螺丝孔径（mm）",
+    "screwMargin": "螺丝边距（mm）",
+    "addFeet": "加底脚"
   },
   "placeholders": {
     "clientContext": "例如：桌面个人使用",
@@ -138,9 +141,12 @@
       "fun": "好玩滑道（Plinko）"
     },
     "mechanism": {
+      "card_shoe": "卡片出牌器（前抽）",
       "card_shoe_front_draw": "卡片出牌器（前抽）",
       "tray_open_front": "开口托盘",
       "divider_rack": "分格架",
+      "rotary_wheel": "转轮（旧版）",
+      "candy_machine_rotary_layered": "糖果机（分层转轮）",
       "candy_rotary_wheel": "糖果转轮",
       "candy_plinko": "Plinko 糖果",
       "dispenser_slot_front": "前方出料槽",
@@ -202,7 +208,7 @@
     "zoomIn": "+",
     "zoomOut": "−",
     "controls": "参数",
-    "projectPack": "生成项目包（zip）"
+    "projectPack": "下载项目包（ZIP）"
   },
   "helpUi": {
     "searchPlaceholder": "搜索说明…",
@@ -222,6 +228,7 @@
     "loadingPyodide": "加载 Pyodide…",
     "loadingModule": "加载生成器模块…",
     "generatingSvg": "正在生成 SVG…",
+    "fixErrorsToExport": "请先修正阻挡导出的错误。",
     "generatingCalibration": "正在生成校准 SVG…",
     "done": "完成。",
     "ready": "就绪。",
@@ -246,13 +253,16 @@
   },
   "recs": {
     "title": "前三名推荐",
+    "selectedTitle": "已选模板：",
     "reason": {
       "flowingCounted": "适合计数出料（每转一次一颗）",
+      "flowingPortions": "可控制份量（转动一次出一份）",
       "flowingTolerant": "更能容忍不规则形状；适合第一次原型",
       "fallbackPrototype": "早期原型的简单备选",
       "stackingOne": "可控制一次一个的输出",
       "stackingGrab": "制作简单、取用快速",
-      "stackingMulti": "多分类收纳与取用"
+      "stackingMulti": "多分类收纳与取用",
+      "visibility": "窗口让学生看见库存"
     }
   },
   "warnings": {
@@ -374,6 +384,12 @@
       "pitfalls": ["太紧会增加摩擦；太松会晃。"],
       "example": "例：6mm。"
     },
+    "hopperHeight": { "title": "料斗高度", "short": "流动式颗粒的储料高度；太低容易架桥卡料。" },
+    "depthLayersTotal": { "title": "总深度层数", "short": "夹层机构的总层数（前到后厚度）。需大于转轮层数。" },
+    "wheelLayers": { "title": "转轮层数", "short": "分配给转轮／滑道区的层数。常用 2–4。" },
+    "screwDiameter": { "title": "螺丝孔径", "short": "锁螺丝用的通孔直径（例如 M3 约 3.2mm）。" },
+    "screwMargin": { "title": "螺丝边距", "short": "螺丝孔到外缘的距离；增加可降低裂缝风险。" },
+    "addFeet": { "title": "加底脚", "short": "选用：加底脚增加稳定性，避免转动时滑动／翻倒。" },
     "rampCount": {
       "title": "斜板数量",
       "short": "Plinko 内部斜板条数量。",

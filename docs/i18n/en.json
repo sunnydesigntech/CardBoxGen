@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "Card Box / Tray SVG Generator",
-    "version": "v0.6",
+    "version": "v0.7",
     "subtitle": "Runs fully in your browser (Pyodide). Generates laser-cut SVG with deterministic finger joints."
   },
   "mode": {
@@ -42,7 +42,7 @@
     "step4": "Step 4 — Auto-dimensioning & review",
     "step2Hint": "Choosing a mechanism will set the preset below.",
     "step3Hint": "If you don’t know kerf yet, use the optional Fit Test (Advanced → Fit tools), cut it, then pick the best label.",
-    "step4Hint": "When ready, press Generate Project Pack (zip).",
+    "step4Hint": "When ready, press Download project pack (ZIP).",
     "checklistTitle": "Calibration checklist",
     "check1": "Run Fit Test (optional)",
     "check2": "Cut it",
@@ -127,7 +127,14 @@
     "slotY": "Slot Y from bottom (mm)",
 
     "cut": "CUT",
-    "labelsLayer": "LABELS"
+    "labelsLayer": "LABELS",
+
+    "hopperHeight": "Hopper height (mm)",
+    "depthLayersTotal": "Total depth layers",
+    "wheelLayers": "Wheel layers",
+    "screwDiameter": "Screw hole diameter (mm)",
+    "screwMargin": "Screw margin (mm)",
+    "addFeet": "Add feet"
   },
   "placeholders": {
     "clientContext": "e.g., personal use at desk",
@@ -150,13 +157,16 @@
       "fun": "Fun chute (plinko)"
     },
     "mechanism": {
-      "card_shoe_front_draw": "Card shoe (front draw)",
+      "card_shoe": "Card shoe (front draw)",
       "tray_open_front": "Open-front tray",
       "divider_rack": "Divider rack",
+      "window_front": "Window front",
+      "rotary_wheel": "Rotary wheel (legacy)",
+      "candy_machine_rotary_layered": "Candy machine (layered rotary wheel)",
+      "card_shoe_front_draw": "Card shoe (front draw)",
       "candy_rotary_wheel": "Rotary wheel candy",
       "candy_plinko": "Plinko candy",
       "dispenser_slot_front": "Front slot dispenser",
-      "window_front": "Window front",
       "box_with_lid": "Box with lid"
     }
   },
@@ -216,7 +226,7 @@
     "calibration": "Generate calibration SVG",
     "fitTest": "Fit Test (optional)",
     "bundle": "Download bundle (zip)",
-    "projectPack": "Generate Project Pack (zip)",
+    "projectPack": "Download project pack (ZIP)",
     "downloadSvg": "Download SVG",
     "downloadCalibration": "Download calibration SVG",
     "fit": "Fit",
@@ -229,6 +239,7 @@
     "loadingPyodide": "Loading Pyodide…",
     "loadingModule": "Loading generator module…",
     "generatingSvg": "Generating SVG…",
+    "fixErrorsToExport": "Fix blocking errors to export.",
     "generatingCalibration": "Generating calibration SVG…",
     "done": "Done.",
     "ready": "Ready.",
@@ -253,13 +264,16 @@
   },
   "recs": {
     "title": "Top 3 recommendations",
+    "selectedTitle": "Selected template:",
     "reason": {
       "flowingCounted": "Best for counted dispensing (one per turn)",
+      "flowingPortions": "Controlled portioning (turn-to-dispense)",
       "flowingTolerant": "More tolerant to irregular shapes; good first prototype",
       "fallbackPrototype": "Simple fallback for early prototypes",
       "stackingOne": "Controlled one-at-a-time output",
       "stackingGrab": "Fast access and simple build",
-      "stackingMulti": "Multi-category organization and access"
+      "stackingMulti": "Multi-category organization and access",
+      "visibility": "Window helps students see inventory"
     }
   },
   "warnings": {
@@ -285,6 +299,66 @@
     "tip": "Tip: If you deploy this on GitHub Pages, it runs client-side and doesn’t need a server."
   },
   "help": {
+        "hopperHeight": {
+          "title": "Hopper height",
+          "short": "How tall the storage hopper is for flowing solids.",
+          "meaning": "A taller hopper can reduce bridging and makes refill easier, but uses more material.",
+          "decide": ["Start larger for irregular pieces, then reduce if it works."],
+          "typical": ["70–140mm depending on piece size."],
+          "pitfalls": ["Too small can cause bridging above the wheel."],
+          "wrong": ["A very short hopper may stop feeding consistently."],
+          "example": "Example: max piece 18mm → hopper height ~100mm."
+        },
+        "depthLayersTotal": {
+          "title": "Total depth layers",
+          "short": "How many stacked spacer layers the body uses.",
+          "meaning": "This controls the total front-to-back depth of the mechanism as a layered sandwich.",
+          "decide": ["Increase if the wheel or chute needs more depth."],
+          "typical": ["8 layers for a first prototype."],
+          "pitfalls": ["Must be at least 2, and must be more than wheel layers."],
+          "wrong": ["If wheel layers >= total layers, there is no hopper space."],
+          "example": "Example: total layers 8, wheel layers 3."
+        },
+        "wheelLayers": {
+          "title": "Wheel layers",
+          "short": "How many layers are allocated to the wheel/chute section.",
+          "meaning": "More wheel layers can increase wheel thickness and stability, but reduces hopper layers.",
+          "decide": ["Start with 3 and adjust after testing."],
+          "typical": ["2–4 layers."],
+          "pitfalls": ["If too high, hopper becomes too small."],
+          "wrong": ["Too few can cause rubbing or weak wheel."],
+          "example": "Example: wheel layers 3 for a stable pocket wheel."
+        },
+        "screwDiameter": {
+          "title": "Screw hole diameter",
+          "short": "Clearance diameter for body screws.",
+          "meaning": "Used for the bolt-through holes that clamp the sandwich layers together.",
+          "decide": ["Use your hardware’s recommended clearance hole."],
+          "typical": ["M3 clearance ~3.2mm."],
+          "pitfalls": ["Too small will bind; too big reduces alignment."],
+          "wrong": ["If holes are too tight, layers can crack when forcing screws."],
+          "example": "Example: M3 screws → 3.2mm holes."
+        },
+        "screwMargin": {
+          "title": "Screw margin",
+          "short": "How far screw holes are from the outer edge.",
+          "meaning": "More margin reduces cracking risk, but consumes more area and may force a larger plate.",
+          "decide": ["Increase if your material cracks near holes."],
+          "typical": ["5–8mm."],
+          "pitfalls": ["Too small can crack acrylic or thin plywood."],
+          "wrong": ["Screws too close to edge can split the layer."],
+          "example": "Example: 6mm margin for M3 in 3mm acrylic."
+        },
+        "addFeet": {
+          "title": "Add feet",
+          "short": "Optional stabilising feet pieces.",
+          "meaning": "Feet can help keep the mechanism stable and prevent tipping during turning.",
+          "decide": ["Enable if the unit rocks or slides during use."],
+          "typical": ["Off for small prototypes; on for classroom demos."],
+          "pitfalls": ["Adds extra parts and cut time."],
+          "wrong": ["Not required if the base is already stable."],
+          "example": "Example: Add feet if students crank the knob hard."
+        },
     "dispenseType": {
       "title": "Dispense type",
       "short": "Stacking = cards/tiles. Flowing = dry solids only.",

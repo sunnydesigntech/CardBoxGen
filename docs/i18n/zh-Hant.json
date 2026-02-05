@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "卡盒／托盤 SVG 產生器",
-    "version": "v0.6",
+    "version": "v0.7",
     "subtitle": "完全在瀏覽器中執行（Pyodide）。產生可雷切的 SVG，並使用可重現的指接結構。"
   },
   "mode": {
@@ -35,7 +35,7 @@
     "calibration": "產生校正 SVG",
     "fitTest": "配合測試（選填）",
     "bundle": "下載打包（zip）",
-    "projectPack": "產生專案包（zip）",
+    "projectPack": "下載專案包（ZIP）",
     "downloadSvg": "下載 SVG",
     "downloadCalibration": "下載校正 SVG",
     "fit": "自動縮放",
@@ -51,9 +51,8 @@
     "step2": "步驟 2 — 需求",
     "step3": "步驟 3 — 機構選擇",
     "step4": "步驟 4 — 自動定尺寸與檢視",
-    "step2Hint": "選擇機構會自動設定下方的預設。",
     "step3Hint": "如果不知道刀縫（kerf），先跑配合測試（進階 → 配合工具），切割後選擇最合適的標籤。",
-    "step4Hint": "準備好後，按下「產生專案包（zip）」。",
+    "step4Hint": "準備好後，按下「下載專案包（ZIP）」。",
     "checklistTitle": "校正檢查清單",
     "check1": "跑配合測試（選填）",
     "check2": "切割它",
@@ -128,7 +127,14 @@
     "slotY": "出料槽 Y（自底部起，mm）",
 
     "cut": "切割",
-    "labelsLayer": "標籤"
+    "labelsLayer": "標籤",
+
+    "hopperHeight": "料斗高度（mm）",
+    "depthLayersTotal": "總深度層數",
+    "wheelLayers": "轉輪層數",
+    "screwDiameter": "螺絲孔徑（mm）",
+    "screwMargin": "螺絲邊距（mm）",
+    "addFeet": "加底腳"
   },
   "placeholders": {
     "clientContext": "例如：桌面個人使用",
@@ -151,9 +157,12 @@
       "fun": "好玩滑道（Plinko）"
     },
     "mechanism": {
+      "card_shoe": "卡片出牌器（前抽）",
       "card_shoe_front_draw": "卡片出牌器（前抽）",
       "tray_open_front": "開口托盤",
       "divider_rack": "分格架",
+      "rotary_wheel": "轉輪（舊版）",
+      "candy_machine_rotary_layered": "糖果機（分層轉輪）",
       "candy_rotary_wheel": "糖果轉輪",
       "candy_plinko": "Plinko 糖果",
       "dispenser_slot_front": "前方出料槽",
@@ -171,13 +180,16 @@
   },
   "recs": {
     "title": "前三名推薦",
+    "selectedTitle": "已選模板：",
     "reason": {
       "flowingCounted": "適合計數出料（每轉一次一顆）",
+      "flowingPortions": "可控制份量（轉動一次出一份）",
       "flowingTolerant": "更能容忍不規則形狀；適合第一次原型",
       "fallbackPrototype": "早期原型的簡單備案",
       "stackingOne": "可控制一次一個的輸出",
       "stackingGrab": "製作簡單、取用快速",
-      "stackingMulti": "多分類收納與取用"
+      "stackingMulti": "多分類收納與取用",
+      "visibility": "視窗讓學生看見庫存"
     }
   },
 
@@ -241,6 +253,7 @@
     "loadingPyodide": "載入 Pyodide…",
     "loadingModule": "載入產生器模組…",
     "generatingSvg": "產生 SVG 中…",
+    "fixErrorsToExport": "請先修正阻擋匯出的錯誤。",
     "generatingCalibration": "產生校正 SVG 中…",
     "done": "完成。",
     "ready": "就緒。",
@@ -374,6 +387,12 @@
       "pitfalls": ["太緊會增加摩擦；太鬆會晃。"],
       "example": "例：6mm。"
     },
+    "hopperHeight": { "title": "料斗高度", "short": "流動式顆粒的儲料高度；太低容易架橋卡料。" },
+    "depthLayersTotal": { "title": "總深度層數", "short": "夾層機構的總層數（前到後厚度）。需大於轉輪層數。" },
+    "wheelLayers": { "title": "轉輪層數", "short": "分配給轉輪／滑道區的層數。常用 2–4。" },
+    "screwDiameter": { "title": "螺絲孔徑", "short": "鎖螺絲用的通孔直徑（例如 M3 約 3.2mm）。" },
+    "screwMargin": { "title": "螺絲邊距", "short": "螺絲孔到外緣的距離；增加可降低裂縫風險。" },
+    "addFeet": { "title": "加底腳", "short": "選用：加底腳增加穩定性，避免轉動時滑動／翻倒。" },
     "rampCount": {
       "title": "斜板數量",
       "short": "Plinko 內部斜板條數量。",

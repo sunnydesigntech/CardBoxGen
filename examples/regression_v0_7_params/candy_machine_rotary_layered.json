@@ -1,0 +1,32 @@
+{
+  "template_id": "candy_machine_rotary_layered",
+  "params": {
+    "thickness": 3,
+    "kerf": 0.2,
+    "fit_clearance": 0.1,
+    "finger_w": null,
+    "min_fingers": 3,
+
+    "max_row_width": 340,
+    "gap": 12,
+    "stroke_mm": 0.2,
+    "labels": true,
+
+    "inner_w": 120,
+    "inner_d": 120,
+    "inner_h": 160,
+
+    "max_piece": 18,
+    "irregular": false,
+    "hopper_h": 100,
+
+    "depth_layers_total": 8,
+    "wheel_layers": 3,
+
+    "screw_d": 3.2,
+    "screw_margin": 6,
+    "axle_d": 3.2,
+
+    "add_feet": false
+  }
+}
