@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
 
+from ..assembly import make_rectangular_box_graph
 from ..geometry import circle_path, rect_path, rounded_rect_path, thumb_notch_path
 from ..joints import EdgeFamily, EdgeKey, build_finger_plan, compute_finger_count, joint_depths_drawn
 from ..models import WarningMsg
@@ -146,53 +147,23 @@ def build_open_box(
     def name(part: str) -> str:
         return f"{prefix}{part}" if prefix else part
 
-    specs: Dict[str, PanelSpec] = {
-        name("BOTTOM"): build_rect_panel_spec(name("BOTTOM"), outer_w, outer_d),
-        name("BACK"): build_rect_panel_spec(name("BACK"), outer_w, wall_h),
-        name("LEFT"): build_rect_panel_spec(name("LEFT"), outer_d, wall_h),
-        name("RIGHT"): build_rect_panel_spec(name("RIGHT"), outer_d, wall_h),
-    }
-    if include_front:
-        specs[name("FRONT")] = build_rect_panel_spec(name("FRONT"), outer_w, front_panel_h)
-
-    edge_pairs = build_edge_pairs_for_box(
-        thickness=t,
-        finger_w=finger_w,
-        min_fingers=min_fingers,
-        kerf=kerf,
-        clearance=clearance,
+    corner = corner_relief_mm(thickness=t, kerf=kerf, clearance=clearance, outer_w=outer_w, outer_d=outer_d, wall_h=wall_h)
+    graph = make_rectangular_box_graph(
         outer_w=outer_w,
         outer_d=outer_d,
         wall_h=wall_h,
         front_panel_h=front_panel_h,
         include_front=include_front,
         prefix=prefix,
+        joint_margin=corner,
         finger_count_outer=finger_count_outer,
         finger_count_vertical=finger_count_vertical,
     )
-    corner = corner_relief_mm(thickness=t, kerf=kerf, clearance=clearance, outer_w=outer_w, outer_d=outer_d, wall_h=wall_h)
+    target = target_finger_width(thickness, finger_w)
+    graph.compile(target_finger_w=target, min_fingers=min_fingers, kerf=kerf, clearance=clearance)
+    specs = graph.panels
+    edge_pairs = graph.edge_pairs
     meta_corner_relief = corner
-
-    def bind(panel: str, edge: str, pair: str, *, invert: bool):
-        bind_edge(specs, panel, edge, pair, invert=invert, offset_start=corner, offset_end=corner)
-
-    bind(name("BOTTOM"), "top", f"{prefix}bottom_back", invert=False)
-    bind(name("BACK"), "bottom", f"{prefix}bottom_back", invert=True)
-    bind(name("BOTTOM"), "left", f"{prefix}bottom_left", invert=False)
-    bind(name("LEFT"), "bottom", f"{prefix}bottom_left", invert=True)
-    bind(name("BOTTOM"), "right", f"{prefix}bottom_right", invert=False)
-    bind(name("RIGHT"), "bottom", f"{prefix}bottom_right", invert=True)
-    bind(name("BACK"), "left", f"{prefix}corner_back_left", invert=False)
-    bind(name("LEFT"), "right", f"{prefix}corner_back_left", invert=True)
-    bind(name("BACK"), "right", f"{prefix}corner_back_right", invert=False)
-    bind(name("RIGHT"), "left", f"{prefix}corner_back_right", invert=True)
-    if include_front:
-        bind(name("BOTTOM"), "bottom", f"{prefix}bottom_front", invert=False)
-        bind(name("FRONT"), "bottom", f"{prefix}bottom_front", invert=True)
-        bind(name("FRONT"), "left", f"{prefix}corner_front_left", invert=False)
-        bind(name("LEFT"), "left", f"{prefix}corner_front_left", invert=True)
-        bind(name("FRONT"), "right", f"{prefix}corner_front_right", invert=False)
-        bind(name("RIGHT"), "right", f"{prefix}corner_front_right", invert=True)
 
     if labels:
         for spec in specs.values():
@@ -204,7 +175,6 @@ def build_open_box(
         order.append(name("FRONT"))
     panels = [render_panel_from_spec(specs[n], joint_params=render_params, edge_pairs=edge_pairs) for n in order]
 
-    target = target_finger_width(thickness, finger_w)
     for pair in edge_pairs.values():
         pitch = pair.length / max(1, pair.plan.count)
         if pitch < max(4.0, t * 1.4):
@@ -228,6 +198,11 @@ def build_open_box(
             "width_rule": "tab/slot segment widths are kerf/clearance compensated then normalized per edge",
         },
         "edge_pairs": [pair.to_meta(thickness=thickness, kerf_mm=kerf, clearance_mm=clearance) for pair in edge_pairs.values()],
+        "assembly_graph": {
+            "model": "rectangular_box_v1",
+            "panels": graph.panel_edge_meta(),
+            "joint_pairs": [pair.to_meta(thickness=thickness, kerf_mm=kerf, clearance_mm=clearance) for pair in edge_pairs.values()],
+        },
     }
     return BoxBuild(panels=panels, warnings=warnings, meta=meta, edge_pairs=edge_pairs, specs=specs, outer_w=outer_w, outer_d=outer_d, wall_h=wall_h, front_panel_h=front_panel_h)
 

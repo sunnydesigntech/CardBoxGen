@@ -1,4 +1,4 @@
-from assembly_oracle import assert_depth_model, assert_design_sound
+from assembly_oracle import assert_depth_model, assert_design_sound, assert_rectangular_tray_graph
 from cardboxgen.api import generate_svg
 
 
@@ -26,3 +26,8 @@ def test_labels_and_stroke_do_not_change_nominal_cut_metadata():
     changed = generate_svg("tray_open_front", {**VALID_PRESETS["tray_open_front"], "labels": False, "stroke_mm": 0.8})
     assert base["meta"]["dimensions"] == changed["meta"]["dimensions"]
     assert base["meta"]["edge_pairs"] == changed["meta"]["edge_pairs"]
+
+
+def test_open_tray_uses_explicit_rectangular_assembly_graph():
+    result = generate_svg("tray_open_front", VALID_PRESETS["tray_open_front"])
+    assert_rectangular_tray_graph(result["meta"])

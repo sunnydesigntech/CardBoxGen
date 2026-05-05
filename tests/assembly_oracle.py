@@ -91,6 +91,95 @@ def assert_edge_pair_fit(meta: dict, *, tolerance: float = 0.18) -> None:
             assert abs(clearance - target_clearance) <= tolerance
 
 
+def assert_assembly_graph_sound(meta: dict) -> None:
+    graph = meta.get("assembly_graph")
+    if not graph:
+        return
+
+    panels = graph.get("panels", [])
+    edge_by_ref = {}
+    for panel in panels:
+        panel_id = panel["id"]
+        assert panel["width"] > 0
+        assert panel["height"] > 0
+        for edge in panel.get("edges", []):
+            key = (panel_id, edge["id"])
+            assert key not in edge_by_ref, f"duplicate edge metadata: {key}"
+            edge_by_ref[key] = edge
+            if edge.get("joint_pair_id") is None:
+                assert edge["role"] == "flat", f"exterior edge accidentally fingered: {key}"
+            else:
+                assert edge["role"] in {"tabbed", "slotted"}, f"mating edge has invalid role: {key}"
+
+    partner_count = {}
+    seen_pair_ids = set()
+    for pair in graph.get("joint_pairs", []):
+        pair_id = pair["id"]
+        assert pair_id not in seen_pair_ids
+        seen_pair_ids.add(pair_id)
+        assert pair.get("finger_plan_id") == pair_id
+        assert pair["length"] > 0
+        assert pair["count"] >= 3 and pair["count"] % 2 == 1
+        assert pair["count"] == len(pair["widths"])
+        assert abs(sum(pair["widths"]) - pair["length"]) < 1e-6
+
+        a = pair["a"]
+        b = pair["b"]
+        a_key = (a["panel"], a["edge"])
+        b_key = (b["panel"], b["edge"])
+        assert a_key in edge_by_ref, f"missing first edge metadata: {a_key}"
+        assert b_key in edge_by_ref, f"missing second edge metadata: {b_key}"
+        assert a_key != b_key
+        partner_count[a_key] = partner_count.get(a_key, 0) + 1
+        partner_count[b_key] = partner_count.get(b_key, 0) + 1
+
+        a_edge = edge_by_ref[a_key]
+        b_edge = edge_by_ref[b_key]
+        assert a_edge["joint_pair_id"] == pair_id
+        assert b_edge["joint_pair_id"] == pair_id
+        assert a_edge["role"] != "flat"
+        assert b_edge["role"] != "flat"
+        assert abs((a_edge["length"] - a_edge["offset_start"] - a_edge["offset_end"]) - pair["length"]) < 1e-6
+        assert abs((b_edge["length"] - b_edge["offset_start"] - b_edge["offset_end"]) - pair["length"]) < 1e-6
+
+        assert len(pair["tabs_a"]) == len(pair["tabs_b"]) == pair["count"]
+        assert all(x != y for x, y in zip(pair["tabs_a"], pair["tabs_b"]))
+        assert pair["tabs_a_local"] == (_reverse(pair["tabs_a"]) if a.get("reverse") else pair["tabs_a"])
+        assert pair["tabs_b_local"] == (_reverse(pair["tabs_b"]) if b.get("reverse") else pair["tabs_b"])
+
+        assert pair["nominal_boundaries"][0] == 0.0
+        assert abs(pair["nominal_boundaries"][-1] - pair["length"]) < 1e-6
+        assert len(pair["nominal_boundaries"]) == pair["count"] + 1
+        assert len(pair["drawn_widths_a"]) == len(pair["drawn_widths_b"]) == pair["count"]
+        assert len(pair["drawn_boundaries_a"]) == len(pair["drawn_boundaries_b"]) == pair["count"] + 1
+        assert abs(pair["drawn_boundaries_a"][-1] - pair["length"]) < 1e-6
+        assert abs(pair["drawn_boundaries_b"][-1] - pair["length"]) < 1e-6
+
+    for key, count in partner_count.items():
+        assert count == 1, f"mating edge does not have exactly one partner: {key}"
+
+
+def assert_rectangular_tray_graph(meta: dict) -> None:
+    graph = meta.get("assembly_graph")
+    assert graph, "rectangular box/tray templates must expose assembly_graph metadata"
+    expected = {
+        ("BOTTOM", "back", "BACK", "bottom"),
+        ("BOTTOM", "front", "FRONT", "bottom"),
+        ("BOTTOM", "left", "LEFT", "bottom"),
+        ("BOTTOM", "right", "RIGHT", "bottom"),
+        ("BACK", "left", "LEFT", "back"),
+        ("BACK", "right", "RIGHT", "back"),
+        ("FRONT", "left", "LEFT", "front"),
+        ("FRONT", "right", "RIGHT", "front"),
+    }
+    actual = {(p["a"]["panel"], p["a"]["edge"], p["b"]["panel"], p["b"]["edge"]) for p in graph.get("joint_pairs", [])}
+    assert expected.issubset(actual)
+
+
+def _reverse(values):
+    return list(reversed(values))
+
+
 def assert_design_sound(template_id: str, params: dict) -> None:
     validation = validate_template_params(template_id, params)
     assert not validation.blocking, validation.to_dict()
@@ -98,6 +187,7 @@ def assert_design_sound(template_id: str, params: dict) -> None:
     assert not any(w.severity == "error" for w in warnings)
     assert meta["exportable"] is True
     assert_edge_pair_fit(meta)
+    assert_assembly_graph_sound(meta)
     for panel in panels:
         assert abs(polygon_area(panel.outline)) > 1e-6
         assert all(math.isfinite(x) and math.isfinite(y) for x, y in panel.outline)

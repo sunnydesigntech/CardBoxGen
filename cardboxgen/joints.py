@@ -35,24 +35,32 @@ class FingerPlan:
     widths: List[float]
     start_with_tab_on_a: bool = True
 
-    def tabs_mask_for_a(self) -> List[bool]:
-        return [((i % 2 == 0) if self.start_with_tab_on_a else (i % 2 == 1)) for i in range(self.count)]
+    def tabs_mask_for_a(self, *, reverse: bool = False) -> List[bool]:
+        mask = [((i % 2 == 0) if self.start_with_tab_on_a else (i % 2 == 1)) for i in range(self.count)]
+        return list(reversed(mask)) if reverse else mask
 
-    def tabs_mask(self, *, invert: bool = False) -> List[bool]:
+    def tabs_mask(self, *, invert: bool = False, reverse: bool = False) -> List[bool]:
         mask = self.tabs_mask_for_a()
-        return [not v for v in mask] if invert else mask
+        if invert:
+            mask = [not v for v in mask]
+        return list(reversed(mask)) if reverse else mask
 
-    def complement_mask(self) -> List[bool]:
-        return [not v for v in self.tabs_mask_for_a()]
+    def local_tabs_mask(self, *, invert: bool = False, reverse: bool = False) -> List[bool]:
+        return self.tabs_mask(invert=invert, reverse=reverse)
 
-    def drawn_widths_for_side(self, *, kerf_mm: float, clearance_mm: float, invert: bool = False) -> List[float]:
-        return compensate_segment_widths(
+    def complement_mask(self, *, reverse: bool = False) -> List[bool]:
+        mask = [not v for v in self.tabs_mask_for_a()]
+        return list(reversed(mask)) if reverse else mask
+
+    def drawn_widths_for_side(self, *, kerf_mm: float, clearance_mm: float, invert: bool = False, reverse: bool = False) -> List[float]:
+        widths = compensate_segment_widths(
             self.widths,
             self.tabs_mask(invert=invert),
             kerf_mm=kerf_mm,
             clearance_mm=clearance_mm,
             total_length=self.length,
         )
+        return list(reversed(widths)) if reverse else widths
 
 
 def compute_finger_count(
@@ -144,6 +152,7 @@ def finger_edge_points(
     kerf_mm: float,
     clearance_mm: float,
     invert_tabs: bool,
+    reverse_plan: bool = False,
 ) -> List[Point]:
     """Generate a Manhattan polyline along an edge using a shared FingerPlan."""
 
@@ -155,8 +164,8 @@ def finger_edge_points(
         raise ValueError("dirv and normal must be perpendicular")
 
     tab_depth, slot_depth = joint_depths_drawn(thickness=thickness, kerf_mm=kerf_mm, clearance_mm=clearance_mm)
-    mask = plan.tabs_mask(invert=invert_tabs)
-    widths = plan.drawn_widths_for_side(kerf_mm=kerf_mm, clearance_mm=clearance_mm, invert=invert_tabs)
+    mask = plan.local_tabs_mask(invert=invert_tabs, reverse=reverse_plan)
+    widths = plan.drawn_widths_for_side(kerf_mm=kerf_mm, clearance_mm=clearance_mm, invert=invert_tabs, reverse=reverse_plan)
 
     pts: List[Point] = []
     p = start

@@ -22,6 +22,32 @@ def _rename_lid_panel(panel: Panel) -> Panel:
     return panel
 
 
+def _rename_lid_meta_panel(name: str) -> str:
+    return "LID_TOP" if name == "LID_BOTTOM" else name
+
+
+def _rename_lid_edge_pair_meta(pair: dict) -> dict:
+    pair = dict(pair)
+    for side in ("a", "b"):
+        endpoint = dict(pair[side])
+        endpoint["panel"] = _rename_lid_meta_panel(str(endpoint.get("panel", "")))
+        pair[side] = endpoint
+    return pair
+
+
+def _rename_lid_graph_meta(graph: dict) -> dict:
+    out = dict(graph)
+    panels = []
+    for panel in graph.get("panels", []):
+        panel = dict(panel)
+        panel["id"] = _rename_lid_meta_panel(str(panel.get("id", "")))
+        panel["edges"] = [dict(edge) for edge in panel.get("edges", [])]
+        panels.append(panel)
+    out["panels"] = panels
+    out["joint_pairs"] = [_rename_lid_edge_pair_meta(pair) for pair in graph.get("joint_pairs", [])]
+    return out
+
+
 def build_box_with_lid(
     *,
     inner_w: float,
@@ -58,6 +84,7 @@ def build_box_with_lid(
     warnings = list(base.warnings)
     panels = list(base.panels)
     edge_meta = list(base.meta.get("edge_pairs", []))
+    base_graph = dict(base.meta.get("assembly_graph", {}))
 
     if lid:
         if lid_clearance < 0:
@@ -89,13 +116,11 @@ def build_box_with_lid(
                 panel.cutouts.append(cut_thumb_notch(lid_box.outer_w, 0.0, min(thumb_notch_radius, lid_box.outer_w / 4), min(thumb_notch_depth, lid_box.front_panel_h / 4)))
             panels.append(_rename_lid_panel(panel))
         for pair in lid_box.meta.get("edge_pairs", []):
-            pair = dict(pair)
-            for side in ("a", "b"):
-                endpoint = dict(pair[side])
-                if endpoint.get("panel") == "LID_BOTTOM":
-                    endpoint["panel"] = "LID_TOP"
-                pair[side] = endpoint
-            edge_meta.append(pair)
+            edge_meta.append(_rename_lid_edge_pair_meta(pair))
+        lid_graph = _rename_lid_graph_meta(dict(lid_box.meta.get("assembly_graph", {})))
+        if base_graph and lid_graph:
+            base_graph["panels"] = list(base_graph.get("panels", [])) + list(lid_graph.get("panels", []))
+            base_graph["joint_pairs"] = list(base_graph.get("joint_pairs", [])) + list(lid_graph.get("joint_pairs", []))
         base.meta["lid"] = {
             "enabled": True,
             "inner": {"w": lid_inner_w, "d": lid_inner_d, "h": lid_inner_h},
@@ -106,5 +131,7 @@ def build_box_with_lid(
         base.meta["lid"] = {"enabled": False}
 
     base.meta["edge_pairs"] = edge_meta
+    if base_graph:
+        base.meta["assembly_graph"] = base_graph
     base.meta["warnings"] = [w.to_dict() for w in warnings]
     return panels, warnings, base.meta

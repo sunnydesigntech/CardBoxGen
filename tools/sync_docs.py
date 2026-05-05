@@ -14,6 +14,7 @@ MODULES = [
     "cardboxgen.models",
     "cardboxgen.joints",
     "cardboxgen.panels",
+    "cardboxgen.assembly",
     "cardboxgen.layout",
     "cardboxgen.svg",
     "cardboxgen.presets.common",
