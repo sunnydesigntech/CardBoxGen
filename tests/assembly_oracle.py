@@ -8,7 +8,7 @@ from typing import Iterable, List, Sequence, Tuple
 
 from cardboxgen.api import build_design
 from cardboxgen.fabrication import final_slot_depth_from_drawn, final_tab_depth_from_drawn
-from cardboxgen.geometry import Point, bbox_points, polygon_area
+from cardboxgen.geometry import Point, bbox_points, dot, polygon_area, sub
 from cardboxgen.layout import arrange_panels, has_overlaps
 from cardboxgen.validation import validate_template_params
 
@@ -159,6 +159,41 @@ def assert_assembly_graph_sound(meta: dict) -> None:
         assert count == 1, f"mating edge does not have exactly one partner: {key}"
 
 
+def assert_clean_reserved_corner_zones(panels, meta: dict) -> None:
+    graph = meta.get("assembly_graph")
+    if not graph:
+        return
+    panel_by_name = {panel.name: panel for panel in panels}
+    max_depth = 0.0
+    for pair in graph.get("joint_pairs", []):
+        max_depth = max(max_depth, float(pair.get("thickness") or 0) + float(pair.get("target_clearance") or 0) + float(pair.get("kerf_full_width_mm") or 0))
+    max_depth = max(max_depth, 1.0)
+
+    for panel_meta in graph.get("panels", []):
+        panel = panel_by_name.get(panel_meta["id"])
+        if panel is None:
+            continue
+        for edge in panel_meta.get("edges", []):
+            start = tuple(edge["start"])
+            dirv = tuple(edge["dir"])
+            normal = (dirv[1], -dirv[0])
+            length = float(edge["length"])
+            start_clear = float(edge.get("offset_start") or 0)
+            end_clear = float(edge.get("offset_end") or 0)
+            if start_clear <= 0 and end_clear <= 0:
+                continue
+            for point in panel.outline:
+                rel = sub(point, start)
+                x = dot(rel, dirv)
+                y = dot(rel, normal)
+                if abs(y) > max_depth + 1e-6:
+                    continue
+                if -1e-6 <= x < start_clear - 1e-6:
+                    assert abs(y) < 1e-6 or abs(x) < 1e-6, f"corner artifact near {panel.name}.{edge['id']} start: {(x, y)}"
+                if length - end_clear + 1e-6 < x <= length + 1e-6:
+                    assert abs(y) < 1e-6 or abs(x - length) < 1e-6, f"corner artifact near {panel.name}.{edge['id']} end: {(x, y)}"
+
+
 def assert_rectangular_tray_graph(meta: dict) -> None:
     graph = meta.get("assembly_graph")
     assert graph, "rectangular box/tray templates must expose assembly_graph metadata"
@@ -188,6 +223,7 @@ def assert_design_sound(template_id: str, params: dict) -> None:
     assert meta["exportable"] is True
     assert_edge_pair_fit(meta)
     assert_assembly_graph_sound(meta)
+    assert_clean_reserved_corner_zones(panels, meta)
     for panel in panels:
         assert abs(polygon_area(panel.outline)) > 1e-6
         assert all(math.isfinite(x) and math.isfinite(y) for x, y in panel.outline)

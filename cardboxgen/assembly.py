@@ -143,6 +143,8 @@ class AssemblyGraph:
                         "id": edge.name,
                         "role": edge.role,
                         "length": edge.length,
+                        "start": [edge.start[0], edge.start[1]],
+                        "dir": [edge.dirv[0], edge.dirv[1]],
                         "joint_pair_id": edge.finger_pair_id,
                         "reverse_plan": edge.reverse_plan,
                         "invert_tabs": edge.invert_tabs,

@@ -52,6 +52,25 @@ def corner_relief_mm(*, thickness: float, kerf: float, clearance: float, outer_w
     return min(relief, outer_w / 4, outer_d / 4, wall_h / 4)
 
 
+def corner_clearance_mm(
+    *,
+    thickness: float,
+    kerf: float,
+    clearance: float,
+    target_finger_w: float,
+    outer_w: float,
+    outer_d: float,
+    wall_h: float,
+) -> float:
+    """Reserved no-finger zone measured along each edge from a panel corner."""
+
+    tab_depth, slot_depth = joint_depths_drawn(thickness=thickness, kerf_mm=kerf, clearance_mm=clearance)
+    normal_depth = max(tab_depth, slot_depth)
+    base = max(float(thickness), float(target_finger_w) / 2.0, 2.0 * float(kerf))
+    relief = base + normal_depth
+    return min(relief, outer_w / 4, outer_d / 4, wall_h / 4)
+
+
 def target_finger_width(thickness: float, finger_w: Optional[float]) -> float:
     return float(finger_w) if finger_w is not None else max(10.0, 3.0 * float(thickness))
 
@@ -147,7 +166,16 @@ def build_open_box(
     def name(part: str) -> str:
         return f"{prefix}{part}" if prefix else part
 
-    corner = corner_relief_mm(thickness=t, kerf=kerf, clearance=clearance, outer_w=outer_w, outer_d=outer_d, wall_h=wall_h)
+    target = target_finger_width(thickness, finger_w)
+    corner = corner_clearance_mm(
+        thickness=t,
+        kerf=kerf,
+        clearance=clearance,
+        target_finger_w=target,
+        outer_w=outer_w,
+        outer_d=outer_d,
+        wall_h=wall_h,
+    )
     graph = make_rectangular_box_graph(
         outer_w=outer_w,
         outer_d=outer_d,
@@ -159,7 +187,6 @@ def build_open_box(
         finger_count_outer=finger_count_outer,
         finger_count_vertical=finger_count_vertical,
     )
-    target = target_finger_width(thickness, finger_w)
     graph.compile(target_finger_w=target, min_fingers=min_fingers, kerf=kerf, clearance=clearance)
     specs = graph.panels
     edge_pairs = graph.edge_pairs

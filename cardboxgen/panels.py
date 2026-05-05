@@ -7,7 +7,7 @@ from typing import Dict, List, Optional, Tuple
 
 from .geometry import Point, add, bbox_points, mul, outward_normal_for_edge, polygon_area, polyline_to_path
 from .fabrication import final_segment_widths
-from .joints import EdgeKey, FingerPlan, finger_edge_points
+from .joints import EdgeKey, FingerPlan, joint_depths_drawn
 
 
 class EdgeRole:
@@ -16,6 +16,11 @@ class EdgeRole:
     SLOTTED = "slotted"
     OPEN = "open"
     SCORE = "score"
+
+
+class CornerPolicy:
+    RESERVED_NO_FINGER_ZONE = "reserved_no_finger_zone"
+    CLEAN_SQUARE = "clean_square"
 
 
 @dataclass
@@ -133,6 +138,49 @@ class PanelEdge:
 
 
 @dataclass
+class EdgeProfile:
+    """Local edge polyline. Points must start at (0, 0) and end at (length, 0)."""
+
+    length: float
+    role: str
+    points: List[Point]
+    corner_clearance_start: float = 0.0
+    corner_clearance_end: float = 0.0
+    finger_plan_id: Optional[str] = None
+    transition_xs: List[float] = field(default_factory=list)
+
+    def validate(self) -> None:
+        if self.length <= 0:
+            raise ValueError("edge profile length must be positive")
+        if not self.points:
+            raise ValueError("edge profile has no points")
+        if _dist2(self.points[0], (0.0, 0.0)) > 1e-12:
+            raise ValueError("edge profile must start at (0, 0)")
+        if _dist2(self.points[-1], (self.length, 0.0)) > 1e-12:
+            raise ValueError("edge profile must end at (length, 0)")
+        for x, _y in self.points:
+            if x < -1e-9 or x > self.length + 1e-9:
+                raise ValueError("edge profile point is outside local x range")
+        for a, b in zip(self.points, self.points[1:]):
+            if _dist2(a, b) <= 1e-18:
+                raise ValueError("edge profile contains a zero-length segment")
+        for x in self.transition_xs:
+            if x < self.corner_clearance_start - 1e-9:
+                raise ValueError("finger transition starts inside reserved corner clearance")
+            if x > self.length - self.corner_clearance_end + 1e-9:
+                raise ValueError("finger transition ends inside reserved corner clearance")
+
+
+@dataclass
+class PanelOutline:
+    panel_id: str
+    nominal_width: float
+    nominal_height: float
+    edges: Dict[str, EdgeProfile]
+    corners: Dict[str, str] = field(default_factory=dict)
+
+
+@dataclass
 class PanelSpec:
     name: str
     width: float
@@ -170,49 +218,139 @@ def build_rect_panel_spec(name: str, w: float, h: float) -> PanelSpec:
 
 
 def render_panel_from_spec(spec: PanelSpec, *, joint_params: JointRenderParams, edge_pairs: Dict[str, EdgePair]) -> Panel:
-    pts: List[Point] = [spec.edges[0].start]
-    for edge in spec.edges:
-        start = edge.start
-        dirv = edge.dirv
-        normal = outward_normal_for_edge(dirv)
-        if edge.finger_pair_id is None:
-            pts.append(add(start, mul(dirv, edge.length)))
-            continue
-
-        pair = edge_pairs[edge.finger_pair_id]
-        if edge.joint_offset_start > 0:
-            start = add(start, mul(dirv, edge.joint_offset_start))
-            pts.append(start)
-        pts.extend(
-            finger_edge_points(
-                start,
-                dirv,
-                normal,
-                pair.plan,
-                thickness=joint_params.thickness,
-                kerf_mm=joint_params.kerf_mm,
-                clearance_mm=joint_params.clearance_mm,
-                invert_tabs=edge.invert_tabs,
-                reverse_plan=edge.reverse_plan,
-            )
-        )
-        endpoint = add(edge.start, mul(dirv, edge.length))
-        if pair.plan.length + edge.joint_offset_start < edge.length - 1e-9:
-            pts.append(endpoint)
-
-    compact: List[Point] = []
-    for point in pts:
-        if not compact or abs(point[0] - compact[-1][0]) > 1e-9 or abs(point[1] - compact[-1][1]) > 1e-9:
-            compact.append(point)
+    outline = build_panel_outline(spec, joint_params=joint_params, edge_pairs=edge_pairs)
+    pts = compose_panel_outline(spec, outline)
 
     return Panel(
         name=spec.name,
-        outline=compact,
+        outline=pts,
         cutouts=list(spec.cutouts),
         score_paths=list(spec.score_paths),
         labels=list(spec.labels),
         notes=list(spec.notes),
     )
+
+
+def build_panel_outline(spec: PanelSpec, *, joint_params: JointRenderParams, edge_pairs: Dict[str, EdgePair]) -> PanelOutline:
+    profiles: Dict[str, EdgeProfile] = {}
+    for edge in spec.edges:
+        profiles[edge.name] = edge_profile_from_panel_edge(edge, joint_params=joint_params, edge_pairs=edge_pairs)
+    return PanelOutline(
+        panel_id=spec.name,
+        nominal_width=spec.width,
+        nominal_height=spec.height,
+        edges=profiles,
+        corners={
+            "top_right": CornerPolicy.RESERVED_NO_FINGER_ZONE,
+            "bottom_right": CornerPolicy.RESERVED_NO_FINGER_ZONE,
+            "bottom_left": CornerPolicy.RESERVED_NO_FINGER_ZONE,
+            "top_left": CornerPolicy.RESERVED_NO_FINGER_ZONE,
+        },
+    )
+
+
+def edge_profile_from_panel_edge(edge: PanelEdge, *, joint_params: JointRenderParams, edge_pairs: Dict[str, EdgePair]) -> EdgeProfile:
+    if edge.finger_pair_id is None:
+        profile = EdgeProfile(length=edge.length, role=edge.role, points=[(0.0, 0.0), (edge.length, 0.0)])
+        profile.validate()
+        return profile
+
+    pair = edge_pairs[edge.finger_pair_id]
+    profile = make_finger_edge_profile(
+        length=edge.length,
+        plan=pair.plan,
+        role=edge.role,
+        thickness=joint_params.thickness,
+        kerf_mm=joint_params.kerf_mm,
+        clearance_mm=joint_params.clearance_mm,
+        invert_tabs=edge.invert_tabs,
+        reverse_plan=edge.reverse_plan,
+        corner_clearance_start=edge.joint_offset_start,
+        corner_clearance_end=edge.joint_offset_end,
+        finger_plan_id=edge.finger_pair_id,
+    )
+    profile.validate()
+    return profile
+
+
+def make_finger_edge_profile(
+    *,
+    length: float,
+    plan: FingerPlan,
+    role: str,
+    thickness: float,
+    kerf_mm: float,
+    clearance_mm: float,
+    invert_tabs: bool,
+    reverse_plan: bool = False,
+    corner_clearance_start: float = 0.0,
+    corner_clearance_end: float = 0.0,
+    finger_plan_id: Optional[str] = None,
+) -> EdgeProfile:
+    """Create a local, corner-free edge profile from x=0 to x=length."""
+
+    edge_len = float(length)
+    start_clear = max(0.0, float(corner_clearance_start))
+    end_clear = max(0.0, float(corner_clearance_end))
+    usable = edge_len - start_clear - end_clear
+    if usable + 1e-9 < plan.length:
+        raise ValueError(f"finger plan length {plan.length:.3f} exceeds usable edge span {usable:.3f}")
+
+    tab_depth, slot_depth = joint_depths_drawn(thickness=thickness, kerf_mm=kerf_mm, clearance_mm=clearance_mm)
+    mask = plan.local_tabs_mask(invert=invert_tabs, reverse=reverse_plan)
+    widths = plan.drawn_widths_for_side(kerf_mm=kerf_mm, clearance_mm=clearance_mm, invert=invert_tabs, reverse=reverse_plan)
+
+    points: List[Point] = [(0.0, 0.0)]
+    if start_clear > 0:
+        points.append((start_clear, 0.0))
+
+    x = start_clear
+    transition_xs: List[float] = []
+    for width, is_tab in zip(widths, mask):
+        width = float(width)
+        depth = tab_depth if is_tab else slot_depth
+        y = depth if is_tab else -depth
+        x2 = x + width
+        points.extend([(x, y), (x2, y), (x2, 0.0)])
+        transition_xs.extend([x, x2])
+        x = x2
+
+    usable_end = start_clear + plan.length
+    if abs(x - usable_end) > 1e-6:
+        raise ValueError("finger profile did not end at expected usable span")
+    if usable_end < edge_len - 1e-9:
+        points.append((edge_len, 0.0))
+
+    compact = _compact_points(points)
+    profile = EdgeProfile(
+        length=edge_len,
+        role=role,
+        points=compact,
+        corner_clearance_start=start_clear,
+        corner_clearance_end=end_clear,
+        finger_plan_id=finger_plan_id,
+        transition_xs=transition_xs,
+    )
+    profile.validate()
+    return profile
+
+
+def compose_panel_outline(spec: PanelSpec, outline: PanelOutline) -> List[Point]:
+    """Transform local edge profiles and connect corners exactly once."""
+
+    pts: List[Point] = []
+    for edge in spec.edges:
+        profile = outline.edges[edge.name]
+        profile.validate()
+        normal = outward_normal_for_edge(edge.dirv)
+        transformed = [add(add(edge.start, mul(edge.dirv, x)), mul(normal, y)) for x, y in profile.points]
+        for point in transformed:
+            if pts and _dist2(point, pts[-1]) <= 1e-18:
+                continue
+            pts.append(point)
+    if len(pts) > 1 and _dist2(pts[0], pts[-1]) <= 1e-18:
+        pts.pop()
+    return pts
 
 
 def bind_edge(
@@ -248,3 +386,16 @@ def _boundaries(widths: List[float]) -> List[float]:
     if out:
         out[-1] = round(out[-1], 12)
     return out
+
+
+def _dist2(a: Point, b: Point) -> float:
+    return (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2
+
+
+def _compact_points(points: List[Point]) -> List[Point]:
+    compact: List[Point] = []
+    for point in points:
+        if compact and _dist2(point, compact[-1]) <= 1e-18:
+            continue
+        compact.append(point)
+    return compact
