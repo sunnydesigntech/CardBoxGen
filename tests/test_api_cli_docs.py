@@ -1,0 +1,83 @@
+import json
+import subprocess
+import sys
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+from cardboxgen.api import generate_svg
+from cardboxgen.version import __version__
+
+
+def test_api_result_is_json_safe_and_contains_bundle_files():
+    result = generate_svg("tray_open_front", {"inner_w": 135, "inner_d": 90, "inner_h": 80, "thickness": 3})
+    json.dumps(result)
+    assert result["svg"].startswith("<?xml")
+    assert {"project_summary.md", "assembly_guide.md", "bom.md", "metadata.json", "params.json"} <= set(result["bundle_files"])
+    assert result["meta"]["template_id"] == "tray_open_front"
+
+
+def test_legacy_alias_returns_deprecation_warning():
+    result = generate_svg("card_shoe_front_draw", {"card_w": 63, "card_h": 88, "card_t": 0.35, "capacity": 20})
+    assert result["meta"]["template_id"] == "card_shoe"
+    assert any(w["code"] == "TEMPLATE_ALIAS" for w in result["warnings"])
+
+
+def test_cli_smoke_module_and_wrapper(tmp_path):
+    out1 = tmp_path / "tray.svg"
+    out2 = tmp_path / "calibration.svg"
+    cmd1 = [
+        sys.executable,
+        "-m",
+        "cardboxgen",
+        "--preset",
+        "tray_open_front",
+        "--inner-width",
+        "135",
+        "--inner-depth",
+        "90",
+        "--inner-height",
+        "80",
+        "--thickness",
+        "3",
+        "--kerf",
+        "0.2",
+        "--clearance",
+        "0.15",
+        "--out",
+        str(out1),
+    ]
+    subprocess.run(cmd1, check=True, cwd=Path(__file__).resolve().parents[1])
+    subprocess.run([sys.executable, "cardboxgen_v0_1.py", "--calibration", "--thickness", "3", "--kerf", "0.2", "--out", str(out2)], check=True, cwd=Path(__file__).resolve().parents[1])
+    ET.parse(out1)
+    ET.parse(out2)
+
+
+def test_docs_bundle_is_fresh():
+    root = Path(__file__).resolve().parents[1]
+    subprocess.run([sys.executable, "tools/sync_docs.py", "--check"], check=True, cwd=root)
+
+
+def test_i18n_keys_and_versions_match():
+    root = Path(__file__).resolve().parents[1]
+    files = sorted((root / "docs" / "i18n").glob("*.json"))
+
+    def flat(obj, prefix=""):
+        if isinstance(obj, dict):
+            out = set()
+            for key, value in obj.items():
+                out |= flat(value, f"{prefix}.{key}" if prefix else key)
+            return out
+        return {prefix}
+
+    payloads = [json.loads(path.read_text(encoding="utf-8")) for path in files]
+    key_sets = [flat(payload) for payload in payloads]
+    assert all(keys == key_sets[0] for keys in key_sets)
+    assert all(payload["app"]["version"] == f"v{__version__}" for payload in payloads)
+
+
+def test_web_app_version_matches_package():
+    root = Path(__file__).resolve().parents[1]
+    app_js = (root / "docs" / "app.js").read_text(encoding="utf-8")
+    index_html = (root / "docs" / "index.html").read_text(encoding="utf-8")
+    assert f'APP_VERSION = "{__version__}"' in app_js
+    assert f"v{__version__}" in index_html

@@ -21,6 +21,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check generated docs bundle
+        run: python tools/sync_docs.py --check
+
       - name: Upload Pages artifact (docs)
         uses: actions/upload-pages-artifact@v3
         with:
