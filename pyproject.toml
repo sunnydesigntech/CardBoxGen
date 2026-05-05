@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cardboxgen"
+version = "0.8.0"
+description = "Parametric SVG generator for laser-cut card trays, boxes, dispensers, and mechanism templates."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Sunny Design Tech" }]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Topic :: Multimedia :: Graphics",
+]
+
+[project.scripts]
+cardboxgen = "cardboxgen.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["cardboxgen*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
