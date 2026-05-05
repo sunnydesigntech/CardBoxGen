@@ -3,7 +3,7 @@
 
 import { loadPyodide } from "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.mjs";
 
-const APP_VERSION = "0.8.0";
+const APP_VERSION = "0.8.1";
 const LANG_STORAGE_KEY = "cardboxgen.lang";
 
 let currentLang = "en";
@@ -904,6 +904,19 @@ function renderWarnings() {
   updateExportUi();
 }
 
+function renderFitModelReadout(meta) {
+  const fit = meta?.validation?.computed_limits?.fit_model;
+  if (!fit || !els.jointRule) return;
+  els.jointRule.textContent = t("readouts.fitModel", {
+    tabDrawn: Number(fit.sample_drawn_tab_width ?? 0).toFixed(2),
+    tabFinal: Number(fit.sample_final_tab_width ?? 0).toFixed(2),
+    slotDrawn: Number(fit.sample_drawn_slot_width ?? 0).toFixed(2),
+    slotFinal: Number(fit.sample_final_slot_width ?? 0).toFixed(2),
+    depthDrawn: Number(fit.drawn_slot_depth ?? 0).toFixed(2),
+    depthFinal: Number(fit.expected_final_slot_depth ?? 0).toFixed(2),
+  });
+}
+
 function buildParams() {
   const inStudent = !!els.studentMode?.checked;
   const templateId = String((inStudent ? els.mechanism?.value : els.preset?.value) || "tray_open_front").trim();
@@ -1009,6 +1022,7 @@ json.dumps(out, ensure_ascii=False)
   lastMeta = meta;
 
   renderWarnings();
+  renderFitModelReadout(meta);
 
   // Preview (inline SVG).
   // Wrap for pan/zoom transforms.

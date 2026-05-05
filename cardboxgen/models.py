@@ -12,13 +12,33 @@ class WarningMsg:
     code: str
     message: str
     fix: str = ""
+    field: Optional[str] = None
 
     def to_dict(self) -> Dict[str, str]:
-        return {
+        data = {
             "severity": str(self.severity),
             "code": str(self.code),
             "message": str(self.message),
             "fix": str(self.fix),
+        }
+        if self.field:
+            data["field"] = str(self.field)
+        return data
+
+
+@dataclass
+class ValidationResult:
+    normalized_params: Dict[str, Any] = field(default_factory=dict)
+    messages: List[WarningMsg] = field(default_factory=list)
+    blocking: bool = False
+    computed_limits: Dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "normalized_params": self.normalized_params,
+            "messages": [m.to_dict() for m in self.messages],
+            "blocking": self.blocking,
+            "computed_limits": self.computed_limits,
         }
 
 

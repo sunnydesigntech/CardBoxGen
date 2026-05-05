@@ -13,12 +13,14 @@ The project is browser-first but Python-backed:
 `cardboxgen/` is the only source of truth for generator logic.
 
 - `version.py`: package version
-- `models.py`: dataclasses and structured warnings
+- `fabrication.py`: full-width kerf model and fit compensation formulas
+- `validation.py`: parameter normalization, blocking errors, and computed limits
+- `models.py`: dataclasses and structured warnings/results
 - `geometry.py`: points, paths, bboxes, cutout path helpers
-- `joints.py`: deterministic `FingerPlan` and kerf/clearance rules
+- `joints.py`: deterministic shared `FingerPlan` edge pairs
 - `panels.py`: panel and cut-path primitives
 - `layout.py`: sheet layout
-- `svg.py`: SVG writer with layer conventions
+- `svg.py`: SVG writer with layer conventions and metadata
 - `presets/`: tray, dispenser, window box, lid box, divider rack, card shoe, candy machine, calibration
 - `api.py`: JSON-safe browser/API entry point
 - `cli.py`: command line interface
@@ -40,20 +42,19 @@ Legacy aliases emit warnings and map to supported presets.
 
 Inner dimensions are authoritative for box/tray presets. The generated panels add material thickness around those dimensions, then produce mating finger joints from shared edge-pair plans.
 
-Kerf and clearance are explicit:
+CardBoxGen uses `kerf` as full laser cut width, so burn radius is `kerf / 2`.
 
-- drawn slot depth = `thickness + clearance - kerf`
-- tab/slot segment widths are compensated, then normalized to exact edge length
+- External tabs shrink after cutting.
+- Internal slots and holes grow after cutting.
+- Drawn tab depth targets final material thickness.
+- Drawn slot depth targets `thickness + clearance`.
+- Tab/slot segment widths are compensated and normalized to exact edge length.
 
-The SVG writer uses separate groups:
-
-- `CUT`: red cut paths
-- `SCORE`: blue score paths
-- `ENGRAVE`: labels/text
+The validation layer blocks impossible or unsafe configurations before export. Examples include negative thickness, kerf greater than material thickness, too-small internal dimensions, even finger counts, tiny finger pitch, unsafe windows/slots, excessive divider count, invalid screw margins, and rotary pockets colliding with axle or rim.
 
 ## Student Mode Notes
 
-The web app includes a student mode for mechanism selection and project-pack export. It can recommend templates, auto-fill safe starting dimensions, display Python warnings/errors, and export:
+The web app includes a student mode for mechanism selection and project-pack export. It can recommend templates, auto-fill safe starting dimensions, display Python warnings/errors, show computed fit values, and export:
 
 - `cut.svg`
 - `project_summary.md`

@@ -6,6 +6,11 @@ import math
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
+from .fabrication import (
+    compensated_segment_widths,
+    drawn_slot_depth_for_target,
+    drawn_tab_depth_for_target,
+)
 from .geometry import Point, add, dot, is_axis_aligned_dir, mul
 
 
@@ -78,15 +83,16 @@ def compute_finger_count(
 def joint_depths_drawn(*, thickness: float, kerf_mm: float, clearance_mm: float) -> Tuple[float, float]:
     """Return drawn tab depth and drawn slot depth.
 
-    Slot rule: final_slot ~= drawn_slot + kerf. Target final slot is
-    material thickness + clearance, therefore drawn_slot = thickness +
-    clearance - kerf.
+    ``kerf_mm`` is the full cut width. Target final tab depth is material
+    thickness. Target final open-edge slot depth is thickness + clearance.
     """
 
     t = max(0.0, float(thickness))
     k = float(kerf_mm)
     c = float(clearance_mm)
-    return t, max(0.0, t + c - k)
+    tab = drawn_tab_depth_for_target(t, k, open_edge=True)
+    slot = drawn_slot_depth_for_target(t + c, k, open_edge=True)
+    return max(0.0, tab), max(0.0, slot)
 
 
 def compensate_segment_widths(
@@ -103,15 +109,13 @@ def compensate_segment_widths(
         raise ValueError("width and mask lengths differ")
     if not nominal_widths:
         return []
-    k = float(kerf_mm)
-    c = float(clearance_mm)
-    tab_delta = k - c / 2.0
-    slot_delta = c / 2.0 - k
-    raw = [max(0.1, float(w) + (tab_delta if is_tab else slot_delta)) for w, is_tab in zip(nominal_widths, tabs_mask)]
-    scale = float(total_length) / max(1e-9, sum(raw))
-    out = [w * scale for w in raw]
-    out[-1] += float(total_length) - sum(out)
-    return out
+    return compensated_segment_widths(
+        nominal_widths,
+        tabs_mask,
+        kerf_full_width_mm=kerf_mm,
+        clearance_mm=clearance_mm,
+        total_length=total_length,
+    )
 
 
 def build_finger_plan(

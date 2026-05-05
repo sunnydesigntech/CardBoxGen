@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
 from .geometry import Point, add, bbox_points, mul, outward_normal_for_edge, polygon_area, polyline_to_path
+from .fabrication import final_segment_widths
 from .joints import EdgeKey, FingerPlan, finger_edge_points
 
 
@@ -16,6 +17,7 @@ class CutPath:
     points: Optional[List[Point]] = None
     d: Optional[str] = None
     kind: str = "cutout"
+    bbox_hint: Optional[Tuple[float, float, float, float]] = None
 
     def to_svg_d(self) -> str:
         if self.d is not None:
@@ -23,6 +25,13 @@ class CutPath:
         if self.points is None:
             return ""
         return polyline_to_path(self.points, close=True)
+
+    def bbox(self) -> Optional[Tuple[float, float, float, float]]:
+        if self.bbox_hint is not None:
+            return self.bbox_hint
+        if self.points:
+            return bbox_points(self.points)
+        return None
 
 
 @dataclass
@@ -54,8 +63,8 @@ class EdgePair:
     length: float
     plan: FingerPlan
 
-    def to_meta(self) -> Dict[str, object]:
-        return {
+    def to_meta(self, *, thickness: float | None = None, kerf_mm: float | None = None, clearance_mm: float | None = None) -> Dict[str, object]:
+        data: Dict[str, object] = {
             "id": self.id,
             "family": self.family,
             "a": {"panel": self.a.panel, "edge": self.a.edge},
@@ -66,6 +75,22 @@ class EdgePair:
             "tabs_a": self.plan.tabs_mask_for_a(),
             "tabs_b": self.plan.complement_mask(),
         }
+        if kerf_mm is not None and clearance_mm is not None:
+            drawn_a = self.plan.drawn_widths_for_side(kerf_mm=kerf_mm, clearance_mm=clearance_mm, invert=False)
+            drawn_b = self.plan.drawn_widths_for_side(kerf_mm=kerf_mm, clearance_mm=clearance_mm, invert=True)
+            data.update(
+                {
+                    "finger_plan_id": self.id,
+                    "drawn_widths_a": drawn_a,
+                    "drawn_widths_b": drawn_b,
+                    "final_widths_a": final_segment_widths(drawn_a, self.plan.tabs_mask_for_a(), kerf_full_width_mm=kerf_mm),
+                    "final_widths_b": final_segment_widths(drawn_b, self.plan.complement_mask(), kerf_full_width_mm=kerf_mm),
+                    "target_clearance": clearance_mm,
+                    "thickness": thickness,
+                    "kerf_full_width_mm": kerf_mm,
+                }
+            )
+        return data
 
 
 @dataclass
@@ -76,6 +101,8 @@ class PanelEdge:
     length: float
     finger_pair_id: Optional[str] = None
     invert_tabs: bool = False
+    joint_offset_start: float = 0.0
+    joint_offset_end: float = 0.0
 
 
 @dataclass
@@ -126,6 +153,9 @@ def render_panel_from_spec(spec: PanelSpec, *, joint_params: JointRenderParams, 
             continue
 
         pair = edge_pairs[edge.finger_pair_id]
+        if edge.joint_offset_start > 0:
+            start = add(start, mul(dirv, edge.joint_offset_start))
+            pts.append(start)
         pts.extend(
             finger_edge_points(
                 start,
@@ -138,8 +168,9 @@ def render_panel_from_spec(spec: PanelSpec, *, joint_params: JointRenderParams, 
                 invert_tabs=edge.invert_tabs,
             )
         )
-        if pair.plan.length < edge.length - 1e-9:
-            pts.append(add(start, mul(dirv, edge.length)))
+        endpoint = add(edge.start, mul(dirv, edge.length))
+        if pair.plan.length + edge.joint_offset_start < edge.length - 1e-9:
+            pts.append(endpoint)
 
     compact: List[Point] = []
     for point in pts:
@@ -156,10 +187,12 @@ def render_panel_from_spec(spec: PanelSpec, *, joint_params: JointRenderParams, 
     )
 
 
-def bind_edge(specs: Dict[str, PanelSpec], panel: str, edge: str, pair_id: str, *, invert: bool) -> None:
+def bind_edge(specs: Dict[str, PanelSpec], panel: str, edge: str, pair_id: str, *, invert: bool, offset_start: float = 0.0, offset_end: float = 0.0) -> None:
     for item in specs[panel].edges:
         if item.name == edge:
             item.finger_pair_id = pair_id
             item.invert_tabs = invert
+            item.joint_offset_start = max(0.0, float(offset_start))
+            item.joint_offset_end = max(0.0, float(offset_end))
             return
     raise KeyError(f"edge not found: {panel}.{edge}")

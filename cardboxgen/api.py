@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
-from .models import BoxParams, GenerationResult, WarningMsg
+from .models import BoxParams, GenerationResult, ValidationResult, WarningMsg
 from .panels import Panel
 from .presets import (
     build_box_with_lid,
@@ -17,7 +17,8 @@ from .presets import (
     build_tray_open_front,
     build_window_front,
 )
-from .svg import make_svg
+from .svg import make_diagnostic_svg, make_svg
+from .validation import validate_template_params
 from .version import __version__
 
 Builder = Callable[..., Tuple[List[Panel], List[WarningMsg], dict]]
@@ -213,6 +214,7 @@ def build_design(template_id: str, params: Optional[Dict[str, Any]] = None) -> T
     meta = dict(meta)
     meta["template_id"] = tid
     meta["cardboxgen_version"] = __version__
+    meta["exportable"] = not any(w.severity == "error" for w in all_warnings)
     meta["warnings"] = [w.to_dict() for w in all_warnings]
     return panels, all_warnings, meta
 
@@ -254,22 +256,48 @@ def generate_svg(template_id: str, params: Optional[Dict[str, Any]] = None) -> D
         params = {}
     if not isinstance(params, dict):
         raise TypeError("params must be a dict")
-    panels, warnings, meta = build_design(template_id, params)
+    validation = validate_template_params(template_id, params)
+    tid = str(validation.normalized_params.get("template_id", template_id))
+    if validation.blocking:
+        meta = {
+            "template_id": tid,
+            "cardboxgen_version": __version__,
+            "exportable": False,
+            "validation": validation.to_dict(),
+            "warnings": [w.to_dict() for w in validation.messages],
+        }
+        svg = make_diagnostic_svg(messages=meta["warnings"], meta=meta)
+        return GenerationResult(svg=svg, warnings=validation.messages, meta=meta, bundle_files=build_bundle_files(tid, validation.normalized_params, meta)).to_dict()
+
+    panels, builder_warnings, meta = build_design(tid, validation.normalized_params)
+    warnings = validation.messages + builder_warnings
+    if any(w.severity == "error" for w in warnings):
+        meta = dict(meta)
+        meta["exportable"] = False
+        meta["validation"] = validation.to_dict()
+        meta["warnings"] = [w.to_dict() for w in warnings]
+        svg = make_diagnostic_svg(messages=meta["warnings"], meta=meta)
+        return GenerationResult(svg=svg, warnings=warnings, meta=meta, bundle_files=build_bundle_files(tid, validation.normalized_params, meta)).to_dict()
+
     tid = str(meta.get("template_id", template_id))
+    meta = dict(meta)
+    meta["exportable"] = True
+    meta["validation"] = validation.to_dict()
+    meta["warnings"] = [w.to_dict() for w in warnings]
     svg = make_svg(
         panels,
         meta=meta,
-        sheet_width=_num(params, "max_row_width", "sheet_width", default=340.0),
-        labels=_bool(params, "labels", default=True),
-        offset_kerf=_bool(params, "offset_kerf", default=False),
-        kerf_mm=_num(params, "kerf", "kerf_mm", default=0.2),
-        layout_margin_mm=_num(params, "margin", "layout_margin_mm", default=10.0),
-        layout_padding_mm=_num(params, "gap", "layout_padding_mm", default=12.0),
-        stroke_mm=_num(params, "stroke_mm", default=0.2),
-        holding_tabs=_bool(params, "holding_tabs", default=False),
-        tab_width_mm=_num(params, "tab_width_mm", default=2.0),
+        sheet_width=_num(validation.normalized_params, "max_row_width", "sheet_width", default=340.0),
+        labels=_bool(validation.normalized_params, "labels", default=True),
+        offset_kerf=_bool(validation.normalized_params, "offset_kerf", default=False),
+        kerf_mm=_num(validation.normalized_params, "kerf", "kerf_mm", default=0.2),
+        layout_margin_mm=_num(validation.normalized_params, "margin", "layout_margin_mm", default=10.0),
+        layout_padding_mm=_num(validation.normalized_params, "gap", "layout_padding_mm", default=12.0),
+        stroke_mm=_num(validation.normalized_params, "stroke_mm", default=0.2),
+        holding_tabs=_bool(validation.normalized_params, "holding_tabs", default=False),
+        tab_width_mm=_num(validation.normalized_params, "tab_width_mm", default=2.0),
     )
-    return GenerationResult(svg=svg, warnings=warnings, meta=meta, bundle_files=build_bundle_files(tid, params, meta)).to_dict()
+    return GenerationResult(svg=svg, warnings=warnings, meta=meta, bundle_files=build_bundle_files(tid, validation.normalized_params, meta)).to_dict()
 
 
 def build_panels_for_preset(params: BoxParams) -> List[Panel]:

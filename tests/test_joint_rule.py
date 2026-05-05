@@ -1,6 +1,5 @@
 def test_joint_depth_rule_matches_spec():
-    # Spec: final_slot ≈ drawn_slot + kerf; target_final_slot = thickness + clearance
-    # => drawn_slot = thickness + clearance − kerf
+    from cardboxgen.fabrication import final_slot_depth_from_drawn, final_tab_depth_from_drawn
     from cardboxgen_v0_1 import joint_depths_drawn
 
     t = 3.0
@@ -8,8 +7,10 @@ def test_joint_depth_rule_matches_spec():
     clearance = 0.2
     tab_d, slot_d = joint_depths_drawn(thickness=t, kerf_mm=kerf, clearance_mm=clearance)
 
-    assert tab_d == t
+    assert abs(tab_d - (t + kerf)) < 1e-9
     assert abs(slot_d - (t + clearance - kerf)) < 1e-9
+    assert abs(final_tab_depth_from_drawn(tab_d, kerf) - t) < 1e-9
+    assert abs(final_slot_depth_from_drawn(slot_d, kerf) - (t + clearance)) < 1e-9
 
 
 def test_width_compensation_normalizes_to_exact_edge_length():

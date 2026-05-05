@@ -184,6 +184,12 @@ def build_candy_machine_rotary_layered(
     meta = {
         "template_id": "candy_machine_rotary_layered",
         "fabrication": {"thickness": thickness, "kerf": kerf, "fit_clearance": fit_clearance},
+        "mechanical_assumptions": [
+            "Educational/prototype mechanism only; not food-safe machinery.",
+            "Dry flowing solids only.",
+            "Irregular shapes can bridge in the hopper or chute.",
+            "Cut and test a prototype before relying on the dispenser.",
+        ],
         "inputs": {
             "max_piece": max_piece,
             "irregular": irregular,
@@ -203,7 +209,6 @@ def build_candy_machine_rotary_layered(
             "plate_w": plate_w,
             "plate_h": plate_h,
             "hopper_layers": hopper_layers,
-            "mechanical_assumption": "Dry flowing solids only; prototypes should be tested for bridging and static friction.",
         },
         "warnings": [w.to_dict() for w in warnings],
     }

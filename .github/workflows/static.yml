@@ -29,3 +29,22 @@ jobs:
 
       - name: Run tests
         run: python -m pytest -q
+
+      - name: Run slow geometry sweep
+        run: python -m pytest -m slow -q
+
+      - name: Regenerate examples
+        run: |
+          python examples/generate_examples.py
+          git diff --exit-code -- examples
+
+      - name: All-preset CLI smoke
+        run: |
+          python -m cardboxgen --preset tray_open_front --inner-width 135 --inner-depth 90 --inner-height 80 --thickness 3 --kerf 0.2 --clearance 0.15 --out /tmp/tray.svg
+          python -m cardboxgen --preset dispenser_slot_front --inner-width 135 --inner-depth 90 --inner-height 80 --thickness 3 --kerf 0.2 --clearance 0.15 --out /tmp/dispenser.svg
+          python -m cardboxgen --preset window_front --inner-width 135 --inner-depth 90 --inner-height 80 --thickness 3 --kerf 0.2 --clearance 0.15 --out /tmp/window.svg
+          python -m cardboxgen --preset box_with_lid --inner-width 135 --inner-depth 90 --inner-height 80 --thickness 3 --kerf 0.2 --clearance 0.4 --out /tmp/box_with_lid.svg
+          python -m cardboxgen --preset divider_rack --inner-width 135 --inner-depth 90 --inner-height 80 --thickness 3 --kerf 0.2 --clearance 0.15 --out /tmp/divider.svg
+          python -m cardboxgen --preset card_shoe --card-width 63 --card-height 88 --card-thickness 0.35 --capacity 60 --thickness 3 --kerf 0.2 --clearance 0.15 --out /tmp/card_shoe.svg
+          python -m cardboxgen --preset candy_machine_rotary_layered --max-piece 18 --thickness 3 --kerf 0.2 --clearance 0.2 --out /tmp/candy.svg
+          python -m cardboxgen --calibration --thickness 3 --kerf 0.2 --out /tmp/calibration.svg

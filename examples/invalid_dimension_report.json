@@ -1,0 +1,105 @@
+{
+  "normalized_params": {
+    "template_id": "tray_open_front",
+    "thickness": 3.0,
+    "kerf": 0.2,
+    "fit_clearance": 0.15,
+    "finger_w": null,
+    "min_fingers": 3,
+    "min_feature_width": 3.0,
+    "min_web_mm": 3.0,
+    "max_row_width": 340.0,
+    "margin": 10.0,
+    "gap": 12.0,
+    "stroke_mm": 0.2,
+    "labels": true,
+    "offset_kerf": false,
+    "holding_tabs": false,
+    "tab_width_mm": 2.0,
+    "finger_count_outer": null,
+    "finger_count_vertical": null,
+    "inner_w": 12.0,
+    "inner_d": 12.0,
+    "inner_h": 8.0,
+    "front_h": null,
+    "scoop": true,
+    "scoop_r": 22.0,
+    "scoop_depth": 2.5,
+    "_scoop_depth_provided": false,
+    "slot_width": 80.0,
+    "slot_height": 18.0,
+    "slot_y_from_bottom": 35.0,
+    "window_margin": 12.0,
+    "window_corner_r": 6.0,
+    "thumb_notch_radius": 10.0,
+    "thumb_notch_depth": 8.0,
+    "lid": true,
+    "lid_height": 25.0,
+    "lid_clearance": 0.4,
+    "divider_count": 3
+  },
+  "messages": [
+    {
+      "severity": "error",
+      "code": "INNER_W_TOO_SMALL",
+      "message": "inner_w 12 mm is too small for 3 mm material and 3 mm minimum features.",
+      "fix": "Increase inner_w to at least 24.0 mm or reduce material thickness.",
+      "field": "inner_w"
+    },
+    {
+      "severity": "error",
+      "code": "INNER_D_TOO_SMALL",
+      "message": "inner_d 12 mm is too small for 3 mm material and 3 mm minimum features.",
+      "fix": "Increase inner_d to at least 24.0 mm or reduce material thickness.",
+      "field": "inner_d"
+    },
+    {
+      "severity": "error",
+      "code": "INNER_H_TOO_SMALL",
+      "message": "inner_h 8 mm is too small for 3 mm material and 3 mm minimum features.",
+      "fix": "Increase inner_h to at least 18.0 mm or reduce material thickness.",
+      "field": "inner_h"
+    },
+    {
+      "severity": "info",
+      "code": "SCOOP_DEPTH_NORMALIZED",
+      "message": "Default scoop depth was reduced to preserve front material.",
+      "fix": "Using scoop_depth=2.5 mm.",
+      "field": "scoop_depth"
+    },
+    {
+      "severity": "error",
+      "code": "SCOOP_TOO_WIDE",
+      "message": "Scoop radius collides with side material.",
+      "fix": "Use scoop_r <= 6.0 mm.",
+      "field": "scoop_r"
+    }
+  ],
+  "blocking": true,
+  "computed_limits": {
+    "kerf_full_width_mm": 0.2,
+    "burn_radius_mm": 0.1,
+    "max_odd_segment_fit_imbalance_mm": 0.54,
+    "odd_segment_fit_imbalance_mm": 0.25,
+    "min_inner_w": 24.0,
+    "min_inner_d": 24.0,
+    "min_inner_h": 18.0,
+    "outer_w": 18.0,
+    "outer_d": 18.0,
+    "wall_h": 11.0,
+    "min_front_h": 6.0,
+    "fit_model": {
+      "target_final_tab_depth": 3.0,
+      "target_final_slot_depth": 3.15,
+      "drawn_tab_depth": 3.2,
+      "drawn_slot_depth": 2.9499999999999997,
+      "expected_final_tab_depth": 3.0,
+      "expected_final_slot_depth": 3.15,
+      "sample_nominal_segment": 3.0,
+      "sample_drawn_tab_width": 3.125,
+      "sample_drawn_slot_width": 2.875,
+      "sample_final_tab_width": 2.925,
+      "sample_final_slot_width": 3.075
+    }
+  }
+}

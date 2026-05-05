@@ -7,11 +7,13 @@ import json
 import sys
 
 from .api import generate_svg
+from .validation import validate_template_params
 from .version import __version__
 
 
 def parse_args(argv=None) -> argparse.Namespace:
     ap = argparse.ArgumentParser(description="Generate laser-cut SVG card boxes and mechanisms.")
+    ap.add_argument("command", nargs="?", choices=["generate", "validate"], help="Command. Omit for backward-compatible generate mode.")
     ap.add_argument("--version", action="store_true", help="Print version and exit.")
     ap.add_argument("--preset", "--template-id", dest="preset", default=None, help="Preset/template ID.")
     ap.add_argument("--variant", choices=["A", "B", "C"], default=None, help="Legacy variant alias if --preset is omitted.")
@@ -68,6 +70,8 @@ def parse_args(argv=None) -> argparse.Namespace:
     ap.add_argument("--clearance-values", default="-0.10,-0.05,0,0.05,0.10,0.15,0.20")
 
     ap.add_argument("--json", action="store_true", help="Print JSON result to stdout instead of status lines.")
+    ap.add_argument("--json-report", default=None, help="Write JSON report to this path.")
+    ap.add_argument("--allow-diagnostic-svg", action="store_true", default=False, help="Write diagnostic SVG even when validation has blocking errors.")
     ap.add_argument("--out", required=False, default="out.svg", help="Output SVG path.")
     return ap.parse_args(argv)
 
@@ -134,7 +138,25 @@ def main(argv=None) -> int:
     }
     if preset == "calibration":
         params["clearance_values"] = args.clearance_values
+    validation = validate_template_params(preset, params)
+    if args.command == "validate":
+        report = validation.to_dict()
+        text = json.dumps(report, ensure_ascii=False, indent=2)
+        if args.json_report:
+            with open(args.json_report, "w", encoding="utf-8") as f:
+                f.write(text + "\n")
+        print(text)
+        return 1 if validation.blocking else 0
+
     result = generate_svg(preset, params)
+    if args.json_report:
+        with open(args.json_report, "w", encoding="utf-8") as f:
+            json.dump({"validation": result["meta"].get("validation"), "warnings": result.get("warnings", []), "meta": result.get("meta", {})}, f, ensure_ascii=False, indent=2)
+            f.write("\n")
+    if not result.get("meta", {}).get("exportable", True) and not args.allow_diagnostic_svg:
+        for w in result.get("warnings", []):
+            print(f"{w['severity'].upper()} {w['code']}: {w['message']}", file=sys.stderr)
+        return 2
     with open(args.out, "w", encoding="utf-8") as f:
         f.write(result["svg"])
     if args.json:

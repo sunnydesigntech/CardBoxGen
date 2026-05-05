@@ -15,7 +15,7 @@
   "app": {
     "subtitle": "完全在浏览器中运行（Pyodide）。生成可激光切割的 SVG，并使用可复现的指接结构。",
     "title": "卡盒／托盘 SVG 生成器",
-    "version": "v0.8.0"
+    "version": "v0.8.1"
   },
   "faq": {
     "Laser fit": [
@@ -1261,7 +1261,8 @@
     "derivedExternal": "推导外尺寸：W {{w}} × D {{d}} × H {{h}}（mm）",
     "derivedInternal": "推导内尺寸：W {{w}} × D {{d}} × H {{h}}（mm）",
     "derivedOpenings": "关键开口（{{preset}}）：出料槽 W {{w}} × H {{h}}（mm）",
-    "jointRule": "接合规则：绘制的槽深 = 厚度 + 间隙 − kerf = {{drawn}}mm。预期完成后槽宽 ≈ 厚度 + 间隙 = {{final}}mm。"
+    "fitModel": "配合模型：示例榫舌 {{tabDrawn}}→{{tabFinal}}mm，槽 {{slotDrawn}}→{{slotFinal}}mm；绘制槽深 {{depthDrawn}}mm，完成后 {{depthFinal}}mm。",
+    "jointRule": "接合规则：绘制的槽深 = 厚度 + 间隙 − kerf = {{drawn}}mm。预期完成后槽深 ≈ 厚度 + 间隙 = {{final}}mm。"
   },
   "recs": {
     "reason": {

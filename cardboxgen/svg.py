@@ -90,6 +90,7 @@ def make_svg(
     )
     meta_comment = "\n".join(textwrap.wrap(json.dumps(meta, ensure_ascii=False, sort_keys=True), width=120))
     out = [svg_header(width, height), svg_layer_styles(stroke_mm=stroke_mm)]
+    out.append(f"  <metadata>{html.escape(json.dumps(meta, ensure_ascii=False, sort_keys=True))}</metadata>\n")
     out.append(f"  <!-- meta: {html.escape(meta_comment)} -->\n")
 
     label_items: List[Tuple[str, float, float]] = []
@@ -137,5 +138,22 @@ def make_svg(
             out.append(f'    <text class="text" x="{fmt(tx)}" y="{fmt(ty)}">{html.escape(str(text))}</text>\n')
     out.append("  </g>\n")
 
+    out.append(svg_footer())
+    return "".join(out)
+
+
+def make_diagnostic_svg(*, messages: List[Dict[str, object]], meta: Dict[str, object], width: float = 220.0, height: float = 140.0) -> str:
+    out = [svg_header(width, height), svg_layer_styles(stroke_mm=0.2)]
+    out.append(f"  <metadata>{html.escape(json.dumps(meta, ensure_ascii=False, sort_keys=True))}</metadata>\n")
+    out.append('  <g id="DIAGNOSTIC" fill="black" font-family="Arial, sans-serif" font-size="5">\n')
+    out.append('    <text x="10" y="16" font-size="8" fill="#b00020">NOT EXPORTABLE</text>\n')
+    out.append('    <text x="10" y="28">CardBoxGen validation blocked this cut file.</text>\n')
+    y = 42
+    for msg in messages[:8]:
+        code = html.escape(str(msg.get("code", "")))
+        text = html.escape(str(msg.get("message", "")))
+        out.append(f'    <text x="10" y="{fmt(y)}">{code}: {text[:120]}</text>\n')
+        y += 9
+    out.append("  </g>\n")
     out.append(svg_footer())
     return "".join(out)

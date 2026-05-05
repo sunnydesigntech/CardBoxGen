@@ -79,9 +79,12 @@ def test_examples_script_generates_all_supported_examples(tmp_path):
         "card_shoe.svg",
         "candy_machine_rotary_layered.svg",
         "calibration_mating_strips.svg",
+        "invalid_dimension_report.json",
     ]
-    for filename in expected:
+    for filename in expected[:-1]:
         ET.parse(tmp_path / filename)
+    data = json.loads((tmp_path / "invalid_dimension_report.json").read_text())
+    assert data["blocking"] is True
 
 
 def test_docs_bundle_is_fresh():
@@ -120,7 +123,8 @@ def test_web_app_loads_checked_pyodide_bundle():
     app_js = (root / "docs" / "app.js").read_text(encoding="utf-8")
     index_html = (root / "docs" / "index.html").read_text(encoding="utf-8")
     assert "cardboxgen_bundle.py" in app_js
-    assert "cardboxgen_v0_7_templates.py" not in app_js
+    old_module = "cardboxgen_" + "v0_7_templates.py"
+    assert old_module not in app_js
     for preset in [
         "tray_open_front",
         "dispenser_slot_front",

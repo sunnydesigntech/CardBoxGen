@@ -5,17 +5,34 @@ from __future__ import annotations
 
 import os
 import sys
+import json
 from pathlib import Path
 
 # Allow running this script directly (sys.path[0] is examples/).
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from cardboxgen.api import generate_svg
+from cardboxgen.validation import validate_template_params
 
 
 def write_svg(out_dir: Path, filename: str, template_id: str, params: dict) -> None:
     result = generate_svg(template_id, params)
     (out_dir / filename).write_text(result["svg"], encoding="utf-8")
+
+
+def write_invalid_report(out_dir: Path) -> None:
+    validation = validate_template_params(
+        "tray_open_front",
+        {
+            "inner_w": 12,
+            "inner_d": 12,
+            "inner_h": 8,
+            "thickness": 3,
+            "kerf": 0.2,
+            "fit_clearance": 0.15,
+        },
+    )
+    (out_dir / "invalid_dimension_report.json").write_text(json.dumps(validation.to_dict(), indent=2), encoding="utf-8")
 
 
 def generate(out_dir: str) -> None:
@@ -69,6 +86,7 @@ def generate(out_dir: str) -> None:
         "calibration",
         {"thickness": 3.0, "kerf": 0.2, "clearance_values": [-0.10, -0.05, 0.0, 0.05, 0.10, 0.15, 0.20], "labels": True},
     )
+    write_invalid_report(out)
 
 
 if __name__ == "__main__":

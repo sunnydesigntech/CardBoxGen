@@ -15,7 +15,7 @@
   "app": {
     "subtitle": "Runs fully in your browser (Pyodide). Generates laser-cut SVG with deterministic finger joints.",
     "title": "Card Box / Tray SVG Generator",
-    "version": "v0.8.0"
+    "version": "v0.8.1"
   },
   "faq": {
     "Laser fit": [
@@ -1261,7 +1261,8 @@
     "derivedExternal": "Derived external size: W {{w}} × D {{d}} × H {{h}} (mm)",
     "derivedInternal": "Derived internal size: W {{w}} × D {{d}} × H {{h}} (mm)",
     "derivedOpenings": "Key openings ({{preset}}): slot W {{w}} × H {{h}} (mm)",
-    "jointRule": "Joint rule: drawn slot depth = thickness + clearance − kerf = {{drawn}}mm. Expected final slot ≈ thickness + clearance = {{final}}mm."
+    "fitModel": "Fit model: sample tab {{tabDrawn}}→{{tabFinal}}mm, slot {{slotDrawn}}→{{slotFinal}}mm; drawn slot depth {{depthDrawn}}mm gives final {{depthFinal}}mm.",
+    "jointRule": "Joint rule: drawn slot depth = thickness + clearance − kerf = {{drawn}}mm. Expected final slot depth ≈ thickness + clearance = {{final}}mm."
   },
   "recs": {
     "reason": {

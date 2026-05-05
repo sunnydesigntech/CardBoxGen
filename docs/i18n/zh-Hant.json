@@ -15,7 +15,7 @@
   "app": {
     "subtitle": "完全在瀏覽器中執行（Pyodide）。產生可雷切的 SVG，並使用可重現的指接結構。",
     "title": "卡盒／托盤 SVG 產生器",
-    "version": "v0.8.0"
+    "version": "v0.8.1"
   },
   "faq": {
     "Laser fit": [
@@ -1261,7 +1261,8 @@
     "derivedExternal": "推導外尺寸：W {{w}} × D {{d}} × H {{h}}（mm）",
     "derivedInternal": "推導內尺寸：W {{w}} × D {{d}} × H {{h}}（mm）",
     "derivedOpenings": "關鍵開口（{{preset}}）：出料槽 W {{w}} × H {{h}}（mm）",
-    "jointRule": "接合規則：繪製槽深 = 厚度 + 間隙 − kerf = {{drawn}}mm。預期實際槽寬 ≈ 厚度 + 間隙 = {{final}}mm。"
+    "fitModel": "配合模型：範例榫舌 {{tabDrawn}}→{{tabFinal}}mm，槽 {{slotDrawn}}→{{slotFinal}}mm；繪製槽深 {{depthDrawn}}mm，完成後 {{depthFinal}}mm。",
+    "jointRule": "接合規則：繪製槽深 = 厚度 + 間隙 − kerf = {{drawn}}mm。預期實際槽深 ≈ 厚度 + 間隙 = {{final}}mm。"
   },
   "recs": {
     "reason": {

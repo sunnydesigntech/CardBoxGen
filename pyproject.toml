@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cardboxgen"
-version = "0.8.0"
+version = "0.8.1"
 description = "Parametric SVG generator for laser-cut card trays, boxes, dispensers, and mechanism templates."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -25,3 +25,6 @@ include = ["cardboxgen*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+markers = [
+  "slow: deterministic broader geometry sweeps",
+]

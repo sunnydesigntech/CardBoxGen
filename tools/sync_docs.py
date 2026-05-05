@@ -10,6 +10,7 @@ from pathlib import Path
 MODULES = [
     "cardboxgen.version",
     "cardboxgen.geometry",
+    "cardboxgen.fabrication",
     "cardboxgen.models",
     "cardboxgen.joints",
     "cardboxgen.panels",
@@ -25,6 +26,7 @@ MODULES = [
     "cardboxgen.presets.candy_machine",
     "cardboxgen.presets.calibration",
     "cardboxgen.presets",
+    "cardboxgen.validation",
     "cardboxgen.api",
     "cardboxgen",
 ]
