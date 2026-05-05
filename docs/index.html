@@ -8,8 +8,11 @@
   </head>
   <body>
     <header class="header">
-      <div class="headerTop">
-        <div class="headerTitle">
+      <div class="brandBlock">
+        <div class="brandMark" aria-hidden="true">
+          <span></span>
+        </div>
+        <div>
           <h1>
             <span data-i18n="app.title">Card Box / Tray SVG Generator</span>
             <span class="ver" data-i18n="app.version">v0.8.1</span>
@@ -18,42 +21,291 @@
             Runs fully in your browser (Pyodide). Generates laser-cut SVG with deterministic finger joints.
           </p>
         </div>
+      </div>
 
-        <div class="headerControls">
-          <label class="srOnly" for="langSelect">Language</label>
-          <select id="langSelect" class="langSelect" aria-label="Language">
-            <option value="en">English</option>
-            <option value="zh-Hant">繁體中文</option>
-            <option value="zh-Hans">简体中文</option>
-          </select>
+      <div class="headerControls">
+        <label class="switch">
+          <input id="studentMode" type="checkbox" />
+          <span class="switchTrack" aria-hidden="true"></span>
+          <span data-i18n="mode.student">Student Mode</span>
+        </label>
 
-          <button id="helpDrawerBtn" type="button" class="ghostBtn" data-i18n="mode.help">Help</button>
-          <button id="faqDrawerBtn" type="button" class="ghostBtn" data-i18n="mode.faq">FAQ</button>
+        <label class="srOnly" for="langSelect">Language</label>
+        <select id="langSelect" class="langSelect" aria-label="Language">
+          <option value="en">English</option>
+          <option value="zh-Hant">繁體中文</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
 
-          <label class="check">
-            <input id="studentMode" type="checkbox" checked />
-            <span data-i18n="mode.student">Student Mode</span>
-          </label>
-
-          <button id="controlsToggle" type="button" class="ghostBtn controlsToggle" data-i18n="actions.controls">
-            Controls
-          </button>
-        </div>
+        <button id="helpDrawerBtn" type="button" class="toolBtn" data-i18n="mode.help">Help</button>
+        <button id="faqDrawerBtn" type="button" class="toolBtn" data-i18n="mode.faq">FAQ</button>
+        <button id="controlsToggle" type="button" class="toolBtn controlsToggle" data-i18n="actions.controls">Controls</button>
       </div>
 
       <div class="headerSticky">
-        <button id="mobileGenerate" type="button" class="ghostBtn" data-i18n="actions.generate">Generate SVG</button>
+        <button id="mobileGenerate" type="button" class="toolBtn" disabled data-i18n="actions.generate">Generate SVG</button>
         <button id="mobileBundle" type="button" class="primaryBtn" disabled data-i18n="actions.projectPack">Download project pack (ZIP)</button>
       </div>
     </header>
 
-    <main class="grid">
-      <section class="card controls" id="controlsPanel">
-        <h2 data-i18n="sections.setup">Setup</h2>
+    <main class="workspace">
+      <aside class="panel controlsPanel controls" id="controlsPanel">
+        <div class="panelHeader">
+          <div>
+            <p class="eyebrow">Build</p>
+            <h2 data-i18n="sections.setup">Setup</h2>
+          </div>
+          <span class="pill">mm</span>
+        </div>
 
-        <details id="wizard" class="wizard section" open>
+        <section class="sectionBlock">
+          <div class="sectionTitle">
+            <span data-i18n="sections.basic">Basic</span>
+            <span>1</span>
+          </div>
+
+          <div class="row">
+            <label for="preset" data-help="preset"><span data-i18n="labels.preset">Preset</span></label>
+            <select id="preset">
+              <option value="tray_open_front" selected>tray_open_front</option>
+              <option value="dispenser_slot_front">dispenser_slot_front</option>
+              <option value="window_front">window_front</option>
+              <option value="box_with_lid">box_with_lid</option>
+              <option value="divider_rack">divider_rack</option>
+              <option value="card_shoe">card_shoe</option>
+              <option value="candy_machine_rotary_layered">candy_machine_rotary_layered</option>
+              <option value="calibration">calibration</option>
+            </select>
+          </div>
+
+          <div class="row">
+            <label for="dimMode" data-help="dimensionMode"><span data-i18n="labels.dimensionMode">Dimension mode</span></label>
+            <select id="dimMode">
+              <option value="internal" selected data-i18n="labels.internal">Internal (space inside)</option>
+              <option value="external" data-i18n="labels.external">External (outside size)</option>
+            </select>
+          </div>
+
+          <div class="fieldGrid">
+            <div class="row">
+              <label for="innerWidth" data-help="innerWidth"><span data-i18n="labels.innerWidth">Inner width (mm)</span></label>
+              <input id="innerWidth" type="number" value="135" step="0.1" min="1" />
+            </div>
+            <div class="row">
+              <label for="innerDepth" data-help="innerDepth"><span data-i18n="labels.innerDepth">Inner depth (mm)</span></label>
+              <input id="innerDepth" type="number" value="90" step="0.1" min="1" />
+            </div>
+          </div>
+
+          <div class="row">
+            <label for="innerHeight" data-help="innerHeight"><span data-i18n="labels.innerHeight">Inner height (mm)</span></label>
+            <input id="innerHeight" type="number" value="80" step="0.1" min="1" />
+          </div>
+
+          <div class="readout" id="sizeReadout"></div>
+        </section>
+
+        <section class="sectionBlock">
+          <div class="sectionTitle">
+            <span>Material & fit</span>
+            <span>2</span>
+          </div>
+
+          <div class="fieldGrid">
+            <div class="row">
+              <label for="thickness" data-help="thickness"><span data-i18n="labels.thickness">Thickness (mm)</span></label>
+              <input id="thickness" type="number" value="3" step="0.01" min="0.1" />
+            </div>
+            <div class="row">
+              <label for="kerf" data-help="kerf"><span data-i18n="labels.kerf">Kerf (mm)</span></label>
+              <input id="kerf" type="number" value="0.2" placeholder="0.2" step="0.01" min="0" />
+            </div>
+          </div>
+
+          <div class="row">
+            <label for="fit" data-help="fit"><span data-i18n="labels.fit">Fit (tight → loose)</span></label>
+            <input id="fit" type="range" min="0" max="2" step="1" value="1" />
+          </div>
+          <div class="fieldGrid">
+            <div class="readout compact" id="fitReadout"></div>
+            <div class="row">
+              <label for="clearance" data-help="clearance"><span data-i18n="labels.clearance">Joint clearance (mm)</span></label>
+              <input id="clearance" type="number" value="0.10" step="0.01" />
+            </div>
+          </div>
+        </section>
+
+        <details id="advanced" class="sectionBlock detailsBlock" open>
+          <summary>
+            <span data-i18n="sections.advanced">Advanced</span>
+            <span>3</span>
+          </summary>
+
+          <div class="fieldGrid">
+            <div class="row">
+              <label for="fingerWidth" data-help="fingerWidth"><span data-i18n="labels.fingerWidth">Target tab width (mm)</span></label>
+              <input id="fingerWidth" type="number" value="" step="0.1" data-i18n-placeholder="placeholders.auto" placeholder="(auto)" />
+            </div>
+            <div class="row">
+              <label for="minFingers" data-help="minTabs"><span data-i18n="labels.minTabs">Min tabs</span></label>
+              <input id="minFingers" type="number" value="3" step="1" min="1" />
+            </div>
+          </div>
+
+          <div class="row">
+            <label for="sheetWidth" data-help="sheetWidth"><span data-i18n="labels.sheetWidth">Sheet width (mm)</span></label>
+            <input id="sheetWidth" type="number" value="340" step="1" min="50" />
+          </div>
+
+          <div class="fieldGrid three">
+            <div class="row">
+              <label for="marginMm" data-help="margin"><span data-i18n="labels.margin">Margin (mm)</span></label>
+              <input id="marginMm" type="number" value="10" step="0.5" min="0" />
+            </div>
+            <div class="row">
+              <label for="paddingMm" data-help="padding"><span data-i18n="labels.padding">Padding (mm)</span></label>
+              <input id="paddingMm" type="number" value="12" step="0.5" min="0" />
+            </div>
+            <div class="row">
+              <label for="strokeMm" data-help="stroke"><span data-i18n="labels.stroke">Stroke (mm)</span></label>
+              <input id="strokeMm" type="number" value="0.2" step="0.05" min="0.01" />
+            </div>
+          </div>
+
+          <label class="check" data-help="labelsToggle">
+            <input id="labels" type="checkbox" checked />
+            <span data-i18n="labels.labelsToggle">Labels</span>
+          </label>
+        </details>
+
+        <details class="sectionBlock detailsBlock" open>
+          <summary>
+            <span data-i18n="sections.presetOptions">Preset options</span>
+            <span>4</span>
+          </summary>
+
+          <div class="row">
+            <label for="frontHeight" data-help="frontHeight"><span data-i18n="labels.frontHeight">Front height (mm)</span></label>
+            <input id="frontHeight" type="number" value="" step="0.1" data-i18n-placeholder="placeholders.auto" placeholder="(auto)" />
+          </div>
+
+          <label class="check" data-help="scoop">
+            <input id="scoop" type="checkbox" />
+            <span data-i18n="labels.scoop">Scoop (tray_open_front)</span>
+          </label>
+
+          <div class="fieldGrid">
+            <div class="row">
+              <label for="scoopRadius" data-help="scoopRadius"><span data-i18n="labels.scoopRadius">Scoop radius (mm)</span></label>
+              <input id="scoopRadius" type="number" value="22" step="0.1" />
+            </div>
+            <div class="row">
+              <label for="scoopDepth" data-help="scoopDepth"><span data-i18n="labels.scoopDepth">Scoop depth (mm)</span></label>
+              <input id="scoopDepth" type="number" value="18" step="0.1" />
+            </div>
+          </div>
+
+          <div class="row">
+            <label for="windowMargin" data-help="windowMargin"><span data-i18n="labels.windowMargin">Window margin (mm)</span></label>
+            <input id="windowMargin" type="number" value="12" step="0.1" min="0" />
+          </div>
+        </details>
+
+        <details class="sectionBlock detailsBlock">
+          <summary>
+            <span data-i18n="sections.mechanismSettings">Mechanism settings</span>
+            <span>5</span>
+          </summary>
+
+          <div class="fieldGrid">
+            <div class="row">
+              <label for="dividerBays" data-help="dividerBays"><span data-i18n="labels.dividerBays">Divider bays</span></label>
+              <input id="dividerBays" type="number" value="3" step="1" min="1" />
+            </div>
+            <div class="row">
+              <label for="rampAngle" data-help="rampAngle"><span data-i18n="labels.rampAngle">Ramp angle (degrees)</span></label>
+              <input id="rampAngle" type="number" value="12" step="0.5" min="0" max="45" />
+            </div>
+          </div>
+
+          <div class="fieldGrid">
+            <div class="row">
+              <label for="cardWidth" data-help="cardWidth"><span data-i18n="labels.cardWidth">Card width (mm)</span></label>
+              <input id="cardWidth" type="number" value="63" step="0.1" min="1" />
+            </div>
+            <div class="row">
+              <label for="cardHeight" data-help="cardHeight"><span data-i18n="labels.cardHeight">Card height (mm)</span></label>
+              <input id="cardHeight" type="number" value="88" step="0.1" min="1" />
+            </div>
+          </div>
+
+          <div class="fieldGrid">
+            <div class="row">
+              <label for="cardThickness" data-help="cardThickness"><span data-i18n="labels.cardThickness">Card thickness (mm)</span></label>
+              <input id="cardThickness" type="number" value="0.35" step="0.01" min="0.05" />
+            </div>
+            <div class="row">
+              <label for="capacityCards" data-help="capacityCards"><span data-i18n="labels.capacityCards">Capacity (cards)</span></label>
+              <input id="capacityCards" type="number" value="60" step="1" min="1" />
+            </div>
+          </div>
+
+          <div class="fieldGrid">
+            <div class="row">
+              <label for="maxPieceSize" data-help="maxPieceSize"><span data-i18n="labels.maxPieceSize">Max piece size (mm)</span></label>
+              <input id="maxPieceSize" type="number" value="18" step="0.1" min="1" />
+            </div>
+            <div class="row">
+              <label for="axleDiameter" data-help="axleDiameter"><span data-i18n="labels.axleDiameter">Axle diameter (mm)</span></label>
+              <input id="axleDiameter" type="number" value="6" step="0.1" min="1" />
+            </div>
+          </div>
+
+          <div class="fieldGrid">
+            <div class="row">
+              <label for="hopperHeight" data-help="hopperHeight"><span data-i18n="labels.hopperHeight">Hopper height (mm)</span></label>
+              <input id="hopperHeight" type="number" value="90" step="1" min="10" />
+            </div>
+            <div class="row">
+              <label for="depthLayersTotal" data-help="depthLayersTotal"><span data-i18n="labels.depthLayersTotal">Total depth layers</span></label>
+              <input id="depthLayersTotal" type="number" value="8" step="1" min="2" />
+            </div>
+          </div>
+
+          <div class="fieldGrid">
+            <div class="row">
+              <label for="wheelLayers" data-help="wheelLayers"><span data-i18n="labels.wheelLayers">Wheel layers</span></label>
+              <input id="wheelLayers" type="number" value="3" step="1" min="1" />
+            </div>
+            <div class="row">
+              <label for="screwDiameter" data-help="screwDiameter"><span data-i18n="labels.screwDiameter">Screw hole diameter (mm)</span></label>
+              <input id="screwDiameter" type="number" value="3.2" step="0.1" min="1" />
+            </div>
+          </div>
+
+          <div class="fieldGrid">
+            <div class="row">
+              <label for="screwMargin" data-help="screwMargin"><span data-i18n="labels.screwMargin">Screw margin (mm)</span></label>
+              <input id="screwMargin" type="number" value="6" step="0.5" min="0" />
+            </div>
+            <label class="check" data-help="irregularShape">
+              <input id="irregularShape" type="checkbox" />
+              <span data-i18n="labels.irregularShape">Irregular shape</span>
+            </label>
+          </div>
+
+          <div class="fieldGrid">
+            <label class="check" data-help="addFeet">
+              <input id="addFeet" type="checkbox" />
+              <span data-i18n="labels.addFeet">Add feet</span>
+            </label>
+          </div>
+        </details>
+
+        <details id="wizard" class="sectionBlock detailsBlock wizard" hidden>
           <summary>
             <span data-i18n="steps.title">Student Mode (4 steps)</span>
+            <span>Guide</span>
           </summary>
 
           <div class="step">
@@ -63,20 +315,16 @@
             </div>
 
             <div class="row">
-              <label for="clientContext" data-help="clientContext">
-                <span data-i18n="labels.clientContext">Client & context</span>
-              </label>
+              <label for="clientContext" data-help="clientContext"><span data-i18n="labels.clientContext">Client & context</span></label>
               <input id="clientContext" type="text" data-i18n-placeholder="placeholders.clientContext" placeholder="e.g., personal use at desk" />
             </div>
 
             <div class="row">
-              <label for="problemStatement" data-help="problemStatement">
-                <span data-i18n="labels.problemStatement">Problem statement</span>
-              </label>
+              <label for="problemStatement" data-help="problemStatement"><span data-i18n="labels.problemStatement">Problem statement</span></label>
               <textarea id="problemStatement" rows="3" data-i18n-placeholder="placeholders.problemStatement" placeholder="e.g., inconsistent portions; messy storage"></textarea>
             </div>
 
-            <div class="row inline">
+            <div class="checkGrid">
               <label class="check" data-help="constraints">
                 <input id="constraintNoCoins" type="checkbox" />
                 <span data-i18n="labels.constraintNoCoins">No coins</span>
@@ -98,101 +346,63 @@
               <span class="badge" id="step2Badge"></span>
             </div>
 
-            <div class="row">
-              <label for="dispenseType" data-help="dispenseType">
-                <span data-i18n="labels.dispenseType">Dispense type</span>
-              </label>
-              <select id="dispenseType">
-                <option value="stacking" selected data-i18n="options.dispense.stacking">Stacking (cards / tiles)</option>
-                <option value="flowing" data-i18n="options.dispense.flowing">Flowing (dry solids only)</option>
-              </select>
+            <div class="fieldGrid">
+              <div class="row">
+                <label for="dispenseType" data-help="dispenseType"><span data-i18n="labels.dispenseType">Dispense type</span></label>
+                <select id="dispenseType">
+                  <option value="stacking" selected data-i18n="options.dispense.stacking">Stacking (cards / tiles)</option>
+                  <option value="flowing" data-i18n="options.dispense.flowing">Flowing (dry solids only)</option>
+                </select>
+              </div>
+              <div class="row">
+                <label for="dispenseTargetType" data-help="dispenseTargetType"><span data-i18n="labels.dispenseTargetType">Dispense target</span></label>
+                <select id="dispenseTargetType">
+                  <option value="one" selected data-i18n="options.dispenseTarget.one">One-at-a-time</option>
+                  <option value="grab" data-i18n="options.dispenseTarget.grab">Grab stack</option>
+                  <option value="multi" data-i18n="options.dispenseTarget.multi">Multi-category</option>
+                  <option value="counted" data-i18n="options.dispenseTarget.counted">Counted (per turn)</option>
+                  <option value="fun" data-i18n="options.dispenseTarget.fun">Fun chute (plinko)</option>
+                </select>
+              </div>
             </div>
 
-            <div class="row" id="studentStackingSizeRow">
-              <label for="cardWidth" data-help="cardWidth">
-                <span data-i18n="labels.cardWidth">Card width (mm)</span>
-              </label>
-              <input id="cardWidth" type="number" value="63" step="0.1" min="1" />
-            </div>
-            <div class="row" id="studentStackingSizeRow2">
-              <label for="cardHeight" data-help="cardHeight">
-                <span data-i18n="labels.cardHeight">Card height (mm)</span>
-              </label>
-              <input id="cardHeight" type="number" value="88" step="0.1" min="1" />
-            </div>
-            <div class="row" id="studentStackingThicknessRow">
-              <label for="cardThickness" data-help="cardThickness">
-                <span data-i18n="labels.cardThickness">Card thickness (mm)</span>
-              </label>
-              <input id="cardThickness" type="number" value="0.35" step="0.01" min="0.05" />
-            </div>
-            <div class="row" id="studentFlowingSizeRow" hidden>
-              <label for="maxPieceSize" data-help="maxPieceSize">
-                <span data-i18n="labels.maxPieceSize">Max piece size (mm)</span>
-              </label>
-              <input id="maxPieceSize" type="number" value="18" step="0.1" min="1" />
-            </div>
-
-            <div class="row inline" id="studentFlowingFlagsRow" hidden>
-              <label class="check" data-help="irregularShape">
-                <input id="irregularShape" type="checkbox" />
-                <span data-i18n="labels.irregularShape">Irregular shape</span>
-              </label>
+            <div id="studentStackingSizeRow" class="hint" hidden>Card width is set in Mechanism settings.</div>
+            <div id="studentStackingSizeRow2" class="hint" hidden>Card height is set in Mechanism settings.</div>
+            <div id="studentStackingThicknessRow" class="hint" hidden>Card thickness is set in Mechanism settings.</div>
+            <div id="studentStackingCapacityRow" class="hint" hidden>Capacity is set in Mechanism settings.</div>
+            <div id="studentFlowingSizeRow" class="hint" hidden>Max piece size is set in Mechanism settings.</div>
+            <div id="studentFlowingFlagsRow" class="checkGrid" hidden>
+              <span class="hint">Irregular-shape behavior is set in Mechanism settings.</span>
             </div>
 
             <div class="row">
-              <label for="dispenseTargetType" data-help="dispenseTargetType">
-                <span data-i18n="labels.dispenseTargetType">Dispense target</span>
-              </label>
-              <select id="dispenseTargetType">
-                <option value="one" selected data-i18n="options.dispenseTarget.one">One-at-a-time</option>
-                <option value="grab" data-i18n="options.dispenseTarget.grab">Grab stack</option>
-                <option value="multi" data-i18n="options.dispenseTarget.multi">Multi-category</option>
-                <option value="counted" data-i18n="options.dispenseTarget.counted">Counted (per turn)</option>
-                <option value="fun" data-i18n="options.dispenseTarget.fun">Fun chute (plinko)</option>
-              </select>
-            </div>
-
-            <div class="row" id="studentStackingCapacityRow">
-              <label for="capacityCards" data-help="capacityCards">
-                <span data-i18n="labels.capacityCards">Capacity (cards)</span>
-              </label>
-              <input id="capacityCards" type="number" value="60" step="1" min="1" />
-            </div>
-            <div class="row">
-              <label for="storageTarget" data-help="storageTarget">
-                <span data-i18n="labels.storageTarget">Storage target</span>
-              </label>
+              <label for="storageTarget" data-help="storageTarget"><span data-i18n="labels.storageTarget">Storage target</span></label>
               <input id="storageTarget" type="text" data-i18n-placeholder="placeholders.storageTarget" placeholder="e.g., 150 cards" />
             </div>
 
             <div class="row">
-              <label for="dispenseTarget" data-help="dispenseTarget">
-                <span data-i18n="labels.dispenseTarget">Dispense target (detail)</span>
-              </label>
+              <label for="dispenseTarget" data-help="dispenseTarget"><span data-i18n="labels.dispenseTarget">Dispense target (detail)</span></label>
               <input id="dispenseTarget" type="text" data-i18n-placeholder="placeholders.dispenseTarget" placeholder="e.g., 1 item per turn" />
             </div>
 
-            <div class="row">
-              <div class="checklistTitle" data-i18n="labels.successMetrics">Success metrics (pick at least 2)</div>
-              <div class="row inline">
-                <label class="check" data-help="successMetrics">
-                  <input id="metricJam" type="checkbox" value="jam_rate" />
-                  <span data-i18n="labels.metricJam">Jam rate</span>
-                </label>
-                <label class="check" data-help="successMetrics">
-                  <input id="metricConsistency" type="checkbox" value="portion_consistency" />
-                  <span data-i18n="labels.metricConsistency">Portion consistency</span>
-                </label>
-                <label class="check" data-help="successMetrics">
-                  <input id="metricRefill" type="checkbox" value="refill_time" />
-                  <span data-i18n="labels.metricRefill">Refill time</span>
-                </label>
-                <label class="check" data-help="successMetrics">
-                  <input id="metricDurability" type="checkbox" value="durability_cycles" />
-                  <span data-i18n="labels.metricDurability">Durability</span>
-                </label>
-              </div>
+            <div class="checklistTitle" data-i18n="labels.successMetrics">Success metrics (pick at least 2)</div>
+            <div class="checkGrid">
+              <label class="check" data-help="successMetrics">
+                <input id="metricJam" type="checkbox" value="jam_rate" />
+                <span data-i18n="labels.metricJam">Jam rate</span>
+              </label>
+              <label class="check" data-help="successMetrics">
+                <input id="metricConsistency" type="checkbox" value="portion_consistency" />
+                <span data-i18n="labels.metricConsistency">Portion consistency</span>
+              </label>
+              <label class="check" data-help="successMetrics">
+                <input id="metricRefill" type="checkbox" value="refill_time" />
+                <span data-i18n="labels.metricRefill">Refill time</span>
+              </label>
+              <label class="check" data-help="successMetrics">
+                <input id="metricDurability" type="checkbox" value="durability_cycles" />
+                <span data-i18n="labels.metricDurability">Durability</span>
+              </label>
             </div>
           </div>
 
@@ -205,9 +415,7 @@
             <div id="mechanismRecs" class="hint"></div>
 
             <div class="row">
-              <label for="mechanism" data-help="mechanism">
-                <span data-i18n="labels.mechanism">Mechanism</span>
-              </label>
+              <label for="mechanism" data-help="mechanism"><span data-i18n="labels.mechanism">Mechanism</span></label>
               <select id="mechanism">
                 <option value="card_shoe" selected data-i18n="options.mechanism.card_shoe">Card shoe (front draw)</option>
                 <option value="tray_open_front" data-i18n="options.mechanism.tray_open_front">Open-front tray</option>
@@ -220,9 +428,7 @@
             </div>
 
             <div class="row">
-              <label for="mechanismJustification" data-help="mechanismJustification">
-                <span data-i18n="labels.mechanismJustification">Justification (1–2 sentences)</span>
-              </label>
+              <label for="mechanismJustification" data-help="mechanismJustification"><span data-i18n="labels.mechanismJustification">Justification (1–2 sentences)</span></label>
               <textarea id="mechanismJustification" rows="3" data-i18n-placeholder="placeholders.mechanismJustification" placeholder="Why this mechanism fits your requirements"></textarea>
             </div>
           </div>
@@ -232,227 +438,76 @@
               <span data-i18n="steps.step4">Step 4 — Auto-dimensioning & review</span>
               <span class="badge" id="step4Badge"></span>
             </div>
-
             <div class="readout" id="reasoningInternal"></div>
             <div class="readout" id="reasoningExternal"></div>
             <div class="readout" id="reasoningOpenings"></div>
-
             <p class="hint" data-i18n="steps.step4Hint">When ready, press Download project pack (ZIP).</p>
           </div>
         </details>
+      </aside>
 
-        <details class="section" open>
-          <summary><span data-i18n="sections.basic">Basic</span></summary>
-
-          <div class="row">
-          <label for="preset" data-help="preset"><span data-i18n="labels.preset">Preset</span></label>
-          <select id="preset">
-            <option value="card_shoe">card_shoe</option>
-            <option value="tray_open_front">tray_open_front</option>
-            <option value="dispenser_slot_front">dispenser_slot_front</option>
-            <option value="box_with_lid">box_with_lid</option>
-            <option value="divider_rack">divider_rack</option>
-            <option value="window_front">window_front</option>
-            <option value="candy_machine_rotary_layered">candy_machine_rotary_layered</option>
-            <option value="calibration">calibration</option>
-          </select>
+      <section class="panel previewPanel">
+        <div class="previewHeader">
+          <div>
+            <p class="eyebrow">Preview</p>
+            <h2 data-i18n="sections.preview">Preview</h2>
           </div>
-
-          <div class="row">
-          <label for="dimMode" data-help="dimensionMode"><span data-i18n="labels.dimensionMode">Dimension mode</span></label>
-          <select id="dimMode">
-            <option value="internal" selected data-i18n="labels.internal">Internal (space inside)</option>
-            <option value="external" data-i18n="labels.external">External (outside size)</option>
-          </select>
+          <div class="previewBar">
+            <button id="zoomOut" type="button" class="iconBtn" data-i18n="actions.zoomOut">−</button>
+            <button id="fitView" type="button" class="toolBtn" data-i18n="actions.fit">Fit</button>
+            <button id="zoomIn" type="button" class="iconBtn" data-i18n="actions.zoomIn">+</button>
           </div>
-
-          <div class="row">
-            <label for="innerWidth" data-help="innerWidth"><span data-i18n="labels.innerWidth">Inner width (mm)</span></label>
-            <input id="innerWidth" type="number" value="135" step="0.1" min="1" />
-          </div>
-          <div class="row">
-            <label for="innerDepth" data-help="innerDepth"><span data-i18n="labels.innerDepth">Inner depth (mm)</span></label>
-            <input id="innerDepth" type="number" value="90" step="0.1" min="1" />
-          </div>
-          <div class="row">
-            <label for="innerHeight" data-help="innerHeight"><span data-i18n="labels.innerHeight">Inner height (mm)</span></label>
-            <input id="innerHeight" type="number" value="225" step="0.1" min="1" />
-          </div>
-
-          <hr />
-
-          <div class="row">
-            <label for="thickness" data-help="thickness"><span data-i18n="labels.thickness">Thickness (mm)</span></label>
-            <input id="thickness" type="number" value="3" step="0.01" min="0.1" />
-          </div>
-
-          <div class="row">
-            <label for="fit" data-help="fit"><span data-i18n="labels.fit">Fit (tight → loose)</span></label>
-            <input id="fit" type="range" min="0" max="2" step="1" value="1" />
-          </div>
-          <div class="readout" id="fitReadout"></div>
-
-          <div class="readout" id="sizeReadout"></div>
-
-        </details>
-
-        <details class="section" open>
-          <summary><span data-i18n="sections.layout">Layout</span></summary>
-
-          <div class="row">
-            <label for="sheetWidth" data-help="sheetWidth"><span data-i18n="labels.sheetWidth">Sheet width (mm)</span></label>
-            <input id="sheetWidth" type="number" value="340" step="1" min="50" />
-          </div>
-
-          <details>
-            <summary data-i18n="sections.layoutOptional">Layout (optional)</summary>
-
-            <div class="row">
-              <label for="marginMm" data-help="margin"><span data-i18n="labels.margin">Margin (mm)</span></label>
-              <input id="marginMm" type="number" value="10" step="0.5" min="0" />
-            </div>
-            <div class="row">
-              <label for="paddingMm" data-help="padding"><span data-i18n="labels.padding">Padding (mm)</span></label>
-              <input id="paddingMm" type="number" value="12" step="0.5" min="0" />
-            </div>
-            <div class="row">
-              <label for="strokeMm" data-help="stroke"><span data-i18n="labels.stroke">Stroke (mm)</span></label>
-              <input id="strokeMm" type="number" value="0.2" step="0.05" min="0.01" />
-            </div>
-          </details>
-
-          <div class="row inline">
-            <label class="check" data-help="labelsToggle">
-              <input id="labels" type="checkbox" checked />
-              <span data-i18n="labels.labelsToggle">Labels</span>
-            </label>
-          </div>
-
-        </details>
-
-        <details id="advanced" class="section">
-          <summary data-i18n="sections.advanced">Advanced</summary>
-
-          <div class="row">
-            <label for="kerf" data-help="kerf"><span data-i18n="labels.kerf">Kerf (mm)</span></label>
-            <input id="kerf" type="number" value="0.2" placeholder="0.2" step="0.01" min="0" />
-          </div>
-          <div class="row">
-            <label for="clearance" data-help="clearance"><span data-i18n="labels.clearance">Joint clearance (mm)</span></label>
-            <input id="clearance" type="number" value="0.10" step="0.01" />
-          </div>
-
-          <div class="readout" id="jointRule"></div>
-
-          
-
-          <div class="row">
-            <label for="fingerWidth" data-help="fingerWidth"><span data-i18n="labels.fingerWidth">Target tab width (mm)</span></label>
-            <input id="fingerWidth" type="number" value="" step="0.1" data-i18n-placeholder="placeholders.auto" placeholder="(auto)" />
-          </div>
-          <div class="row">
-            <label for="minFingers" data-help="minTabs"><span data-i18n="labels.minTabs">Min tabs</span></label>
-            <input id="minFingers" type="number" value="3" step="1" min="1" />
-          </div>
-        </details>
-
-        <details class="section">
-          <summary data-i18n="sections.presetOptions">Preset options</summary>
-
-          <div class="row">
-            <label for="frontHeight" data-help="frontHeight"><span data-i18n="labels.frontHeight">Front height (mm)</span></label>
-            <input id="frontHeight" type="number" value="" step="0.1" data-i18n-placeholder="placeholders.auto" placeholder="(auto)" />
-          </div>
-
-          <div class="row inline">
-            <label class="check" data-help="scoop">
-              <input id="scoop" type="checkbox" />
-              <span data-i18n="labels.scoop">Scoop (tray_open_front)</span>
-            </label>
-          </div>
-          <div class="row">
-            <label for="scoopRadius" data-help="scoopRadius"><span data-i18n="labels.scoopRadius">Scoop radius (mm)</span></label>
-            <input id="scoopRadius" type="number" value="22" step="0.1" />
-          </div>
-          <div class="row">
-            <label for="scoopDepth" data-help="scoopDepth"><span data-i18n="labels.scoopDepth">Scoop depth (mm)</span></label>
-            <input id="scoopDepth" type="number" value="18" step="0.1" />
-          </div>
-
-          <div class="row">
-            <label for="windowMargin" data-help="windowMargin"><span data-i18n="labels.windowMargin">Window margin (mm)</span></label>
-            <input id="windowMargin" type="number" value="12" step="0.1" min="0" />
-          </div>
-        </details>
-
-        <details class="section">
-          <summary data-i18n="sections.mechanismSettings">Mechanism settings</summary>
-
-          <div class="row">
-            <label for="dividerBays" data-help="dividerBays"><span data-i18n="labels.dividerBays">Divider bays</span></label>
-            <input id="dividerBays" type="number" value="3" step="1" min="1" />
-          </div>
-          <div class="row">
-            <label for="axleDiameter" data-help="axleDiameter"><span data-i18n="labels.axleDiameter">Axle diameter (mm)</span></label>
-            <input id="axleDiameter" type="number" value="6" step="0.1" min="1" />
-          </div>
-
-          <div class="row">
-            <label for="hopperHeight" data-help="hopperHeight"><span data-i18n="labels.hopperHeight">Hopper height (mm)</span></label>
-            <input id="hopperHeight" type="number" value="90" step="1" min="10" />
-          </div>
-          <div class="row">
-            <label for="depthLayersTotal" data-help="depthLayersTotal"><span data-i18n="labels.depthLayersTotal">Total depth layers</span></label>
-            <input id="depthLayersTotal" type="number" value="8" step="1" min="2" />
-          </div>
-          <div class="row">
-            <label for="wheelLayers" data-help="wheelLayers"><span data-i18n="labels.wheelLayers">Wheel layers</span></label>
-            <input id="wheelLayers" type="number" value="3" step="1" min="1" />
-          </div>
-          <div class="row">
-            <label for="screwDiameter" data-help="screwDiameter"><span data-i18n="labels.screwDiameter">Screw hole diameter (mm)</span></label>
-            <input id="screwDiameter" type="number" value="3.2" step="0.1" min="1" />
-          </div>
-          <div class="row">
-            <label for="screwMargin" data-help="screwMargin"><span data-i18n="labels.screwMargin">Screw margin (mm)</span></label>
-            <input id="screwMargin" type="number" value="6" step="0.5" min="0" />
-          </div>
-          <div class="row inline">
-            <label class="check" data-help="addFeet">
-              <input id="addFeet" type="checkbox" />
-              <span data-i18n="labels.addFeet">Add feet</span>
-            </label>
-          </div>
-          <div class="row">
-            <label for="rampAngle" data-help="rampAngle"><span data-i18n="labels.rampAngle">Ramp angle (degrees)</span></label>
-            <input id="rampAngle" type="number" value="12" step="0.5" min="0" max="45" />
-          </div>
-        </details>
-
-        <p class="hint" id="exportHint" hidden></p>
-
-        <div class="actions">
-          <button id="btnBundle" disabled data-i18n="actions.projectPack">Download project pack (ZIP)</button>
-          <button id="btnGenerate" disabled data-i18n="status.loadingPyodide">Loading Python…</button>
         </div>
 
-        <p class="status" id="status" data-i18n="status.initializing">Initializing…</p>
-        <div class="warnings" id="warnings" hidden></div>
+        <div class="layerToolbar">
+          <label class="check"><input id="showCut" type="checkbox" checked /> <span data-i18n="labels.cut">CUT</span></label>
+          <label class="check"><input id="showLabels" type="checkbox" checked /> <span data-i18n="labels.labelsLayer">LABELS</span></label>
+          <span class="layerLegend"><i></i> Laser centerline SVG</span>
+        </div>
+
+        <div id="preview" class="preview"></div>
+
+        <div class="fitModelCard">
+          <div>
+            <p class="eyebrow">Fit model</p>
+            <div class="readout bare" id="jointRule"></div>
+          </div>
+        </div>
       </section>
 
-      <section class="card previewCard">
-        <details class="section" open>
-          <summary><span data-i18n="sections.preview">Preview</span></summary>
-          <div class="previewBar">
-            <button id="zoomOut" type="button" data-i18n="actions.zoomOut">−</button>
-            <button id="zoomIn" type="button" data-i18n="actions.zoomIn">+</button>
-            <button id="fitView" type="button" data-i18n="actions.fit">Fit</button>
-            <label class="check"><input id="showCut" type="checkbox" checked /> <span data-i18n="labels.cut">CUT</span></label>
-            <label class="check"><input id="showLabels" type="checkbox" checked /> <span data-i18n="labels.labelsLayer">LABELS</span></label>
+      <aside class="panel exportPanel">
+        <div class="panelHeader">
+          <div>
+            <p class="eyebrow">Validation</p>
+            <h2>Ready to cut</h2>
           </div>
-          <div id="preview" class="preview"></div>
-        </details>
-      </section>
+          <span class="statusDot" aria-hidden="true"></span>
+        </div>
+
+        <section class="statusCard">
+          <p class="statusLabel">Generator status</p>
+          <p class="status" id="status" data-i18n="status.initializing">Initializing…</p>
+          <p class="hint" id="exportHint" hidden></p>
+        </section>
+
+        <section class="warnings" id="warnings" hidden></section>
+
+        <section class="packCard">
+          <h3>Project pack</h3>
+          <ul>
+            <li>cut.svg</li>
+            <li>project_summary.md</li>
+            <li>assembly_guide.md</li>
+            <li>bom.md</li>
+            <li>params.json + metadata.json</li>
+          </ul>
+        </section>
+
+        <div class="actions">
+          <button id="btnGenerate" class="toolBtn large" disabled data-i18n="status.loadingPyodide">Loading Python…</button>
+          <button id="btnBundle" class="primaryBtn large" disabled data-i18n="actions.projectPack">Download project pack (ZIP)</button>
+        </div>
+      </aside>
     </main>
 
     <footer class="footer">
@@ -469,7 +524,7 @@
     <aside id="helpDrawer" class="drawer" hidden>
       <div class="drawerHeader">
         <div class="drawerTitle" data-i18n="mode.help">Help</div>
-        <button id="helpDrawerClose" type="button" class="ghostBtn">×</button>
+        <button id="helpDrawerClose" type="button" class="toolBtn">×</button>
       </div>
       <div class="drawerTools">
         <input id="helpSearch" type="search" class="drawerSearch" data-i18n-placeholder="helpUi.searchPlaceholder" placeholder="Search help…" />
@@ -480,7 +535,7 @@
     <aside id="faqDrawer" class="drawer" hidden>
       <div class="drawerHeader">
         <div class="drawerTitle" data-i18n="mode.faq">FAQ</div>
-        <button id="faqDrawerClose" type="button" class="ghostBtn">×</button>
+        <button id="faqDrawerClose" type="button" class="toolBtn">×</button>
       </div>
       <div class="drawerTools">
         <input id="faqSearch" type="search" class="drawerSearch" data-i18n-placeholder="faqUi.searchPlaceholder" placeholder="Search FAQ…" />

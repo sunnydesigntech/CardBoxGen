@@ -1822,9 +1822,11 @@ function fitToView() {
   const wrap = getSvgWrap();
   const svg = wrap?.querySelector("svg");
   if (!wrap || !svg) return;
-  const box = svg.viewBox?.baseVal;
-  const vbW = box?.width || svg.getBoundingClientRect().width;
-  const vbH = box?.height || svg.getBoundingClientRect().height;
+  wrap.style.transformOrigin = "0 0";
+  wrap.style.transform = "translate(0px, 0px) scale(1)";
+  const svgRect = svg.getBoundingClientRect();
+  const vbW = svgRect.width || svg.viewBox?.baseVal?.width || 1;
+  const vbH = svgRect.height || svg.viewBox?.baseVal?.height || 1;
   const rect = els.preview.getBoundingClientRect();
   const pad = 20;
   const s = Math.min((rect.width - pad) / vbW, (rect.height - pad) / vbH);
@@ -2314,6 +2316,42 @@ els.fitView?.addEventListener("click", () => {
 els.showCut?.addEventListener("change", applyLayerToggles);
 els.showLabels?.addEventListener("change", applyLayerToggles);
 
+let panState = null;
+els.preview?.addEventListener("pointerdown", (e) => {
+  if (e.button !== 0 || !getSvgWrap()) return;
+  const interactive = e.target?.closest?.("button, input, select, textarea, label, a");
+  if (interactive) return;
+  userZoomed = true;
+  panState = { pointerId: e.pointerId, x: e.clientX, y: e.clientY, tx: view.tx, ty: view.ty };
+  els.preview.setPointerCapture?.(e.pointerId);
+});
+
+els.preview?.addEventListener("pointermove", (e) => {
+  if (!panState || e.pointerId !== panState.pointerId) return;
+  view.tx = panState.tx + (e.clientX - panState.x);
+  view.ty = panState.ty + (e.clientY - panState.y);
+  applyTransform();
+});
+
+["pointerup", "pointercancel"].forEach((eventName) => {
+  els.preview?.addEventListener(eventName, (e) => {
+    if (panState && e.pointerId === panState.pointerId) panState = null;
+  });
+});
+
+els.preview?.addEventListener(
+  "wheel",
+  (e) => {
+    if (!getSvgWrap()) return;
+    e.preventDefault();
+    userZoomed = true;
+    const factor = e.deltaY > 0 ? 0.9 : 1.1;
+    view.scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, view.scale * factor));
+    applyTransform();
+  },
+  { passive: false }
+);
+
 const markTemplateChanged = () => {
   autoFitNextRender = true;
   lastRenderedTemplateId = null;
@@ -2350,7 +2388,8 @@ async function main() {
 
   // Initial UI state
   if (!projectFromUrl) {
-    setStudentMode(true);
+    if (els.studentMode) els.studentMode.checked = false;
+    setStudentMode(false);
     setFitPreset(1);
     computeDerived();
   } else {
