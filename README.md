@@ -1,135 +1,179 @@
-# CardBoxGen — Laser-cut Card Tray / Dispenser SVG Generator
+# CardBoxGen
 
-Parametric SVG generator for **3mm laser-cut board** card trays / dispensers / boxes.
+Current version: **v0.8.0**
 
-This project focuses on:
-- **Correct cavity sizing** (inner dimensions are the source of truth)
-- **Reliable finger joints** that always mate (deterministic edge pairing)
-- **Practical kerf + fit** handling for press-fit / friction-fit
-- **Browser-first workflow** via a static Pyodide web app (GitHub Pages)
+CardBoxGen generates millimeter SVG cut files for laser-cut card trays, boxes, dispensers, divider racks, card shoes, and a layered rotary dry-goods dispenser prototype. It targets sheet material around 3 mm thick and is designed to run both as a Python CLI and as a static GitHub Pages app powered by Pyodide.
 
-Current version: **v0.6**
+Live app: <https://sunnydesigntech.github.io/CardBoxGen/>
 
-Live web app:
-- https://sunnydesigntech.github.io/CardBoxGen/
+## Architecture
 
-## Key Names (presets + parts)
+The generator source of truth is the Python package in `cardboxgen/`.
 
-### Presets (`--preset`)
-- `tray_open_front`: open top, lowered/open front, optional scoop
-- `dispenser_slot_front`: front present with dispense slot
-- `window_front`: front with large window cutout + thumb notch
-- `box_with_lid`: box + slip lid
+- `models.py`: typed parameters, warnings, and JSON-safe result models
+- `geometry.py`: point/path/bbox helpers and SVG path primitives
+- `joints.py`: `FingerPlan`, mating edge pairs, and kerf/clearance compensation
+- `panels.py`: panels, cut paths, score paths, labels, and render specs
+- `svg.py`: SVG writer with `CUT`, `SCORE`, and `ENGRAVE` layers
+- `layout.py`: deterministic sheet layout without overlapping panel boxes
+- `presets/`: template-specific builders
+- `api.py`: `generate_svg(template_id, params)` for Pyodide and Python callers
+- `cli.py`: argparse CLI used by `python -m cardboxgen`
 
-### Panel names (SVG group IDs)
-- Base: `BOTTOM`, `BACK`, `LEFT`, `RIGHT`, optional `FRONT`
-- Lid (preset `box_with_lid`): `LID_TOP`, `LID_BACK`, `LID_FRONT`, `LID_LEFT`, `LID_RIGHT`
+Compatibility wrappers remain:
 
-### SVG layer/group conventions
-- `CUT` (red stroke, `0.2`)
-- `ENGRAVE` (text/labels, black)
+- `cardboxgen_v0_1.py`
+- `cardboxgen_v0_7_templates.py`
 
-## How Finger Joints Are Made (no “phase guessing”)
+The web app loads `docs/cardboxgen_bundle.py`, a generated single-file bundle created by `python tools/sync_docs.py`. Do not hand-edit the bundle.
 
-Instead of choosing a “phase” per panel edge, the generator defines **mating edge pairs**.
-Each pair shares one computed `FingerPlan` (finger count + segment widths). One side uses the plan,
-the other side uses the **complement** (tabs vs slots), so the two edges always match.
+## Supported Presets
 
-Finger count is stable:
+First-class template IDs:
 
-$$n = \max(\text{min\_fingers}, \lfloor L / w_{target} \rfloor)$$
+- `tray_open_front`
+- `dispenser_slot_front`
+- `window_front`
+- `box_with_lid`
+- `divider_rack`
+- `card_shoe`
+- `candy_machine_rotary_layered`
+- `calibration`
 
-Then `n` is forced odd.
+Legacy aliases are accepted with warnings:
 
-Optional: force fixed counts per joint family:
-- `--finger-count-outer`
-- `--finger-count-vertical`
+- `card_shoe_front_draw` -> `card_shoe`
+- `candy_rotary_wheel` -> `candy_machine_rotary_layered`
+- `rotary_wheel` -> `candy_machine_rotary_layered`
 
-## Kerf + Clearance Model
+## Geometry Rules
 
-Parameters:
-- `--kerf-mm`: laser kerf (typical ~0.15–0.25mm)
-- `--clearance-mm`: desired slot–tab clearance (0.00 tight → 0.25 looser)
+Inner dimensions are the source of truth for box-like presets. For material thickness `t`, base outside width/depth are `inner + 2t`, and wall panel height is `inner_h + t`.
 
-We model in-plane finger width compensation (so tabs/slots fit after cutting):
+Finger joints use shared mating plans. Each mating edge pair owns one `FingerPlan` with length, count, nominal segment widths, and a tab mask. The mate uses the complement mask, so matching edges do not independently guess phase.
 
-- Tabs (external features) shrink after cutting by ~`kerf`.
-- Slots (internal openings) grow after cutting by ~`kerf`.
+Depth rule:
 
-Symmetric drawn-width rule used in the generator:
+```text
+drawn_slot_depth = thickness + clearance - kerf
+```
 
-$$w_{tab,drawn} = w_{nominal} + (kerf - clearance/2)$$
-$$w_{slot,drawn} = w_{nominal} + (clearance/2 - kerf)$$
+Width rule:
 
-Widths are normalized per edge so the total length stays exactly $L$.
+```text
+tab_drawn  = nominal + (kerf - clearance / 2)
+slot_drawn = nominal + (clearance / 2 - kerf)
+```
 
-## Local CLI
+Segment widths are normalized per edge so the total edge length remains exact.
 
-Acceptance example:
-- `python3 cardboxgen_v0_1.py --preset tray_open_front --inner-width 135 --inner-depth 90 --inner-height 225 --thickness 3 --kerf 0.2 --clearance 0.15 --out out.svg`
+## CLI
 
-Optional holding tabs (bridges so parts don’t drop out while cutting):
-- `python3 cardboxgen_v0_1.py --preset tray_open_front --inner-width 135 --inner-depth 90 --inner-height 225 --thickness 3 --kerf 0.2 --clearance 0.15 --holding-tabs --tab-width 2 --out out.svg`
+Install development requirements:
 
-Calibration SVG (mating strips across clearances):
-- `python3 cardboxgen_v0_1.py --calibration --kerf 0.2 --thickness 3 --out calibration.svg`
+```bash
+python -m pip install -r requirements-dev.txt
+```
 
-## Local Web App (recommended)
+Generate a tray:
 
-The web app runs fully in your browser via Pyodide.
+```bash
+python -m cardboxgen --preset tray_open_front --inner-width 135 --inner-depth 90 --inner-height 225 --thickness 3 --kerf 0.2 --clearance 0.15 --out out.svg
+```
 
-1) Sync generator into the web folder:
-- `python3 tools/sync_docs.py`
+Compatibility wrapper:
 
-2) Start a local static server:
-- `python3 -m http.server 8000`
+```bash
+python cardboxgen_v0_1.py --preset tray_open_front --inner-width 135 --inner-depth 90 --inner-height 225 --thickness 3 --kerf 0.2 --clearance 0.15 --out out.svg
+```
 
-3) Open:
-- `http://localhost:8000/docs/`
+Calibration strips:
+
+```bash
+python -m cardboxgen --calibration --thickness 3 --kerf 0.2 --out calibration.svg
+```
+
+## Python API
+
+```python
+from cardboxgen.api import generate_svg
+
+result = generate_svg(
+    "tray_open_front",
+    {
+        "inner_w": 135,
+        "inner_d": 90,
+        "inner_h": 225,
+        "thickness": 3,
+        "kerf": 0.2,
+        "fit_clearance": 0.15,
+    },
+)
+
+svg = result["svg"]
+warnings = result["warnings"]
+meta = result["meta"]
+```
+
+The API result is JSON-safe and includes `svg`, `warnings`, `meta`, and `bundle_files`.
+
+## Web Preview
+
+From the repo root:
+
+```bash
+python tools/sync_docs.py
+python -m http.server 8000
+```
+
+Open <http://localhost:8000/docs/>.
+
+The app is static and GitHub Pages friendly. It loads Pyodide, imports `docs/cardboxgen_bundle.py`, renders SVG inline, supports preview zoom/pan/layer toggles, and exports a ZIP with `cut.svg`, project docs, `params.json`, and `metadata.json`.
 
 ## Examples
 
-- `python3 examples/generate_examples.py`
+Regenerate checked examples:
 
-Outputs in [examples/](examples/):
-- `tray_open_front.svg`
-- `dispenser_slot_front.svg`
-- `box_with_lid.svg`
-- `calibration_mating_strips.svg`
+```bash
+python examples/generate_examples.py
+```
+
+Generated files:
+
+- `examples/tray_open_front.svg`
+- `examples/dispenser_slot_front.svg`
+- `examples/box_with_lid.svg`
+- `examples/calibration_mating_strips.svg`
 
 ## Tests
 
-Dev deps:
-- `pip install -r requirements-dev.txt`
+```bash
+python -m pytest -q
+python tools/sync_docs.py --check
+```
 
-Run:
-- `pytest -q`
+The test suite covers finger planning, kerf/clearance math, preset smoke generation, SVG XML validity, layer IDs, layout overlap checks, CLI subprocess smoke tests, API JSON safety, docs bundle freshness, i18n key consistency, and version alignment.
 
 ## GitHub Pages
 
-This repo includes an Actions workflow to deploy [docs/](docs/) to GitHub Pages.
+GitHub Actions deploys `docs/` to Pages. In repository settings, set Pages source to **GitHub Actions**.
 
-Steps:
-1) Push to `main` or `master`
-2) GitHub repo → Settings → Pages → Source: **GitHub Actions**
-3) Wait for the “Deploy GitHub Pages” workflow to finish
+The CI workflow runs:
 
-Your site URL will be:
-- `https://<user>.github.io/<repo>/`
+```bash
+python -m pip install -r requirements-dev.txt
+python tools/sync_docs.py --check
+python -m pytest -q
+```
 
-## Versioning + Releases
+## Release Checklist
 
-- The generator version is defined in `__version__` in [cardboxgen_v0_1.py](cardboxgen_v0_1.py).
-- The web app version text lives in [docs/app.js](docs/app.js) (`APP_VERSION`) and [docs/i18n/](docs/i18n/) (`app.version`).
-- The GitHub Pages app runs the copy in [docs/cardboxgen_v0_1.py](docs/cardboxgen_v0_1.py), so keep it synced.
+1. Update `cardboxgen/version.py`.
+2. Update `pyproject.toml`, `docs/app.js`, `docs/index.html`, and `docs/i18n/*.json`.
+3. Run `python tools/sync_docs.py`.
+4. Run `python -m pytest -q`.
+5. Run `python examples/generate_examples.py`.
+6. Commit the source changes and generated docs bundle.
+7. Tag the release.
 
-Release checklist (for a new version):
-- Bump `__version__` in both generator copies (or bump root + run `python3 tools/sync_docs.py`).
-- Update `APP_VERSION` and `app.version` strings.
-- Run tests: `pytest -q`
-- Commit, then tag and publish:
-	- `git tag -a vX.Y -m "CardBoxGen vX.Y"`
-	- `git push origin vX.Y`
-	- (optional) `gh release create vX.Y --title "vX.Y" --notes-file CHANGELOG.md`
-
-See [CHANGELOG.md](CHANGELOG.md) for published versions.
+License: MIT.

@@ -1,403 +1,1341 @@
 {
-  "app": {
-    "title": "卡盒／托盤 SVG 產生器",
-    "version": "v0.7",
-    "subtitle": "完全在瀏覽器中執行（Pyodide）。產生可雷切的 SVG，並使用可重現的指接結構。"
-  },
-  "mode": {
-    "student": "學生模式",
-    "help": "說明",
-    "faq": "FAQ"
-  },
-  "helpSections": {
-    "consider": "建議思考",
-    "decide": "如何決定",
-    "typical": "常見數值",
-    "pitfalls": "常見陷阱",
-    "wrong": "如果不對",
-    "example": "例子"
-  },
-  "sections": {
-    "setup": "設定",
-    "studentSteps": "學生步驟",
-    "basic": "基本",
-    "layout": "排版",
-    "layoutOptional": "排版（選填）",
-    "advanced": "進階",
-    "fitTools": "配合工具（選填）",
-    "presetOptions": "預設選項",
-    "mechanismSettings": "機構設定",
-    "preview": "預覽",
-    "exports": "匯出"
-  },
   "actions": {
-    "generate": "產生 SVG",
-    "calibration": "產生校正 SVG",
-    "fitTest": "配合測試（選填）",
     "bundle": "下載打包（zip）",
-    "projectPack": "下載專案包（ZIP）",
-    "downloadSvg": "下載 SVG",
+    "calibration": "產生校正 SVG",
+    "controls": "控制",
     "downloadCalibration": "下載校正 SVG",
+    "downloadSvg": "下載 SVG",
     "fit": "自動縮放",
+    "fitTest": "配合測試（選填）",
+    "generate": "產生 SVG",
+    "projectPack": "下載專案包（ZIP）",
     "zoomIn": "+",
-    "zoomOut": "−",
-    "controls": "控制"
+    "zoomOut": "−"
   },
-  "steps": {
-    "title": "學生模式（4 步驟）",
-    "complete": "完成",
-    "incomplete": "未完成",
-    "step1": "步驟 1 — 客戶與情境",
-    "step2": "步驟 2 — 需求",
-    "step3": "步驟 3 — 機構選擇",
-    "step4": "步驟 4 — 自動定尺寸與檢視",
-    "step3Hint": "如果不知道刀縫（kerf），先跑配合測試（進階 → 配合工具），切割後選擇最合適的標籤。",
-    "step4Hint": "準備好後，按下「下載專案包（ZIP）」。",
-    "checklistTitle": "校正檢查清單",
-    "check1": "跑配合測試（選填）",
-    "check2": "切割它",
-    "check3": "選擇最合適的標籤",
-    "check4": "套用數值並重新產生最終 SVG"
+  "app": {
+    "subtitle": "完全在瀏覽器中執行（Pyodide）。產生可雷切的 SVG，並使用可重現的指接結構。",
+    "title": "卡盒／托盤 SVG 產生器",
+    "version": "v0.8.0"
   },
-  "labels": {
-    "clientContext": "客戶／情境",
-    "problemStatement": "問題描述",
-    "constraintNoCoins": "不使用硬幣",
-    "constraintNoLiquids": "不使用液體",
-    "constraintPersonalUse": "個人使用",
-    "irregularShape": "不規則形狀",
-    "successMetrics": "成功指標（至少選 2 個）",
-    "metricJam": "卡料／堵塞率",
-    "metricConsistency": "份量一致性",
-    "metricRefill": "補充時間",
-    "metricDurability": "耐用度",
-    "mechanismJustification": "理由（1–2 句）",
-    "exportAllLanguages": "匯出所有語言",
-    "dispenseType": "出料類型",
-    "storageTarget": "儲存目標",
-    "dispenseTarget": "出料目標",
-    "dispenseTargetType": "出料目標",
-    "mechanism": "機構",
-
-    "cardWidth": "卡片寬度（mm）",
-    "cardHeight": "卡片高度（mm）",
-    "capacityCards": "容量（張數）",
-    "maxPieceSize": "最大顆粒尺寸（mm）",
-
-    "dividerBays": "分格數",
-    "pocketCount": "轉輪口袋數",
-    "axleDiameter": "軸徑（mm）",
-    "rampCount": "斜板數量",
-
-    "preset": "預設",
-    "dimensionMode": "尺寸模式",
-    "internal": "內尺寸（內部空間）",
-    "external": "外尺寸（外觀尺寸）",
-
-    "innerWidth": "內寬（mm）",
-    "innerDepth": "內深（mm）",
-    "innerHeight": "內高（mm）",
-
-    "thickness": "厚度（mm）",
-    "fit": "鬆緊（緊 → 鬆）",
-
-    "sheetWidth": "板材寬度（mm）",
-    "margin": "邊界（mm）",
-    "padding": "間距（mm）",
-    "stroke": "線寬（mm）",
-    "labelsToggle": "標籤",
-    "lid": "上蓋（僅 box_with_lid）",
-    "holdingTabs": "固定小橋",
-    "tabWidth": "小橋寬度（mm）",
-
-    "kerf": "刀縫 Kerf（mm）",
-    "clearance": "接合間隙（mm）",
-    "calSet": "校正集合",
-    "calStudent": "學生（緊／正常／鬆）",
-    "calFull": "完整列表",
-    "fingerWidth": "目標榫寬（mm）",
-    "minTabs": "最少榫數",
-
-    "frontHeight": "前板高度（mm）",
-    "scoop": "挖勺（tray_open_front）",
-    "scoopRadius": "挖勺半徑（mm）",
-    "scoopDepth": "挖勺深度（mm）",
-    "slotWidth": "出料槽寬（mm）",
-    "slotHeight": "出料槽高（mm）",
-    "slotY": "出料槽 Y（自底部起，mm）",
-
-    "cut": "切割",
-    "labelsLayer": "標籤",
-
-    "hopperHeight": "料斗高度（mm）",
-    "depthLayersTotal": "總深度層數",
-    "wheelLayers": "轉輪層數",
-    "screwDiameter": "螺絲孔徑（mm）",
-    "screwMargin": "螺絲邊距（mm）",
-    "addFeet": "加底腳"
-  },
-  "placeholders": {
-    "clientContext": "例如：桌面個人使用",
-    "problemStatement": "例如：份量不一致；收納凌亂",
-    "mechanismJustification": "為什麼這個機構符合你的需求",
-    "storageTarget": "例如：150 張卡",
-    "dispenseTarget": "例如：每次抽 1 張",
-    "auto": "（自動）"
-  },
-  "options": {
-    "dispense": {
-      "stacking": "堆疊出料（卡片／板片）",
-      "flowing": "流動式（僅乾燥顆粒）"
-    },
-    "dispenseTarget": {
-      "one": "一次一個（一次一張）",
-      "grab": "直接抓取一疊",
-      "multi": "多分類（多格）",
-      "counted": "計數出料（每轉一次）",
-      "fun": "好玩滑道（Plinko）"
-    },
-    "mechanism": {
-      "card_shoe": "卡片出牌器（前抽）",
-      "card_shoe_front_draw": "卡片出牌器（前抽）",
-      "tray_open_front": "開口托盤",
-      "divider_rack": "分格架",
-      "rotary_wheel": "轉輪（舊版）",
-      "candy_machine_rotary_layered": "糖果機（分層轉輪）",
-      "candy_rotary_wheel": "糖果轉輪",
-      "candy_plinko": "Plinko 糖果",
-      "dispenser_slot_front": "前方出料槽",
-      "window_front": "前方視窗",
-      "box_with_lid": "含上蓋盒"
-    }
-  },
-  "readouts": {
-    "jointRule": "接合規則：繪製槽深 = 厚度 + 間隙 − kerf = {{drawn}}mm。預期實際槽寬 ≈ 厚度 + 間隙 = {{final}}mm。",
-    "computedExternal": "計算外尺寸 ≈ W {{w}} × D {{d}} × H {{h}}（mm）",
-    "computedInternal": "計算內尺寸 ≈ W {{w}} × D {{d}} × H {{h}}（mm）",
-    "derivedInternal": "推導內尺寸：W {{w}} × D {{d}} × H {{h}}（mm）",
-    "derivedExternal": "推導外尺寸：W {{w}} × D {{d}} × H {{h}}（mm）",
-    "derivedOpenings": "關鍵開口（{{preset}}）：出料槽 W {{w}} × H {{h}}（mm）"
-  },
-  "recs": {
-    "title": "前三名推薦",
-    "selectedTitle": "已選模板：",
-    "reason": {
-      "flowingCounted": "適合計數出料（每轉一次一顆）",
-      "flowingPortions": "可控制份量（轉動一次出一份）",
-      "flowingTolerant": "更能容忍不規則形狀；適合第一次原型",
-      "fallbackPrototype": "早期原型的簡單備案",
-      "stackingOne": "可控制一次一個的輸出",
-      "stackingGrab": "製作簡單、取用快速",
-      "stackingMulti": "多分類收納與取用",
-      "visibility": "視窗讓學生看見庫存"
-    }
-  },
-
   "faq": {
-    "疑難排解": [
+    "Laser fit": [
       {
-        "q": "卡片會卡住怎麼辦？",
-        "a": "常見原因：出牌口太低/太緊、壓牌間隙太小（摩擦大）、斜坡太陡（卡住）、盒子太寬（卡片轉向）。先用「卡片出牌器」模板，Fit 用 Normal/Loose，再微調出牌口高度。"
+        "a": "Kerf is the width of material removed by the laser. Because kerf is centred on the cut line, holes cut larger and parts cut smaller than your file. Start with your lab’s suggested kerf and adjust after testing.",
+        "q": "What is kerf?"
       },
       {
-        "q": "糖果為什麼不流？",
-        "a": "流動物常在洞口上方「架橋」堵住。加漏斗/擋板、開口至少大於最大顆粒尺寸約 1.2–2 倍，避免內部有尖角台階。"
+        "a": "Move Fit towards Loose first. If still tight, increase clearance slightly or update kerf (if kerf is underestimated).",
+        "q": "My joints are too tight—what do I change?"
+      },
+      {
+        "a": "Move Fit towards Tight. Decrease clearance slightly, and ensure thickness is correct.",
+        "q": "My joints are too loose—what do I change?"
+      },
+      {
+        "a": "Kerf makes holes larger. If you need an accurate hole size, draw it slightly smaller (compensation depends on kerf).",
+        "q": "Why are holes the wrong size?"
       }
     ],
-    "雷切配合": [
+    "Preview": [
       {
-        "q": "什麼是 Kerf？",
-        "a": "Kerf 是雷射切割燒掉的寬度。因為 kerf 在切線中心，孔會比檔案大、零件會比檔案小。先用學校建議值，再用測試微調。"
-      },
-      {
-        "q": "榫接太緊怎麼調？",
-        "a": "先把 Fit 往 Loose。還是太緊就增加間隙或修正 kerf（kerf 估太小會變緊）。壓克力不要硬塞。"
-      },
-      {
-        "q": "榫接太鬆怎麼調？",
-        "a": "把 Fit 往 Tight，並稍微減少間隙，確認材料厚度輸入正確。"
+        "a": "Use Fit-to-view. v0.5 auto-fits on first render and keeps your manual zoom after you adjust.",
+        "q": "The preview is huge / tiny."
       }
     ],
-    "預覽": [
+    "Project": [
       {
-        "q": "預覽太大/太小？",
-        "a": "按 Fit-to-view。v0.5 會第一次生成自動 Fit，手動縮放後保持。"
+        "a": "Stacking + one-by-one = Card Shoe. Flowing + counted = Rotary Wheel. Flowing + fun/tolerant = Plinko. Multiple categories = Divider Rack.",
+        "q": "Which mechanism should I pick?"
+      },
+      {
+        "a": "Not always. Friction fit can work, but tolerances are tight. For reliability, consider screws/bolts or a few glue points. Prototyping and iteration are normal.",
+        "q": "Do I need glue?"
+      },
+      {
+        "a": "Plywood/MDF is forgiving. Acrylic is brittle—avoid over-tight press fits.",
+        "q": "What material should I choose?"
+      }
+    ],
+    "Troubleshooting": [
+      {
+        "a": "Common causes: draw slot too short/tight, hold-down gap too small (high friction), ramp too steep (binding), or box too wide (cards rotate). Start with the Card Shoe preset, use Normal/Loose fit, and increase draw slot height slightly.",
+        "q": "Why does my design jam (cards)?"
+      },
+      {
+        "a": "Flowing solids can ‘bridge’ above a hole. Use a funnel/baffle, keep openings ≥ ~1.2–2× max piece size, and avoid sharp internal ledges.",
+        "q": "Why does my candy stop flowing?"
       }
     ],
     "專案": [
       {
-        "q": "機構怎麼選？",
-        "a": "堆疊+一次一個=卡片出牌器；流動+計數=糖果轉輪；流動+好玩/容錯=Plinko；多分類=分格架。"
+        "a": "堆疊+一次一個=卡片出牌器；流動+計數=糖果轉輪；流動+好玩/容錯=Plinko；多分類=分格架。",
+        "q": "機構怎麼選？"
       },
       {
-        "q": "一定要用膠水嗎？",
-        "a": "不一定，但緊配容差很敏感。要更可靠可用螺絲/螺母，或少量點膠。迭代測試很正常。"
+        "a": "不一定，但緊配容差很敏感。要更可靠可用螺絲/螺母，或少量點膠。迭代測試很正常。",
+        "q": "一定要用膠水嗎？"
+      }
+    ],
+    "故障排查": [
+      {
+        "a": "常见原因：出牌口太低/太紧、压牌间隙太小（摩擦大）、斜坡太陡（卡住）、盒子太宽（卡片转向）。先用“卡片出牌器”模板，Fit 用 Normal/Loose，再微调出牌口高度。",
+        "q": "卡片会卡住怎么办？"
+      },
+      {
+        "a": "流动物常在洞口上方“架桥”堵住。加漏斗/挡板，开口至少大于最大颗粒尺寸约 1.2–2 倍，避免内部尖角台阶。",
+        "q": "糖果为什么不流？"
+      }
+    ],
+    "激光配合": [
+      {
+        "a": "Kerf 是激光切割烧掉的宽度。因为 kerf 在切线中心，孔会比文件大、零件会比文件小。先用学校建议值，再用测试微调。",
+        "q": "什么是 Kerf？"
+      },
+      {
+        "a": "先把 Fit 往 Loose。还是太紧就增加间隙或修正 kerf（kerf 估太小会变紧）。亚克力不要硬塞。",
+        "q": "榫接太紧怎么调？"
+      },
+      {
+        "a": "把 Fit 往 Tight，并稍微减少间隙，确认材料厚度输入正确。",
+        "q": "榫接太松怎么调？"
+      }
+    ],
+    "疑難排解": [
+      {
+        "a": "常見原因：出牌口太低/太緊、壓牌間隙太小（摩擦大）、斜坡太陡（卡住）、盒子太寬（卡片轉向）。先用「卡片出牌器」模板，Fit 用 Normal/Loose，再微調出牌口高度。",
+        "q": "卡片會卡住怎麼辦？"
+      },
+      {
+        "a": "流動物常在洞口上方「架橋」堵住。加漏斗/擋板、開口至少大於最大顆粒尺寸約 1.2–2 倍，避免內部有尖角台階。",
+        "q": "糖果為什麼不流？"
+      }
+    ],
+    "雷切配合": [
+      {
+        "a": "Kerf 是雷射切割燒掉的寬度。因為 kerf 在切線中心，孔會比檔案大、零件會比檔案小。先用學校建議值，再用測試微調。",
+        "q": "什麼是 Kerf？"
+      },
+      {
+        "a": "先把 Fit 往 Loose。還是太緊就增加間隙或修正 kerf（kerf 估太小會變緊）。壓克力不要硬塞。",
+        "q": "榫接太緊怎麼調？"
+      },
+      {
+        "a": "把 Fit 往 Tight，並稍微減少間隙，確認材料厚度輸入正確。",
+        "q": "榫接太鬆怎麼調？"
+      }
+    ],
+    "預覽": [
+      {
+        "a": "按 Fit-to-view。v0.5 會第一次生成自動 Fit，手動縮放後保持。",
+        "q": "預覽太大/太小？"
+      }
+    ],
+    "项目": [
+      {
+        "a": "堆叠+一次一个=卡片出牌器；流动+计数=糖果转轮；流动+好玩/容错=Plinko；多分类=分格架。",
+        "q": "机构怎么选？"
+      },
+      {
+        "a": "不一定，但紧配容差很敏感。更可靠可用螺丝/螺母，或少量点胶。迭代测试很正常。",
+        "q": "一定要用胶水吗？"
+      }
+    ],
+    "预览": [
+      {
+        "a": "按 Fit-to-view。v0.5 会首次生成自动 Fit，手动缩放后保持。",
+        "q": "预览太大/太小？"
       }
     ]
   },
-  "helpUi": {
-    "searchPlaceholder": "搜尋說明…",
-    "noResults": "找不到符合的主題。"
-  },
   "faqUi": {
-    "searchPlaceholder": "搜尋 FAQ…",
     "noResults": "找不到符合的問題。",
-    "troubleshootingTitle": "疑難排解",
-    "troubleshootingShort": "快速找到該改哪個參數。"
+    "searchPlaceholder": "搜尋 FAQ…",
+    "troubleshootingShort": "快速找到該改哪個參數。",
+    "troubleshootingTitle": "疑難排解"
+  },
+  "fit": {
+    "custom": "鬆緊：自訂（使用接合間隙）",
+    "loose": "鬆緊：鬆（適合課堂）",
+    "normal": "鬆緊：正常",
+    "tight": "鬆緊：緊（較難組裝）"
   },
   "fitTools": {
     "hint": "用一小張測試片先找到最合適的接合間隙（很推薦給學生）。"
-  },
-  "status": {
-    "initializing": "初始化中…",
-    "loadingPyodide": "載入 Pyodide…",
-    "loadingModule": "載入產生器模組…",
-    "generatingSvg": "產生 SVG 中…",
-    "fixErrorsToExport": "請先修正阻擋匯出的錯誤。",
-    "generatingCalibration": "產生校正 SVG 中…",
-    "done": "完成。",
-    "ready": "就緒。",
-    "readyFile": "就緒：{{filename}}",
-    "hover": "指向：{{name}}",
-    "error": "錯誤：{{message}}",
-    "initFailed": "初始化失敗：{{message}}"
-  },
-  "fit": {
-    "tight": "鬆緊：緊（較難組裝）",
-    "normal": "鬆緊：正常",
-    "loose": "鬆緊：鬆（適合課堂）",
-    "custom": "鬆緊：自訂（使用接合間隙）"
-  },
-  "warnings": {
-    "title": "警告",
-    "kerfTooBig": "刀縫（kerf）大於或等於厚度，接合可能失效。",
-    "clearanceLarge": "接合間隙看起來偏大，作品可能鬆動。",
-    "slotInvalid": "出料槽尺寸不合理或超出前板範圍。",
-    "minTabs": "最少榫數小於 3，接合可能過弱或不對齊。",
-
-    "vagueClientContext": "需求檢查：客戶／情境有點模糊。請補上誰／在哪裡／怎麼用（例如：家中桌面個人使用）。",
-    "vagueProblemStatement": "需求檢查：問題描述有點模糊。請描述可量測的痛點（卡料、凌亂、份量不一致、不好拿）。",
-    "vagueStorageTarget": "需求檢查：儲存目標沒有數字。請補上張數／顆數／克數／容量（例如：150 張卡）。",
-    "vagueDispenseTarget": "需求檢查：出料目標（細節）有點模糊。請補上『一次出料』的定義（例如：每轉一次 1 顆）。",
-
-    "flowingBridgingRisk": "設計檢視：流動式物品有架橋／卡料風險。開口／漏斗可能太接近最大顆粒尺寸。修正：加大內部寬深、降低最大顆粒尺寸，或先用更保守（更鬆）的開口做原型。",
-    "rotaryPocketWallsThin": "設計檢視：轉輪口袋隔牆可能太薄。修正：減少口袋數或加大尺寸／增加厚度。",
-    "cardShoeFrontTooTall": "設計檢視：卡片出牌器前板高度偏高。風險：可能一次掉出多張。修正：降低前板高度。",
-    "cardShoeFrontTooShort": "設計檢視：卡片出牌器前板高度偏低。風險：可能卡住／不好抽。修正：提高前板高度。",
-    "tallWallsFlexRisk": "設計檢視：高牆配薄材料可能彎曲／變形。修正：增加厚度、增加榫數，或降低高度。",
-    "paddingTooSmall": "設計檢視：排版間距偏小。風險：零件可能重疊或切割不乾淨。修正：增加間距（Padding）。"
   },
   "footer": {
     "tip": "提示：部署到 GitHub Pages 後可完全在瀏覽器端執行，不需要伺服器。"
   },
   "help": {
-    "dispenseType": { "title": "出料類型", "short": "選擇堆疊出料（卡片／板片）或流動式（僅乾燥顆粒）。" },
-    "storageTarget": { "title": "儲存目標", "short": "描述想要存放的數量（僅供規劃）。" },
-    "dispenseTarget": { "title": "出料目標", "short": "描述希望的出料方式（僅供規劃）。" },
-    "mechanism": { "title": "機構", "short": "選擇機構後會套用對應的預設設計。" },
-
-    "clientContext": { "title": "客戶／情境", "short": "這個設計給誰用、在哪裡用？" },
-    "problemStatement": { "title": "問題描述", "short": "你想解決什麼問題（份量不一致／收納凌亂／不好拿）？" },
-    "constraints": { "title": "限制確認", "short": "課程規則（不硬幣、不液體、個人使用）。" },
-    "successMetrics": { "title": "成功指標", "short": "至少選 2 個可量測的目標，方便測試與迭代。" },
-    "irregularShape": { "title": "不規則形狀", "short": "顆粒不一致時更容易架橋卡料，需要更保守的開口／漏斗。" },
-    "mechanismJustification": { "title": "理由", "short": "用 1–2 句說明為什麼選這個機構（必填）。" },
-    "exportAllLanguages": { "title": "匯出所有語言", "short": "在 zip 內額外輸出 EN/繁/簡 的文件翻譯。" },
-
-    "preset": { "title": "預設", "short": "預先定義的模板（托盤、出料器、視窗、盒子）。" },
-    "dimensionMode": { "title": "尺寸模式", "short": "選擇 W/D/H 是指內尺寸或外尺寸。" },
-    "innerWidth": { "title": "內寬", "short": "盒／托盤內部的寬度。" },
-    "innerDepth": { "title": "內深", "short": "盒／托盤內部的深度（前到後）。" },
-    "innerHeight": { "title": "內高", "short": "盒／托盤內部的高度。" },
-    "thickness": { "title": "厚度", "short": "材料厚度。常見為 2–4mm。" },
-    "fit": { "title": "鬆緊", "short": "快速鬆緊設定：緊更牢固但較難組裝；鬆更適合學生。" },
-
-    "sheetWidth": { "title": "板材寬度", "short": "用於排版的板材寬度。" },
-    "margin": { "title": "邊界", "short": "板材邊緣保留的空白。" },
-    "padding": { "title": "間距", "short": "零件之間的距離，避免重疊。" },
-    "stroke": { "title": "線寬", "short": "SVG 顯示用線寬，通常不影響切割。" },
-    "labelsToggle": { "title": "標籤", "short": "加上刻字標籤（面板名稱）以協助組裝。" },
-    "lid": { "title": "上蓋", "short": "在 box_with_lid 預設中加入上蓋。" },
-    "holdingTabs": { "title": "固定小橋", "short": "加上小橋讓零件切完仍留在板材上。" },
-    "tabWidth": { "title": "小橋寬度", "short": "每個小橋的寬度。" },
-
-    "kerf": { "title": "刀縫 Kerf", "short": "雷射切割會移除的寬度（切縫）。建議用校正片測量。" },
-    "clearance": { "title": "接合間隙", "short": "接合的鬆動量；太緊就加大、太鬆就減小。" },
-    "calSet": { "title": "校正集合", "short": "選擇學生用短列表或完整列表。" },
-    "fingerWidth": { "title": "目標榫寬", "short": "每個榫沿邊的寬度。多數情況留空即可。" },
-    "minTabs": { "title": "最少榫數", "short": "每條接合邊至少要有多少榫。" },
-
-    "frontHeight": { "title": "前板高度", "short": "調整前板高度（tray_open_front）。" },
-    "scoop": { "title": "挖勺", "short": "加入挖勺缺口，方便取用（tray_open_front）。" },
-    "scoopRadius": { "title": "挖勺半徑", "short": "挖勺曲線半徑。" },
-    "scoopDepth": { "title": "挖勺深度", "short": "挖勺切入的深度。" },
-    "slotWidth": { "title": "出料槽寬", "short": "出料槽寬度（dispenser_slot_front）。" },
-    "slotHeight": { "title": "出料槽高", "short": "出料槽高度（dispenser_slot_front）。" },
-    "slotY": { "title": "出料槽 Y", "short": "出料槽位置，自底部往上量。" },
-
-    "dispenseTargetType": {
-      "title": "出料目標",
-      "short": "學生模式：定義一次出料是什麼。",
-      "decide": ["卡片：一次一張或直接抓取。", "糖果：計數（每轉一次）或 Plinko 滑道。"],
-      "pitfalls": ["目標選錯會讓自動選機構不符合需求。"],
-      "example": "例：每轉一次 1 顆 → 計數出料。"
-    },
-    "cardWidth": {
-      "title": "卡片寬度（mm)",
-      "short": "一張卡片的實際寬度。",
-      "decide": ["量真實物品，不要只用標準尺寸。"],
-      "pitfalls": ["太緊會卡；太寬會歪。"],
-      "example": "例：63mm。"
-    },
-    "cardHeight": {
-      "title": "卡片高度（mm)",
-      "short": "一張卡片的實際高度。",
-      "decide": ["量長邊。"],
-      "pitfalls": ["深度太小會影響出牌順暢。"],
-      "example": "例：88mm。"
-    },
-    "capacityCards": {
-      "title": "容量（張數)",
-      "short": "希望可容納的卡片張數。",
-      "pitfalls": ["塞太滿摩擦變大，容易卡。"],
-      "example": "例：80 張。"
-    },
-    "maxPieceSize": {
-      "title": "最大顆粒尺寸（mm)",
-      "short": "流動物的最大顆粒尺寸（最壞情況）。",
-      "decide": ["量最大那顆/那個。"],
-      "pitfalls": ["開口太小會堵住或架橋。"],
-      "example": "例：12mm。"
-    },
-    "dividerBays": {
-      "title": "分格數",
-      "short": "分格架的格數/通道數。",
-      "pitfalls": ["太多格會讓隔板變薄、容易斷。"],
-      "example": "例：4 格。"
-    },
-    "pocketCount": {
-      "title": "轉輪口袋數",
-      "short": "轉輪上的口袋數量。",
-      "pitfalls": ["太多口袋會讓壁太薄。"],
-      "example": "例：8。"
+    "addFeet": {
+      "decide": [
+        "Enable if the unit rocks or slides during use."
+      ],
+      "example": "Example: Add feet if students crank the knob hard.",
+      "meaning": "Feet can help keep the mechanism stable and prevent tipping during turning.",
+      "pitfalls": [
+        "Adds extra parts and cut time."
+      ],
+      "short": "選用：加底腳增加穩定性，避免轉動時滑動／翻倒。",
+      "title": "加底腳",
+      "typical": [
+        "Off for small prototypes; on for classroom demos."
+      ],
+      "wrong": [
+        "Not required if the base is already stable."
+      ]
     },
     "axleDiameter": {
-      "title": "軸徑（mm)",
+      "decide": [
+        "Measure the real axle if possible."
+      ],
+      "example": "例：6mm。",
+      "meaning": "Match your available hardware for smooth rotation.",
+      "pitfalls": [
+        "太緊會增加摩擦；太鬆會晃。"
+      ],
       "short": "轉輪軸使用的圓棒/螺栓直徑。",
-      "pitfalls": ["太緊會增加摩擦；太鬆會晃。"],
-      "example": "例：6mm。"
+      "title": "軸徑（mm)",
+      "typical": [
+        "3–8mm."
+      ],
+      "wrong": [
+        "If it binds, increase the axle hole slightly."
+      ]
     },
-    "hopperHeight": { "title": "料斗高度", "short": "流動式顆粒的儲料高度；太低容易架橋卡料。" },
-    "depthLayersTotal": { "title": "總深度層數", "short": "夾層機構的總層數（前到後厚度）。需大於轉輪層數。" },
-    "wheelLayers": { "title": "轉輪層數", "short": "分配給轉輪／滑道區的層數。常用 2–4。" },
-    "screwDiameter": { "title": "螺絲孔徑", "short": "鎖螺絲用的通孔直徑（例如 M3 約 3.2mm）。" },
-    "screwMargin": { "title": "螺絲邊距", "short": "螺絲孔到外緣的距離；增加可降低裂縫風險。" },
-    "addFeet": { "title": "加底腳", "short": "選用：加底腳增加穩定性，避免轉動時滑動／翻倒。" },
+    "calSet": {
+      "decide": [
+        "Use Student for class. Use Full when dialing in a perfect fit."
+      ],
+      "example": "Example: Start with Student, then switch to Full if needed.",
+      "meaning": "Student is shorter; Full includes more fine steps.",
+      "pitfalls": [
+        "Too many options can confuse first-time users."
+      ],
+      "short": "選擇學生用短列表或完整列表。",
+      "title": "校正集合",
+      "typical": [
+        "Student: tight/normal/loose labels."
+      ],
+      "wrong": [
+        "If the test doesn’t include the value you need, switch to Full."
+      ]
+    },
+    "capacityCards": {
+      "decide": [
+        "Pick a realistic target; overfilling increases friction."
+      ],
+      "example": "例：80 張。",
+      "meaning": "Used in Student Mode to estimate stack height.",
+      "pitfalls": [
+        "塞太滿摩擦變大，容易卡。"
+      ],
+      "short": "希望可容納的卡片張數。",
+      "title": "容量（張數)",
+      "typical": [
+        "40–120."
+      ],
+      "wrong": [
+        "If loading is hard, reduce capacity or increase height."
+      ]
+    },
+    "cardHeight": {
+      "decide": [
+        "量長邊。"
+      ],
+      "example": "例：88mm。",
+      "meaning": "Often sets depth for card mechanisms.",
+      "pitfalls": [
+        "深度太小會影響出牌順暢。"
+      ],
+      "short": "一張卡片的實際高度。",
+      "title": "卡片高度（mm)",
+      "typical": [
+        "Trading card ~88mm (varies)."
+      ],
+      "wrong": [
+        "If the deck sticks out, increase depth or reduce capacity."
+      ]
+    },
+    "cardWidth": {
+      "decide": [
+        "量真實物品，不要只用標準尺寸。"
+      ],
+      "example": "例：63mm。",
+      "meaning": "Used in Student Mode auto-design to size the cavity.",
+      "pitfalls": [
+        "太緊會卡；太寬會歪。"
+      ],
+      "short": "一張卡片的實際寬度。",
+      "title": "卡片寬度（mm)",
+      "typical": [
+        "Trading card ~63mm (varies)."
+      ],
+      "wrong": [
+        "If cards don’t fit, increase width or clearance."
+      ]
+    },
+    "clearance": {
+      "decide": [
+        "Adjust in small steps (e.g. 0.05mm) based on a test cut."
+      ],
+      "example": "Example: If joints are tight, try 0.10 → 0.15mm.",
+      "meaning": "Clearance tunes how easily tabs slide into slots.",
+      "pitfalls": [
+        "Clearance can’t fix an incorrect thickness input."
+      ],
+      "short": "接合的鬆動量；太緊就加大、太鬆就減小。",
+      "title": "接合間隙",
+      "typical": [
+        "0.00 tight, 0.10 normal, 0.20 loose (student-friendly)."
+      ],
+      "wrong": [
+        "Too tight → hard assembly/tearing. Too loose → wobble/gaps."
+      ]
+    },
+    "clientContext": {
+      "decide": [
+        "Write a concrete use context (desk, classroom, workshop)."
+      ],
+      "example": "Example: Personal use at desk; dispensing into a small cup.",
+      "meaning": "This drives clearer requirements and more realistic testing.",
+      "pitfalls": [
+        "Avoid vague words like ‘somewhere’ or ‘maybe’."
+      ],
+      "short": "這個設計給誰用、在哪裡用？",
+      "title": "客戶／情境",
+      "typical": [
+        "Personal desk use; shared classroom demo; workshop bench."
+      ],
+      "wrong": [
+        "If context is vague, success criteria and tests will be vague too."
+      ]
+    },
+    "constraints": {
+      "decide": [
+        "Check the boxes to confirm you understand the rules."
+      ],
+      "example": "Example: Dry solids only; no coin mechanisms.",
+      "meaning": "These are locked rules for the assignment (no coins, no liquids, personal use).",
+      "pitfalls": [
+        "If any are not met, the project may be out of scope."
+      ],
+      "short": "課程規則（不硬幣、不液體、個人使用）。",
+      "title": "限制確認",
+      "typical": [
+        "All checked."
+      ],
+      "wrong": [
+        "You may build something that cannot be submitted."
+      ]
+    },
+    "depthLayersTotal": {
+      "decide": [
+        "Increase if the wheel or chute needs more depth."
+      ],
+      "example": "Example: total layers 8, wheel layers 3.",
+      "meaning": "This controls the total front-to-back depth of the mechanism as a layered sandwich.",
+      "pitfalls": [
+        "Must be at least 2, and must be more than wheel layers."
+      ],
+      "short": "夾層機構的總層數（前到後厚度）。需大於轉輪層數。",
+      "title": "總深度層數",
+      "typical": [
+        "8 layers for a first prototype."
+      ],
+      "wrong": [
+        "If wheel layers >= total layers, there is no hopper space."
+      ]
+    },
+    "dimensionMode": {
+      "decide": [
+        "Pick Internal unless you have a strict outside size constraint."
+      ],
+      "example": "Example: A 63mm-wide card needs Internal width slightly above 63mm.",
+      "meaning": "Internal is best when you care about fitting items. External is best when you must fit a footprint.",
+      "pitfalls": [
+        "Switching mode without re-checking thickness changes the effective cavity size."
+      ],
+      "short": "選擇 W/D/H 是指內尺寸或外尺寸。",
+      "title": "尺寸模式",
+      "typical": [
+        "Students: Internal."
+      ],
+      "wrong": [
+        "Wrong mode can make the cavity too small even if numbers look correct."
+      ]
+    },
+    "dispenseTarget": {
+      "decide": [
+        "Describe the user action (pull 1 card, shake to pour, etc.)."
+      ],
+      "example": "Example: ‘Pull 1 card from a front slot’.",
+      "meaning": "This helps you choose an opening and mechanism, not the final dimensions.",
+      "pitfalls": [
+        "If you want 1-at-a-time dispensing, mechanism matters more than capacity."
+      ],
+      "short": "描述希望的出料方式（僅供規劃）。",
+      "title": "出料目標",
+      "typical": [
+        "Example: 1 card per pull."
+      ],
+      "wrong": [
+        "A mismatch between mechanism and target can cause multiple items to dispense."
+      ]
+    },
+    "dispenseTargetType": {
+      "decide": [
+        "卡片：一次一張或直接抓取。",
+        "糖果：計數（每轉一次）或 Plinko 滑道。"
+      ],
+      "example": "例：每轉一次 1 顆 → 計數出料。",
+      "meaning": "This helps auto-select a mechanism and default settings.",
+      "pitfalls": [
+        "目標選錯會讓自動選機構不符合需求。"
+      ],
+      "short": "學生模式：定義一次出料是什麼。",
+      "title": "出料目標",
+      "typical": [
+        "Cards: One-at-a-time",
+        "Candy: Counted (per turn)"
+      ],
+      "wrong": [
+        "Wrong target can pick a mechanism that doesn’t match your goal."
+      ]
+    },
+    "dispenseType": {
+      "decide": [
+        "If you are dispensing flat items, choose stacking."
+      ],
+      "example": "Example: Trading cards → Stacking. Rice/beans (dry) → Flowing.",
+      "meaning": "This affects what mechanisms make sense and how the opening should work.",
+      "pitfalls": [
+        "Flowing is not recommended for cards."
+      ],
+      "short": "選擇堆疊出料（卡片／板片）或流動式（僅乾燥顆粒）。",
+      "title": "出料類型",
+      "typical": [
+        "Cards/tiles: stacking."
+      ],
+      "wrong": [
+        "Choosing flowing for cards can cause jams and unstable output."
+      ]
+    },
+    "dividerBays": {
+      "decide": [
+        "Pick how many categories you need."
+      ],
+      "example": "例：4 格。",
+      "meaning": "Creates simple dividers between bays.",
+      "pitfalls": [
+        "太多格會讓隔板變薄、容易斷。"
+      ],
+      "short": "分格架的格數/通道數。",
+      "title": "分格數",
+      "typical": [
+        "3–6."
+      ],
+      "wrong": [
+        "If dividers are fragile, reduce bay count."
+      ]
+    },
+    "exportAllLanguages": {
+      "decide": [
+        "Turn on for classroom sharing or instructor review."
+      ],
+      "example": "Example: Export EN + 繁體 + 简体 for students.",
+      "meaning": "When enabled, the pack adds docs/translations/<lang>/... for EN/繁/简.",
+      "pitfalls": [
+        "Larger zip size."
+      ],
+      "short": "在 zip 內額外輸出 EN/繁/簡 的文件翻譯。",
+      "title": "匯出所有語言",
+      "typical": [
+        "Off for personal use; on for teaching."
+      ],
+      "wrong": [
+        "Not an issue; it only affects docs."
+      ]
+    },
+    "fingerWidth": {
+      "decide": [
+        "Leave auto unless you need a specific look/strength."
+      ],
+      "example": "Example: Try 10mm for a balanced look.",
+      "meaning": "This affects how many fingers appear on an edge.",
+      "pitfalls": [
+        "Very small fingers are fragile; very large fingers reduce alignment."
+      ],
+      "short": "每個榫沿邊的寬度。多數情況留空即可。",
+      "title": "目標榫寬",
+      "typical": [
+        "Auto, or ~8–15mm."
+      ],
+      "wrong": [
+        "Too small → weak tabs. Too large → joints can twist."
+      ]
+    },
+    "fit": {
+      "decide": [
+        "Use Loose for student builds; use Tight only after you’ve calibrated."
+      ],
+      "example": "Example: Start with Loose, then adjust clearance by 0.05mm if needed.",
+      "meaning": "Fit is easier than picking an exact clearance when you’re starting.",
+      "pitfalls": [
+        "If kerf is unknown, even ‘Normal’ may be too tight."
+      ],
+      "short": "快速鬆緊設定：緊更牢固但較難組裝；鬆更適合學生。",
+      "title": "鬆緊",
+      "typical": [
+        "Loose is often the best classroom default."
+      ],
+      "wrong": [
+        "Too tight → hard assembly. Too loose → wobble/gaps."
+      ]
+    },
+    "frontHeight": {
+      "decide": [
+        "Set a front height that keeps items in place but allows access."
+      ],
+      "example": "Example: Inner height 60mm → front height 35–45mm.",
+      "meaning": "Lowering the front makes it easier to grab items.",
+      "pitfalls": [
+        "Too low can let items fall out."
+      ],
+      "short": "調整前板高度（tray_open_front）。",
+      "title": "前板高度",
+      "typical": [
+        "Auto or roughly 1/2 to 3/4 of inner height."
+      ],
+      "wrong": [
+        "Too high → hard to grab. Too low → poor retention."
+      ]
+    },
+    "holdingTabs": {
+      "decide": [
+        "Enable if your parts move after cuts, or if you want safer handling."
+      ],
+      "example": "Example: Enable tabs for acrylic to prevent pieces shifting.",
+      "meaning": "Tabs prevent parts from shifting or falling through honeycomb beds.",
+      "pitfalls": [
+        "You must cut/sand tabs after the laser run."
+      ],
+      "short": "加上小橋讓零件切完仍留在板材上。",
+      "title": "固定小橋",
+      "typical": [
+        "Off for clean cuts; On for thin or small parts."
+      ],
+      "wrong": [
+        "Too few tabs → parts drop. Too many → lots of cleanup."
+      ]
+    },
+    "hopperHeight": {
+      "decide": [
+        "Start larger for irregular pieces, then reduce if it works."
+      ],
+      "example": "Example: max piece 18mm → hopper height ~100mm.",
+      "meaning": "A taller hopper can reduce bridging and makes refill easier, but uses more material.",
+      "pitfalls": [
+        "Too small can cause bridging above the wheel."
+      ],
+      "short": "流動式顆粒的儲料高度；太低容易架橋卡料。",
+      "title": "料斗高度",
+      "typical": [
+        "70–140mm depending on piece size."
+      ],
+      "wrong": [
+        "A very short hopper may stop feeding consistently."
+      ]
+    },
+    "innerDepth": {
+      "decide": [
+        "Set depth to item depth plus a little clearance."
+      ],
+      "example": "Example: 88mm card depth → Inner depth 90–92mm.",
+      "meaning": "Depth mostly affects capacity and stability.",
+      "pitfalls": [
+        "Very deep trays can make it hard to grab items."
+      ],
+      "short": "盒／托盤內部的深度（前到後）。",
+      "title": "內深",
+      "typical": [
+        "Cards: item depth + 1–3mm."
+      ],
+      "wrong": [
+        "Too shallow → items stick out. Too deep → wasted material/space."
+      ]
+    },
+    "innerHeight": {
+      "decide": [
+        "Choose a height that matches your storage target."
+      ],
+      "example": "Example: 150 cards might be ~45–60mm tall (depends on cards).",
+      "meaning": "Height controls capacity (how tall the stack can be).",
+      "pitfalls": [
+        "If height is too tall, stacks can lean unless constrained."
+      ],
+      "short": "盒／托盤內部的高度。",
+      "title": "內高",
+      "typical": [
+        "Card stacks: depends on count and card thickness."
+      ],
+      "wrong": [
+        "Too low → items don’t fit. Too high → less stable."
+      ]
+    },
+    "innerWidth": {
+      "decide": [
+        "Measure item width, then add clearance (wiggle room)."
+      ],
+      "example": "Example: 63mm cards → Inner width 65–67mm.",
+      "meaning": "This is the width available for your items.",
+      "pitfalls": [
+        "Too tight can jam; too loose can cause tilting."
+      ],
+      "short": "盒／托盤內部的寬度。",
+      "title": "內寬",
+      "typical": [
+        "Cards: item width + 1–3mm (depends on sleeve and tolerance)."
+      ],
+      "wrong": [
+        "Too small → items don’t fit. Too large → items rattle/lean."
+      ]
+    },
+    "irregularShape": {
+      "decide": [
+        "Turn on if pieces vary a lot in shape."
+      ],
+      "example": "Example: Jelly beans (irregular) → On.",
+      "meaning": "Irregular solids bridge/jam more; mechanisms need larger openings and gentler funnels.",
+      "pitfalls": [
+        "If unsure, turn it on and prototype with loose fit."
+      ],
+      "short": "顆粒不一致時更容易架橋卡料，需要更保守的開口／漏斗。",
+      "title": "不規則形狀",
+      "typical": [
+        "Off for uniform candies; on for mixed snacks."
+      ],
+      "wrong": [
+        "Too-tight openings can cause bridging and jams."
+      ]
+    },
+    "kerf": {
+      "decide": [
+        "Run the Fit Test once per material + laser settings."
+      ],
+      "example": "Example: Measured kerf 0.20mm → enter 0.20.",
+      "meaning": "Kerf changes the real size of tabs/slots after cutting.",
+      "pitfalls": [
+        "Changing power/speed changes kerf."
+      ],
+      "short": "雷射切割會移除的寬度（切縫）。建議用校正片測量。",
+      "title": "刀縫 Kerf",
+      "typical": [
+        "Often ~0.15–0.25mm, but it varies a lot."
+      ],
+      "wrong": [
+        "Kerf too small → joints too tight. Kerf too big → joints too loose."
+      ]
+    },
+    "labelsToggle": {
+      "decide": [
+        "Turn on for classroom builds; turn off for final clean parts."
+      ],
+      "example": "Example: Keep labels on for first prototype.",
+      "meaning": "Labels are useful during prototyping and teaching.",
+      "pitfalls": [
+        "Engraving increases laser time."
+      ],
+      "short": "加上刻字標籤（面板名稱）以協助組裝。",
+      "title": "標籤",
+      "typical": [
+        "On for student mode."
+      ],
+      "wrong": [
+        "If you don’t want engraved text, turn this off."
+      ]
+    },
+    "lid": {
+      "decide": [
+        "Enable only if you need a closing top."
+      ],
+      "example": "Example: For a travel box, enable Lid.",
+      "meaning": "The lid is generated as additional panels in the layout.",
+      "pitfalls": [
+        "A lid increases material usage and assembly complexity."
+      ],
+      "short": "在 box_with_lid 預設中加入上蓋。",
+      "title": "上蓋",
+      "typical": [
+        "Enabled for storage boxes."
+      ],
+      "wrong": [
+        "If enabled on other presets, it may be ignored."
+      ]
+    },
+    "margin": {
+      "decide": [
+        "Use a margin if your laser bed has edge constraints."
+      ],
+      "example": "Example: Margin 10mm.",
+      "meaning": "Useful to avoid clamps, warped edges, or charred borders.",
+      "pitfalls": [
+        "Too large wastes material."
+      ],
+      "short": "板材邊緣保留的空白。",
+      "title": "邊界",
+      "typical": [
+        "5–15mm."
+      ],
+      "wrong": [
+        "Too small can put cuts too close to the sheet edge."
+      ]
+    },
+    "maxPieceSize": {
+      "decide": [
+        "量最大那顆/那個。"
+      ],
+      "example": "例：12mm。",
+      "meaning": "Openings and chutes should be sized from this (worst case).",
+      "pitfalls": [
+        "開口太小會堵住或架橋。"
+      ],
+      "short": "流動物的最大顆粒尺寸（最壞情況）。",
+      "title": "最大顆粒尺寸（mm)",
+      "typical": [
+        "8–18mm (varies)."
+      ],
+      "wrong": [
+        "If it jams, increase openings/chutes and reduce sharp ledges."
+      ]
+    },
+    "mechanism": {
+      "decide": [
+        "Pick the one that matches how you want to access/dispense."
+      ],
+      "example": "Example: Classroom card tray → Open-front tray.",
+      "meaning": "Mechanism is the student-friendly name; Preset is the generator template.",
+      "pitfalls": [
+        "Slot mechanisms require valid slot dimensions."
+      ],
+      "short": "選擇機構後會套用對應的預設設計。",
+      "title": "機構",
+      "typical": [
+        "Open-front tray is simplest to build and use."
+      ],
+      "wrong": [
+        "Wrong mechanism can block access or dispense too fast."
+      ]
+    },
+    "mechanismJustification": {
+      "decide": [
+        "Write 1–2 sentences linking requirements → mechanism."
+      ],
+      "example": "Example: ‘Plinko tolerates irregular pieces and is easy to test.’",
+      "meaning": "This is required for learning outcomes (not autopilot).",
+      "pitfalls": [
+        "Avoid repeating the mechanism name without reasons."
+      ],
+      "short": "用 1–2 句說明為什麼選這個機構（必填）。",
+      "title": "理由",
+      "typical": [
+        "Chosen because it matches counted/one-by-one and reduces jams."
+      ],
+      "wrong": [
+        "Without justification, the project pack export stays locked."
+      ]
+    },
+    "minTabs": {
+      "decide": [
+        "Keep at 3+ unless the edge is very short."
+      ],
+      "example": "Example: Min tabs 3 for small trays.",
+      "meaning": "More tabs usually means better alignment and strength.",
+      "pitfalls": [
+        "Too many tabs on a short edge creates tiny fragile features."
+      ],
+      "short": "每條接合邊至少要有多少榫。",
+      "title": "最少榫數",
+      "typical": [
+        "3 to 7."
+      ],
+      "wrong": [
+        "Too few tabs → weak joint. Too many → fragile or messy cuts."
+      ]
+    },
+    "padding": {
+      "decide": [
+        "Increase if your laser burns edges or if parts are hard to separate."
+      ],
+      "example": "Example: Padding 12mm.",
+      "meaning": "Padding helps prevent scorching and makes parts easier to remove.",
+      "pitfalls": [
+        "Too much padding can push layout beyond the sheet width."
+      ],
+      "short": "零件之間的距離，避免重疊。",
+      "title": "間距",
+      "typical": [
+        "8–15mm."
+      ],
+      "wrong": [
+        "Too small can make parts overlap or touch."
+      ]
+    },
+    "pocketCount": {
+      "decide": [
+        "Use fewer pockets for stronger walls."
+      ],
+      "example": "例：8。",
+      "meaning": "More pockets = smaller turn per dispense.",
+      "pitfalls": [
+        "太多口袋會讓壁太薄。"
+      ],
+      "short": "轉輪上的口袋數量。",
+      "title": "轉輪口袋數",
+      "typical": [
+        "6–12."
+      ],
+      "wrong": [
+        "If wheel is weak, reduce pocket count."
+      ]
+    },
+    "preset": {
+      "decide": [
+        "Choose the closest template, then adjust optional parameters."
+      ],
+      "example": "Example: Need a lid → box_with_lid.",
+      "meaning": "Different presets add or remove features (slot, window, lid, etc.).",
+      "pitfalls": [
+        "Some options only apply to specific presets."
+      ],
+      "short": "預先定義的模板（托盤、出料器、視窗、盒子）。",
+      "title": "預設",
+      "typical": [
+        "tray_open_front for general storage/trays."
+      ],
+      "wrong": [
+        "A preset mismatch can create missing/extra panels."
+      ]
+    },
+    "problemStatement": {
+      "decide": [
+        "Describe the current pain: messy, inconsistent portions, hard access, jams."
+      ],
+      "example": "Example: ‘Portions vary a lot; I want 1 candy per turn.’",
+      "meaning": "A good problem statement makes it easier to pick a mechanism and write success metrics.",
+      "pitfalls": [
+        "Avoid ‘nice’ / ‘better’ without saying what changes."
+      ],
+      "short": "你想解決什麼問題（份量不一致／收納凌亂／不好拿）？",
+      "title": "問題描述",
+      "typical": [
+        "Inconsistent portions; messy storage; hard to grab one item."
+      ],
+      "wrong": [
+        "If the problem is unclear, the design can’t be evaluated."
+      ]
+    },
     "rampCount": {
-      "title": "斜板數量",
+      "decide": [
+        "Use more ramps for smaller pieces."
+      ],
+      "example": "例：6。",
+      "meaning": "More ramps slows and guides falling pieces.",
+      "pitfalls": [
+        "太多會增加切割時間。"
+      ],
       "short": "Plinko 內部斜板條數量。",
-      "pitfalls": ["太多會增加切割時間。"],
-      "example": "例：6。"
+      "title": "斜板數量",
+      "typical": [
+        "4–10."
+      ],
+      "wrong": [
+        "If it drops too fast, increase ramp count."
+      ]
+    },
+    "scoop": {
+      "decide": [
+        "Enable if fingers need help to reach the bottom of the tray."
+      ],
+      "example": "Example: Enable scoop for small parts bins.",
+      "meaning": "A scoop removes material from the front opening.",
+      "pitfalls": [
+        "Scoops reduce front strength."
+      ],
+      "short": "加入挖勺缺口，方便取用（tray_open_front）。",
+      "title": "挖勺",
+      "typical": [
+        "On for deep trays."
+      ],
+      "wrong": [
+        "Overly large scoops can weaken the front panel."
+      ]
+    },
+    "scoopDepth": {
+      "decide": [
+        "Increase if access is still hard; decrease if too weak."
+      ],
+      "example": "Example: Depth 18mm.",
+      "meaning": "Depth controls how much material is removed from the front.",
+      "pitfalls": [
+        "Too deep can cut into the bottom area."
+      ],
+      "short": "挖勺切入的深度。",
+      "title": "挖勺深度",
+      "typical": [
+        "10–25mm."
+      ],
+      "wrong": [
+        "Over-deep scoops weaken the panel."
+      ]
+    },
+    "scoopRadius": {
+      "decide": [
+        "Use a radius that fits within the front opening."
+      ],
+      "example": "Example: Radius 22mm.",
+      "meaning": "Larger radius makes a gentler curve.",
+      "pitfalls": [
+        "Too large may intersect joints or edges."
+      ],
+      "short": "挖勺曲線半徑。",
+      "title": "挖勺半徑",
+      "typical": [
+        "15–30mm."
+      ],
+      "wrong": [
+        "If geometry overlaps, reduce radius or depth."
+      ]
+    },
+    "screwDiameter": {
+      "decide": [
+        "Use your hardware’s recommended clearance hole."
+      ],
+      "example": "Example: M3 screws → 3.2mm holes.",
+      "meaning": "Used for the bolt-through holes that clamp the sandwich layers together.",
+      "pitfalls": [
+        "Too small will bind; too big reduces alignment."
+      ],
+      "short": "鎖螺絲用的通孔直徑（例如 M3 約 3.2mm）。",
+      "title": "螺絲孔徑",
+      "typical": [
+        "M3 clearance ~3.2mm."
+      ],
+      "wrong": [
+        "If holes are too tight, layers can crack when forcing screws."
+      ]
+    },
+    "screwMargin": {
+      "decide": [
+        "Increase if your material cracks near holes."
+      ],
+      "example": "Example: 6mm margin for M3 in 3mm acrylic.",
+      "meaning": "More margin reduces cracking risk, but consumes more area and may force a larger plate.",
+      "pitfalls": [
+        "Too small can crack acrylic or thin plywood."
+      ],
+      "short": "螺絲孔到外緣的距離；增加可降低裂縫風險。",
+      "title": "螺絲邊距",
+      "typical": [
+        "5–8mm."
+      ],
+      "wrong": [
+        "Screws too close to edge can split the layer."
+      ]
+    },
+    "sheetWidth": {
+      "decide": [
+        "Enter the usable width of your sheet (after margins)."
+      ],
+      "example": "Example: A4 landscape usable width ≈ 297mm.",
+      "meaning": "This doesn’t change the box size, only how panels are arranged.",
+      "pitfalls": [
+        "If too small, layout may overflow or pack poorly."
+      ],
+      "short": "用於排版的板材寬度。",
+      "title": "板材寬度",
+      "typical": [
+        "Example: 300–600mm depending on stock."
+      ],
+      "wrong": [
+        "Wrong sheet width can cause overlaps or unexpected panel ordering."
+      ]
+    },
+    "slotHeight": {
+      "decide": [
+        "Keep low for single-item dispensing."
+      ],
+      "example": "Example: Slot height 18mm.",
+      "meaning": "Slot height controls thickness clearance and how many items can slip out.",
+      "pitfalls": [
+        "Too tall can allow 2 items at once."
+      ],
+      "short": "出料槽高度（dispenser_slot_front）。",
+      "title": "出料槽高",
+      "typical": [
+        "Often 10–20mm (depends on item thickness)."
+      ],
+      "wrong": [
+        "Too small → jams. Too large → double-feed."
+      ]
+    },
+    "slotWidth": {
+      "decide": [
+        "Set slightly larger than item width if items slide out sideways."
+      ],
+      "example": "Example: 63mm cards → slot width 60–62mm depending on mechanism.",
+      "meaning": "Slot width controls what can pass through.",
+      "pitfalls": [
+        "Too wide can allow multiple items to escape."
+      ],
+      "short": "出料槽寬度（dispenser_slot_front）。",
+      "title": "出料槽寬",
+      "typical": [
+        "Cards: near card width, but constrained to prevent double-feed."
+      ],
+      "wrong": [
+        "If too narrow, items jam. If too wide, uncontrolled dispensing."
+      ]
+    },
+    "slotY": {
+      "decide": [
+        "Place it where the stack naturally presses the front."
+      ],
+      "example": "Example: If inner height is 80mm, try slotY 30–40mm.",
+      "meaning": "Controls where the opening sits relative to the item stack.",
+      "pitfalls": [
+        "Slot + height must stay within the front panel."
+      ],
+      "short": "出料槽位置，自底部往上量。",
+      "title": "出料槽 Y",
+      "typical": [
+        "Often 1/4 to 1/2 of inner height."
+      ],
+      "wrong": [
+        "Invalid slot placement will be warned/ignored."
+      ]
+    },
+    "storageTarget": {
+      "decide": [
+        "Write an approximate count (or total height/stack)."
+      ],
+      "example": "Example: 200 cards, or 2 stacks of 100.",
+      "meaning": "This doesn’t change geometry directly; it helps students think about capacity.",
+      "pitfalls": [
+        "Don’t treat this as the real dimension input — use W/D/H below."
+      ],
+      "short": "描述想要存放的數量（僅供規劃）。",
+      "title": "儲存目標",
+      "typical": [
+        "Example: 150 cards."
+      ],
+      "wrong": [
+        "If you only set this and not dimensions, the design won’t match your items."
+      ]
+    },
+    "stroke": {
+      "decide": [
+        "Leave at 0.2 unless your workflow needs a different preview stroke."
+      ],
+      "example": "Example: Stroke 0.2mm.",
+      "meaning": "Many laser workflows cut the path centerline, not stroke thickness.",
+      "pitfalls": [
+        "Some software may interpret stroke thickness visually; confirm your cut settings."
+      ],
+      "short": "SVG 顯示用線寬，通常不影響切割。",
+      "title": "線寬",
+      "typical": [
+        "0.2mm."
+      ],
+      "wrong": [
+        "If your laser uses stroke width, verify settings before cutting."
+      ]
+    },
+    "successMetrics": {
+      "decide": [
+        "Choose metrics you can test with a simple table."
+      ],
+      "example": "Example: ≤1 jam per 20 dispenses; ±1 item per action.",
+      "meaning": "Metrics turn a vague goal into a testable prototype.",
+      "pitfalls": [
+        "Avoid metrics you can’t measure in class."
+      ],
+      "short": "至少選 2 個可量測的目標，方便測試與迭代。",
+      "title": "成功指標",
+      "typical": [
+        "Jam rate + portion consistency."
+      ],
+      "wrong": [
+        "If you can’t measure it, you can’t improve it."
+      ]
+    },
+    "tabWidth": {
+      "decide": [
+        "Pick a width your material can survive without snapping."
+      ],
+      "example": "Example: Tab width 2mm.",
+      "meaning": "Wider tabs hold better but require more cleanup.",
+      "pitfalls": [
+        "Too thin can break during cutting; too thick is hard to remove."
+      ],
+      "short": "每個小橋的寬度。",
+      "title": "小橋寬度",
+      "typical": [
+        "1.5–3.0mm."
+      ],
+      "wrong": [
+        "Broken tabs → parts fall; oversized tabs → lots of sanding."
+      ]
+    },
+    "thickness": {
+      "decide": [
+        "Measure your sheet with calipers if possible."
+      ],
+      "example": "Example: If your sheet measures 2.9mm, enter 2.9.",
+      "meaning": "Thickness affects outside size, joint geometry, and fit rules.",
+      "pitfalls": [
+        "Nominal ‘3mm’ material is often 2.8–3.2mm."
+      ],
+      "short": "材料厚度。常見為 2–4mm。",
+      "title": "厚度",
+      "typical": [
+        "Chipboard/acrylic: 2–4mm (varies by material)."
+      ],
+      "wrong": [
+        "Wrong thickness makes joints misfit and dimensions inaccurate."
+      ]
+    },
+    "troubleshooting": {
+      "decide": [],
+      "example": "Example: Tight joints → clearance 0.10 → 0.15mm.",
+      "meaning": "Use these quick checks before re-cutting a full design.",
+      "pitfalls": [],
+      "short": "Common symptoms and what to change.",
+      "title": "Troubleshooting",
+      "typical": [],
+      "wrong": [
+        "Too tight: increase Joint clearance by ~0.05mm or verify kerf with Fit Test.",
+        "Too loose: decrease Joint clearance by ~0.05mm.",
+        "Wrong size: confirm Dimension mode and Thickness."
+      ]
+    },
+    "wheelLayers": {
+      "decide": [
+        "Start with 3 and adjust after testing."
+      ],
+      "example": "Example: wheel layers 3 for a stable pocket wheel.",
+      "meaning": "More wheel layers can increase wheel thickness and stability, but reduces hopper layers.",
+      "pitfalls": [
+        "If too high, hopper becomes too small."
+      ],
+      "short": "分配給轉輪／滑道區的層數。常用 2–4。",
+      "title": "轉輪層數",
+      "typical": [
+        "2–4 layers."
+      ],
+      "wrong": [
+        "Too few can cause rubbing or weak wheel."
+      ]
     }
+  },
+  "helpSections": {
+    "consider": "建議思考",
+    "decide": "如何決定",
+    "example": "例子",
+    "pitfalls": "常見陷阱",
+    "typical": "常見數值",
+    "wrong": "如果不對"
+  },
+  "helpUi": {
+    "noResults": "找不到符合的主題。",
+    "searchPlaceholder": "搜尋說明…"
+  },
+  "labels": {
+    "addFeet": "加底腳",
+    "axleDiameter": "軸徑（mm）",
+    "calFull": "完整列表",
+    "calSet": "校正集合",
+    "calStudent": "學生（緊／正常／鬆）",
+    "capacityCards": "容量（張數）",
+    "cardHeight": "卡片高度（mm）",
+    "cardWidth": "卡片寬度（mm）",
+    "clearance": "接合間隙（mm）",
+    "clientContext": "客戶／情境",
+    "constraintNoCoins": "不使用硬幣",
+    "constraintNoLiquids": "不使用液體",
+    "constraintPersonalUse": "個人使用",
+    "cut": "切割",
+    "depthLayersTotal": "總深度層數",
+    "dimensionMode": "尺寸模式",
+    "dispenseTarget": "出料目標",
+    "dispenseTargetType": "出料目標",
+    "dispenseType": "出料類型",
+    "dividerBays": "分格數",
+    "exportAllLanguages": "匯出所有語言",
+    "external": "外尺寸（外觀尺寸）",
+    "fingerWidth": "目標榫寬（mm）",
+    "fit": "鬆緊（緊 → 鬆）",
+    "frontHeight": "前板高度（mm）",
+    "holdingTabs": "固定小橋",
+    "hopperHeight": "料斗高度（mm）",
+    "innerDepth": "內深（mm）",
+    "innerHeight": "內高（mm）",
+    "innerWidth": "內寬（mm）",
+    "internal": "內尺寸（內部空間）",
+    "irregularShape": "不規則形狀",
+    "kerf": "刀縫 Kerf（mm）",
+    "labelsLayer": "標籤",
+    "labelsToggle": "標籤",
+    "lid": "上蓋（僅 box_with_lid）",
+    "margin": "邊界（mm）",
+    "maxPieceSize": "最大顆粒尺寸（mm）",
+    "mechanism": "機構",
+    "mechanismJustification": "理由（1–2 句）",
+    "metricConsistency": "份量一致性",
+    "metricDurability": "耐用度",
+    "metricJam": "卡料／堵塞率",
+    "metricRefill": "補充時間",
+    "minTabs": "最少榫數",
+    "padding": "間距（mm）",
+    "pocketCount": "轉輪口袋數",
+    "preset": "預設",
+    "problemStatement": "問題描述",
+    "rampCount": "斜板數量",
+    "scoop": "挖勺（tray_open_front）",
+    "scoopDepth": "挖勺深度（mm）",
+    "scoopRadius": "挖勺半徑（mm）",
+    "screwDiameter": "螺絲孔徑（mm）",
+    "screwMargin": "螺絲邊距（mm）",
+    "sheetWidth": "板材寬度（mm）",
+    "slotHeight": "出料槽高（mm）",
+    "slotWidth": "出料槽寬（mm）",
+    "slotY": "出料槽 Y（自底部起，mm）",
+    "storageTarget": "儲存目標",
+    "stroke": "線寬（mm）",
+    "successMetrics": "成功指標（至少選 2 個）",
+    "tabWidth": "小橋寬度（mm）",
+    "thickness": "厚度（mm）",
+    "wheelLayers": "轉輪層數"
+  },
+  "mode": {
+    "faq": "FAQ",
+    "help": "說明",
+    "student": "學生模式"
+  },
+  "options": {
+    "dispense": {
+      "flowing": "流動式（僅乾燥顆粒）",
+      "stacking": "堆疊出料（卡片／板片）"
+    },
+    "dispenseTarget": {
+      "counted": "計數出料（每轉一次）",
+      "fun": "好玩滑道（Plinko）",
+      "grab": "直接抓取一疊",
+      "multi": "多分類（多格）",
+      "one": "一次一個（一次一張）"
+    },
+    "mechanism": {
+      "box_with_lid": "含上蓋盒",
+      "candy_machine_rotary_layered": "糖果機（分層轉輪）",
+      "candy_plinko": "Plinko 糖果",
+      "candy_rotary_wheel": "糖果轉輪",
+      "card_shoe": "卡片出牌器（前抽）",
+      "card_shoe_front_draw": "卡片出牌器（前抽）",
+      "dispenser_slot_front": "前方出料槽",
+      "divider_rack": "分格架",
+      "rotary_wheel": "轉輪（舊版）",
+      "tray_open_front": "開口托盤",
+      "window_front": "前方視窗"
+    }
+  },
+  "placeholders": {
+    "auto": "（自動）",
+    "clientContext": "例如：桌面個人使用",
+    "dispenseTarget": "例如：每次抽 1 張",
+    "mechanismJustification": "為什麼這個機構符合你的需求",
+    "problemStatement": "例如：份量不一致；收納凌亂",
+    "storageTarget": "例如：150 張卡"
+  },
+  "readouts": {
+    "computedExternal": "計算外尺寸 ≈ W {{w}} × D {{d}} × H {{h}}（mm）",
+    "computedInternal": "計算內尺寸 ≈ W {{w}} × D {{d}} × H {{h}}（mm）",
+    "derivedExternal": "推導外尺寸：W {{w}} × D {{d}} × H {{h}}（mm）",
+    "derivedInternal": "推導內尺寸：W {{w}} × D {{d}} × H {{h}}（mm）",
+    "derivedOpenings": "關鍵開口（{{preset}}）：出料槽 W {{w}} × H {{h}}（mm）",
+    "jointRule": "接合規則：繪製槽深 = 厚度 + 間隙 − kerf = {{drawn}}mm。預期實際槽寬 ≈ 厚度 + 間隙 = {{final}}mm。"
+  },
+  "recs": {
+    "reason": {
+      "fallbackPrototype": "早期原型的簡單備案",
+      "flowingCounted": "適合計數出料（每轉一次一顆）",
+      "flowingPortions": "可控制份量（轉動一次出一份）",
+      "flowingTolerant": "更能容忍不規則形狀；適合第一次原型",
+      "stackingGrab": "製作簡單、取用快速",
+      "stackingMulti": "多分類收納與取用",
+      "stackingOne": "可控制一次一個的輸出",
+      "visibility": "視窗讓學生看見庫存"
+    },
+    "selectedTitle": "已選模板：",
+    "title": "前三名推薦"
+  },
+  "sections": {
+    "advanced": "進階",
+    "basic": "基本",
+    "exports": "匯出",
+    "fitTools": "配合工具（選填）",
+    "layout": "排版",
+    "layoutOptional": "排版（選填）",
+    "mechanismSettings": "機構設定",
+    "presetOptions": "預設選項",
+    "preview": "預覽",
+    "setup": "設定",
+    "studentSteps": "學生步驟"
+  },
+  "status": {
+    "done": "完成。",
+    "error": "錯誤：{{message}}",
+    "fixErrorsToExport": "請先修正阻擋匯出的錯誤。",
+    "generatingCalibration": "產生校正 SVG 中…",
+    "generatingSvg": "產生 SVG 中…",
+    "hover": "指向：{{name}}",
+    "initFailed": "初始化失敗：{{message}}",
+    "initializing": "初始化中…",
+    "loadingModule": "載入產生器模組…",
+    "loadingPyodide": "載入 Pyodide…",
+    "ready": "就緒。",
+    "readyFile": "就緒：{{filename}}"
+  },
+  "steps": {
+    "check1": "跑配合測試（選填）",
+    "check2": "切割它",
+    "check3": "選擇最合適的標籤",
+    "check4": "套用數值並重新產生最終 SVG",
+    "checklistTitle": "校正檢查清單",
+    "complete": "完成",
+    "incomplete": "未完成",
+    "step1": "步驟 1 — 客戶與情境",
+    "step2": "步驟 2 — 需求",
+    "step2Hint": "Choosing a mechanism will set the preset below.",
+    "step3": "步驟 3 — 機構選擇",
+    "step3Hint": "如果不知道刀縫（kerf），先跑配合測試（進階 → 配合工具），切割後選擇最合適的標籤。",
+    "step4": "步驟 4 — 自動定尺寸與檢視",
+    "step4Hint": "準備好後，按下「下載專案包（ZIP）」。",
+    "title": "學生模式（4 步驟）"
+  },
+  "warnings": {
+    "cardShoeFrontTooShort": "設計檢視：卡片出牌器前板高度偏低。風險：可能卡住／不好抽。修正：提高前板高度。",
+    "cardShoeFrontTooTall": "設計檢視：卡片出牌器前板高度偏高。風險：可能一次掉出多張。修正：降低前板高度。",
+    "clearanceLarge": "接合間隙看起來偏大，作品可能鬆動。",
+    "flowingBridgingRisk": "設計檢視：流動式物品有架橋／卡料風險。開口／漏斗可能太接近最大顆粒尺寸。修正：加大內部寬深、降低最大顆粒尺寸，或先用更保守（更鬆）的開口做原型。",
+    "kerfTooBig": "刀縫（kerf）大於或等於厚度，接合可能失效。",
+    "minTabs": "最少榫數小於 3，接合可能過弱或不對齊。",
+    "paddingTooSmall": "設計檢視：排版間距偏小。風險：零件可能重疊或切割不乾淨。修正：增加間距（Padding）。",
+    "rotaryPocketWallsThin": "設計檢視：轉輪口袋隔牆可能太薄。修正：減少口袋數或加大尺寸／增加厚度。",
+    "slotInvalid": "出料槽尺寸不合理或超出前板範圍。",
+    "tallWallsFlexRisk": "設計檢視：高牆配薄材料可能彎曲／變形。修正：增加厚度、增加榫數，或降低高度。",
+    "title": "警告",
+    "vagueClientContext": "需求檢查：客戶／情境有點模糊。請補上誰／在哪裡／怎麼用（例如：家中桌面個人使用）。",
+    "vagueDispenseTarget": "需求檢查：出料目標（細節）有點模糊。請補上『一次出料』的定義（例如：每轉一次 1 顆）。",
+    "vagueProblemStatement": "需求檢查：問題描述有點模糊。請描述可量測的痛點（卡料、凌亂、份量不一致、不好拿）。",
+    "vagueStorageTarget": "需求檢查：儲存目標沒有數字。請補上張數／顆數／克數／容量（例如：150 張卡）。"
   }
 }

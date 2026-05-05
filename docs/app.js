@@ -3,7 +3,7 @@
 
 import { loadPyodide } from "https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.mjs";
 
-const APP_VERSION = "0.7";
+const APP_VERSION = "0.8.0";
 const LANG_STORAGE_KEY = "cardboxgen.lang";
 
 let currentLang = "en";
@@ -707,13 +707,13 @@ async function init() {
   pyodide = await loadPyodide({});
 
   setStatusKey("status.loadingModule");
-  const resp = await fetch("./cardboxgen_v0_7_templates.py", { cache: "no-store" });
+  const resp = await fetch("./cardboxgen_bundle.py", { cache: "no-store" });
   if (!resp.ok) throw new Error(`Failed to load Python module: ${resp.status}`);
   const code = await resp.text();
 
   // Write into the virtual FS and import as a module so it doesn't run the CLI.
-  pyodide.FS.writeFile("cardboxgen_v0_7_templates.py", code);
-  await pyodide.runPythonAsync(`import importlib\ntmpl = importlib.import_module('cardboxgen_v0_7_templates')`);
+  pyodide.FS.writeFile("cardboxgen_bundle.py", code);
+  await pyodide.runPythonAsync(`import importlib\ntmpl = importlib.import_module('cardboxgen_bundle')`);
 
   els.btnGenerate.disabled = false;
   els.btnBundle.disabled = false;
@@ -990,7 +990,7 @@ async function generateSvg() {
 
   const resultJson = await pyodide.runPythonAsync(`
 import json
-from cardboxgen_v0_7_templates import generate_svg
+from cardboxgen_bundle import generate_svg
 
 params = json.loads(p_json)
 template_id = params.pop('template_id', None)
@@ -1311,8 +1311,8 @@ function buildProjectDocs(project, lang, dictForLang) {
     `| ${S.labels.dispense} | ${escapeMarkdown(dispTarget)} |\n` +
     `| ${S.labels.metrics} | ${escapeMarkdown(metricsLine)} |\n` +
     `| ${S.labels.thickness} | ${escapeMarkdown(String(project?.generator_params?.thickness ?? ""))} |\n` +
-    `| ${S.labels.kerf} | ${escapeMarkdown(String(project?.generator_params?.kerf_mm ?? ""))} |\n` +
-    `| ${S.labels.fit} | ${escapeMarkdown(String(project?.generator_params?.clearance_mm ?? ""))} |\n\n` +
+    `| ${S.labels.kerf} | ${escapeMarkdown(String(project?.generator_params?.kerf ?? ""))} |\n` +
+    `| ${S.labels.fit} | ${escapeMarkdown(String(project?.generator_params?.fit_clearance ?? ""))} |\n\n` +
     `${S.prompts.evidence}`;
 
   doc[FN.s01] =
@@ -1535,7 +1535,11 @@ async function downloadProjectPackZip() {
   zip.file("project_summary.md", buildProjectSummaryMarkdown(project));
   zip.file("assembly_guide.md", buildAssemblyGuideMarkdown(project));
   zip.file("bom.md", buildBomMarkdown(project));
-  zip.file("teacher_notes.md", buildTeacherNotesMarkdown(project));
+  zip.file("params.json", JSON.stringify(lastParams || {}, null, 2));
+  zip.file("metadata.json", JSON.stringify(lastMeta || {}, null, 2));
+  if (project?.ui?.studentMode) {
+    zip.file("teacher_notes.md", buildTeacherNotesMarkdown(project));
+  }
 
   const blob = await zip.generateAsync({ type: "blob" });
   const url = URL.createObjectURL(blob);
