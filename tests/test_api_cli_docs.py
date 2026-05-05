@@ -23,33 +23,65 @@ def test_legacy_alias_returns_deprecation_warning():
 
 
 def test_cli_smoke_module_and_wrapper(tmp_path):
-    out1 = tmp_path / "tray.svg"
-    out2 = tmp_path / "calibration.svg"
-    cmd1 = [
-        sys.executable,
-        "-m",
-        "cardboxgen",
-        "--preset",
+    root = Path(__file__).resolve().parents[1]
+    presets = [
         "tray_open_front",
-        "--inner-width",
-        "135",
-        "--inner-depth",
-        "90",
-        "--inner-height",
-        "80",
-        "--thickness",
-        "3",
-        "--kerf",
-        "0.2",
-        "--clearance",
-        "0.15",
-        "--out",
-        str(out1),
+        "dispenser_slot_front",
+        "window_front",
+        "box_with_lid",
+        "divider_rack",
+        "card_shoe",
+        "candy_machine_rotary_layered",
     ]
-    subprocess.run(cmd1, check=True, cwd=Path(__file__).resolve().parents[1])
-    subprocess.run([sys.executable, "cardboxgen_v0_1.py", "--calibration", "--thickness", "3", "--kerf", "0.2", "--out", str(out2)], check=True, cwd=Path(__file__).resolve().parents[1])
-    ET.parse(out1)
+    for preset in presets:
+        out = tmp_path / f"{preset}.svg"
+        cmd = [
+            sys.executable,
+            "-m",
+            "cardboxgen",
+            "--preset",
+            preset,
+            "--inner-width",
+            "135",
+            "--inner-depth",
+            "90",
+            "--inner-height",
+            "80",
+            "--thickness",
+            "3",
+            "--kerf",
+            "0.2",
+            "--clearance",
+            "0.15",
+            "--out",
+            str(out),
+        ]
+        subprocess.run(cmd, check=True, cwd=root)
+        ET.parse(out)
+
+    out2 = tmp_path / "calibration.svg"
+    subprocess.run([sys.executable, "cardboxgen_v0_1.py", "--calibration", "--thickness", "3", "--kerf", "0.2", "--out", str(out2)], check=True, cwd=root)
     ET.parse(out2)
+
+
+def test_examples_script_generates_all_supported_examples(tmp_path):
+    root = Path(__file__).resolve().parents[1]
+    sys.path.insert(0, str(root / "examples"))
+    from generate_examples import generate
+
+    generate(str(tmp_path))
+    expected = [
+        "tray_open_front.svg",
+        "dispenser_slot_front.svg",
+        "window_front.svg",
+        "box_with_lid.svg",
+        "divider_rack.svg",
+        "card_shoe.svg",
+        "candy_machine_rotary_layered.svg",
+        "calibration_mating_strips.svg",
+    ]
+    for filename in expected:
+        ET.parse(tmp_path / filename)
 
 
 def test_docs_bundle_is_fresh():
@@ -81,3 +113,22 @@ def test_web_app_version_matches_package():
     index_html = (root / "docs" / "index.html").read_text(encoding="utf-8")
     assert f'APP_VERSION = "{__version__}"' in app_js
     assert f"v{__version__}" in index_html
+
+
+def test_web_app_loads_checked_pyodide_bundle():
+    root = Path(__file__).resolve().parents[1]
+    app_js = (root / "docs" / "app.js").read_text(encoding="utf-8")
+    index_html = (root / "docs" / "index.html").read_text(encoding="utf-8")
+    assert "cardboxgen_bundle.py" in app_js
+    assert "cardboxgen_v0_7_templates.py" not in app_js
+    for preset in [
+        "tray_open_front",
+        "dispenser_slot_front",
+        "window_front",
+        "box_with_lid",
+        "divider_rack",
+        "card_shoe",
+        "candy_machine_rotary_layered",
+        "calibration",
+    ]:
+        assert f'value="{preset}"' in index_html

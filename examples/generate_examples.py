@@ -34,7 +34,35 @@ def generate(out_dir: str) -> None:
     }
     write_svg(out, "tray_open_front.svg", "tray_open_front", {**common, "scoop": True})
     write_svg(out, "dispenser_slot_front.svg", "dispenser_slot_front", {**common, "slot_width": 86, "slot_height": 18, "slot_y_from_bottom": 38})
+    write_svg(out, "window_front.svg", "window_front", {**common, "window_margin": 14})
     write_svg(out, "box_with_lid.svg", "box_with_lid", {**common, "lid": True, "lid_height": 30, "lid_clearance": 0.4})
+    write_svg(out, "divider_rack.svg", "divider_rack", {**common, "divider_count": 4})
+    write_svg(
+        out,
+        "card_shoe.svg",
+        "card_shoe",
+        {"card_w": 63, "card_h": 88, "card_t": 0.35, "capacity": 60, "thickness": 3, "kerf": 0.2, "fit_clearance": 0.15, "labels": True, "max_row_width": 340},
+    )
+    write_svg(
+        out,
+        "candy_machine_rotary_layered.svg",
+        "candy_machine_rotary_layered",
+        {
+            "max_piece": 18,
+            "irregular": False,
+            "hopper_h": 90,
+            "depth_layers_total": 8,
+            "wheel_layers": 3,
+            "screw_d": 3.2,
+            "screw_margin": 10,
+            "axle_d": 6,
+            "thickness": 3,
+            "kerf": 0.2,
+            "fit_clearance": 0.15,
+            "labels": True,
+            "max_row_width": 340,
+        },
+    )
     write_svg(
         out,
         "calibration_mating_strips.svg",

@@ -142,7 +142,11 @@ Generated files:
 
 - `examples/tray_open_front.svg`
 - `examples/dispenser_slot_front.svg`
+- `examples/window_front.svg`
 - `examples/box_with_lid.svg`
+- `examples/divider_rack.svg`
+- `examples/card_shoe.svg`
+- `examples/candy_machine_rotary_layered.svg`
 - `examples/calibration_mating_strips.svg`
 
 ## Tests
