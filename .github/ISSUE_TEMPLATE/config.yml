@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Live CardBoxGen app
+    url: https://sunnydesigntech.github.io/CardBoxGen/
+    about: Open the static browser app.
+  - name: Camera, QR, and Project Code help
+    url: https://sunnydesigntech.github.io/CardBoxGen/camera_qr_sharing.md
+    about: Troubleshoot camera permission and project handoff.

@@ -1,0 +1,60 @@
+name: Geometry or Fabrication Bug
+description: Report generated SVG parts that are unsafe, inconsistent, or do not assemble.
+title: "[geometry] "
+labels: ["geometry", "bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for mechanically wrong panels, bad joints, unsafe cutouts, validation mistakes, or assembly failures.
+  - type: dropdown
+    id: template
+    attributes:
+      label: Template
+      options:
+        - tray_open_front
+        - dispenser_slot_front
+        - window_front
+        - box_with_lid
+        - divider_rack
+        - card_shoe
+        - candy_machine_rotary_layered
+        - calibration
+        - other / legacy alias
+    validations:
+      required: true
+  - type: textarea
+    id: params
+    attributes:
+      label: Parameters
+      description: Paste CLI args, params.json, or the relevant dimensions.
+      placeholder: "inner_w=135, inner_d=90, inner_h=80, thickness=3, kerf=0.2, clearance=0.15"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should the generated parts do physically?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What was wrong with the generated SVG or fabricated assembly?
+    validations:
+      required: true
+  - type: textarea
+    id: files
+    attributes:
+      label: Attachments
+      description: Attach the SVG/project pack and photos or screenshots if available.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-checks
+      options:
+        - label: I measured actual material thickness with calipers.
+        - label: I cut or checked a calibration piece for this kerf/clearance.
+        - label: The web app or CLI did not show a blocking validation error.

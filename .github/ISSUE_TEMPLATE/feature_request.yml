@@ -1,0 +1,38 @@
+name: Feature Request
+description: Suggest a preset, export option, validation rule, documentation improvement, or web workflow.
+title: "[feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What workflow or fabrication problem should this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the behavior, UI, CLI, or geometry rule you want.
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Fabrication constraints
+      description: Material, thickness, kerf, clearance, machine, or classroom constraints that matter.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - generator geometry
+        - validation
+        - web app
+        - CLI/API
+        - documentation
+        - examples
+        - CI/release
+    validations:
+      required: true

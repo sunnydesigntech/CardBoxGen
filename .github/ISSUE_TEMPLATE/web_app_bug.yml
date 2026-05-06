@@ -1,0 +1,51 @@
+name: Web App Bug
+description: Report UI, Pyodide, export, i18n, camera, or project-handoff issues.
+title: "[web] "
+labels: ["web", "bug"]
+body:
+  - type: input
+    id: url
+    attributes:
+      label: URL
+      placeholder: "https://sunnydesigntech.github.io/CardBoxGen/"
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and OS
+      placeholder: "Chrome on macOS, Safari on iOS, Edge on Windows..."
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Open...\n2. Select...\n3. Click..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: console
+    attributes:
+      label: Console errors
+      description: Paste browser console errors if available.
+  - type: checkboxes
+    id: camera
+    attributes:
+      label: If this is a camera or QR issue
+      options:
+        - label: I tried opening the page directly in Safari or Chrome.
+        - label: I tried the `/exec/` entry point.
+        - label: Project Code import works as a fallback.

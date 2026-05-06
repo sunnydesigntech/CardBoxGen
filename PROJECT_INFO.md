@@ -88,3 +88,15 @@ This rebuilds `docs/cardboxgen_bundle.py` from the package. CI checks freshness 
 ```bash
 python tools/sync_docs.py --check
 ```
+
+## Repository Information
+
+GitHub-facing project information is maintained in the repo so the public page, issue flow, and wiki source stay reviewable:
+
+- `README.md`: landing page, quick start, architecture, presets, validation contract, CLI/API, web app, and release checklist.
+- `CONTRIBUTING.md`: contributor setup, geometry rules, web rules, and pull-request checklist.
+- `SUPPORT.md`: what to include in geometry, web, camera, and QR bug reports.
+- `SECURITY.md`: privacy and security reporting notes.
+- `.github/ISSUE_TEMPLATE/`: structured reports for geometry bugs, web bugs, and feature requests.
+- `.github/pull_request_template.md`: validation checklist for code changes.
+- `docs/wiki/*.md`: GitHub Wiki source pages kept under version control.

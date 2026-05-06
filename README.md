@@ -1,10 +1,60 @@
 # CardBoxGen
 
+![CI](https://github.com/sunnydesigntech/CardBoxGen/actions/workflows/static.yml/badge.svg)
+![GitHub Pages](https://github.com/sunnydesigntech/CardBoxGen/actions/workflows/pages.yml/badge.svg)
+![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
+![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB.svg)
+
 Current version: **v0.8.1**
 
 CardBoxGen generates millimeter SVG cut files for laser-cut card trays, boxes, dispensers, divider racks, card shoes, and a layered rotary dry-goods dispenser prototype. It runs as a Python CLI and as a static GitHub Pages app powered by Pyodide.
 
 Live app: <https://sunnydesigntech.github.io/CardBoxGen/>
+
+Direct classroom/execution entry: <https://sunnydesigntech.github.io/CardBoxGen/exec/>
+
+## What This Repo Provides
+
+- A Python generator package with deterministic geometry, validation, and SVG export.
+- A static browser app that runs the same Python API in Pyodide.
+- GitHub Pages deployment from `docs/`.
+- Checked example SVG files for every first-class template.
+- Test coverage for fabrication formulas, assembly edge pairing, panel corners, validation, CLI, docs sync, i18n, and web asset smoke checks.
+- Wiki-ready documentation sources in `docs/wiki/`.
+
+## Quick Start
+
+Use the live app when you only need a cut file:
+
+1. Open <https://sunnydesigntech.github.io/CardBoxGen/>.
+2. Pick a template.
+3. Enter measured material thickness, kerf, clearance, and dimensions.
+4. Check warnings/errors.
+5. Download the project pack.
+
+Use the CLI when you want repeatable generation:
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -m cardboxgen --preset tray_open_front --inner-width 135 --inner-depth 90 --inner-height 80 --thickness 3 --kerf 0.2 --clearance 0.15 --out tray.svg
+```
+
+Cut calibration first:
+
+```bash
+python -m cardboxgen --calibration --thickness 3 --kerf 0.2 --out calibration.svg
+```
+
+## Repository Status
+
+The active source of truth is the `cardboxgen/` Python package. The old root-level generator filenames are compatibility wrappers only. The web app loads the generated bundle `docs/cardboxgen_bundle.py`, which CI checks against the package source.
+
+Current production focus:
+
+- mechanically correct panel geometry for valid supported dimensions;
+- explicit blocking validation for impossible or unsafe dimensions;
+- reliable static-web deployment and project handoff without a backend;
+- clear documentation for calibration, kerf convention, and classroom use.
 
 ## Architecture
 
@@ -241,6 +291,21 @@ The CI workflow installs dev requirements, checks docs bundle freshness, runs te
 - [docs/fabrication_model.md](docs/fabrication_model.md): kerf, clearance, corner zones, and calibration model.
 - [docs/camera_qr_sharing.md](docs/camera_qr_sharing.md): camera permission, QR scanning, share links, and project/location codes.
 - [docs/wiki/](docs/wiki/): versioned source pages for the GitHub Wiki.
+- [CONTRIBUTING.md](CONTRIBUTING.md): development workflow and PR checklist.
+- [SUPPORT.md](SUPPORT.md): what to include in geometry and web bug reports.
+- [SECURITY.md](SECURITY.md): security and privacy reporting notes.
+
+## GitHub Repository Setup
+
+Recommended GitHub settings:
+
+- About description: browser-first Python/Pyodide SVG generator for laser-cut card trays, boxes, dispensers, mechanisms, and calibration fit tests.
+- Homepage: <https://sunnydesigntech.github.io/CardBoxGen/>
+- Topics: `laser-cutting`, `svg-generator`, `box-generator`, `finger-joints`, `pyodide`, `github-pages`, `cad`, `fabrication`, `python`.
+- Pages source: GitHub Actions.
+- Issues and Wiki enabled.
+
+The GitHub Wiki source pages are kept in `docs/wiki/` so they can be reviewed and versioned with the codebase.
 
 ## Release Checklist
 

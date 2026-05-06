@@ -14,8 +14,12 @@ Repository:
 ## Main Pages
 
 - [[Camera, QR, and Project Codes|Camera-QR-and-Project-Codes]]
+- [[Template Reference|Template-Reference]]
+- [[Validation and Testing|Validation-and-Testing]]
+- [[CLI and Python API|CLI-and-Python-API]]
 - [[Fabrication Model|Fabrication-Model]]
 - [[Running and Deployment|Running-and-Deployment]]
+- [[Contributing|Contributing]]
 
 ## Supported Templates
 
@@ -33,3 +37,11 @@ Repository:
 CardBoxGen works for validated supported dimensions and returns blocking validation errors for impossible or unsafe geometry. It does not claim every arbitrary dimension can become a physically correct box.
 
 The web app runs fully client-side. It loads Pyodide, imports the generated `docs/cardboxgen_bundle.py`, renders SVG inline, and exports a project pack ZIP.
+
+## Where to Start
+
+- Use the live app if you want an SVG cut file without installing Python.
+- Use the CLI if you want repeatable generation or scripted examples.
+- Read the fabrication model before cutting production material.
+- Cut calibration strips before a full box.
+- Open a geometry issue if a generated export is marked valid but cannot physically assemble.

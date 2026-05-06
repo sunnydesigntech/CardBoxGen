@@ -5,6 +5,7 @@
 - Added project handoff tools: copy share link, copy `CBG1:` project/location code, import code, and optional QR scanning.
 - Added camera-permission fallback handling so blocked QR scanning points users to direct Safari/Chrome access or project-code import.
 - Added `/exec/` redirect entry point and camera/QR troubleshooting documentation.
+- Added GitHub-facing repository documentation: contribution guide, support policy, security notes, PR template, issue forms, and expanded wiki source pages.
 - Added an explicit full-width kerf fabrication model with tested tab/slot width and depth compensation formulas.
 - Added `validate_template_params()` with normalized parameters, computed limits, structured field-level messages, and blocking/nonblocking severity.
 - Changed API and CLI behavior so impossible geometry returns a non-exportable diagnostic result instead of silently producing a cut file.

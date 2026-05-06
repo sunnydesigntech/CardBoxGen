@@ -176,3 +176,26 @@ def test_web_app_has_qr_camera_fallback_and_exec_entrypoint():
     assert "camera_qr_sharing.md" in docs_readme
     assert (root / "docs" / "wiki" / "Home.md").exists()
     assert (root / "docs" / "wiki" / "Camera-QR-and-Project-Codes.md").exists()
+
+
+def test_github_repository_docs_are_present():
+    root = Path(__file__).resolve().parents[1]
+    for rel in [
+        "CONTRIBUTING.md",
+        "SUPPORT.md",
+        "SECURITY.md",
+        ".github/pull_request_template.md",
+        ".github/ISSUE_TEMPLATE/geometry_bug.yml",
+        ".github/ISSUE_TEMPLATE/web_app_bug.yml",
+        ".github/ISSUE_TEMPLATE/feature_request.yml",
+        "docs/wiki/Template-Reference.md",
+        "docs/wiki/Validation-and-Testing.md",
+        "docs/wiki/CLI-and-Python-API.md",
+        "docs/wiki/Contributing.md",
+    ]:
+        assert (root / rel).exists(), rel
+
+    readme = (root / "README.md").read_text(encoding="utf-8")
+    assert "GitHub Repository Setup" in readme
+    assert "CONTRIBUTING.md" in readme
+    assert "SUPPORT.md" in readme

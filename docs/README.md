@@ -25,7 +25,18 @@ The app also supports project handoff without a backend:
 
 If camera permission is blocked, use the project code fallback. See `camera_qr_sharing.md`.
 
-The `wiki/` folder contains wiki-ready Markdown pages. If the GitHub wiki repository has not been initialized yet, create its first page in the GitHub UI, then copy or push these pages to the wiki repository.
+The `wiki/` folder contains wiki-ready Markdown pages:
+
+- `Home.md`
+- `Template-Reference.md`
+- `Validation-and-Testing.md`
+- `CLI-and-Python-API.md`
+- `Fabrication-Model.md`
+- `Camera-QR-and-Project-Codes.md`
+- `Running-and-Deployment.md`
+- `Contributing.md`
+
+If the GitHub wiki repository has not been initialized yet, create its first page in the GitHub UI, then copy or push these pages to the wiki repository.
 
 ## Local Preview
 
