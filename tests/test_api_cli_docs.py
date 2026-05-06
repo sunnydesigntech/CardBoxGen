@@ -158,3 +158,21 @@ def test_web_app_loads_checked_pyodide_bundle():
         "calibration",
     ]:
         assert f'value="{preset}"' in index_html
+
+
+def test_web_app_has_qr_camera_fallback_and_exec_entrypoint():
+    root = Path(__file__).resolve().parents[1]
+    app_js = (root / "docs" / "app.js").read_text(encoding="utf-8")
+    index_html = (root / "docs" / "index.html").read_text(encoding="utf-8")
+    docs_readme = (root / "docs" / "README.md").read_text(encoding="utf-8")
+    assert 'id="copyShareLink"' in index_html
+    assert 'id="projectCodeInput"' in index_html
+    assert 'id="scanQr"' in index_html
+    assert "navigator.mediaDevices.getUserMedia" in app_js
+    assert "BarcodeDetector" in app_js
+    assert "status.cameraBlocked" in app_js
+    assert "CBG1:" in app_js
+    assert (root / "docs" / "exec" / "index.html").exists()
+    assert "camera_qr_sharing.md" in docs_readme
+    assert (root / "docs" / "wiki" / "Home.md").exists()
+    assert (root / "docs" / "wiki" / "Camera-QR-and-Project-Codes.md").exists()

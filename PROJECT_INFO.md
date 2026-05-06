@@ -64,6 +64,15 @@ The web app includes a student mode for mechanism selection and project-pack exp
 - `metadata.json`
 - `teacher_notes.md` when student mode is active
 
+## Project Handoff and Camera Notes
+
+The web app can hand off projects with share links, pasteable `CBG1:` project/location codes, and optional QR scanning. QR scanning uses browser camera APIs and only works when the page is opened in a browser that grants camera permission and supports QR decoding. If camera access is blocked, the project code import path remains the reliable fallback.
+
+The direct Pages entry point is:
+
+- <https://sunnydesigntech.github.io/CardBoxGen/>
+- <https://sunnydesigntech.github.io/CardBoxGen/exec/> for execution/classroom launchers
+
 Mechanism templates are mechanically plausible starting points, not certified manufactured products. The candy machine preset is for dry flowing solids only and should be prototyped before classroom or public use.
 
 ## Generated Docs Bundle

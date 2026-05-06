@@ -525,6 +525,32 @@ input[type="checkbox"] {
   border-color: var(--primary-dark);
 }
 
+.handoffActions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.cameraPanel {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.cameraPanel[hidden] {
+  display: none;
+}
+
+.cameraPanel video {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #020617;
+  object-fit: cover;
+}
+
 .large {
   width: 100%;
 }

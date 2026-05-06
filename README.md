@@ -183,6 +183,21 @@ Open <http://localhost:8000/docs/>.
 
 The app is static and GitHub Pages friendly. It loads Pyodide, imports `docs/cardboxgen_bundle.py`, renders SVG inline, supports preview zoom/pan/layer toggles, displays validation messages and fit-model values, and exports a ZIP with `cut.svg`, project docs, `params.json`, and `metadata.json`.
 
+## Project Handoff, QR, and Camera Access
+
+The web app includes a Project handoff panel:
+
+- Copy share link: creates a URL containing the current project configuration.
+- Copy project code: creates a pasteable `CBG1:` code for the same project.
+- Import code: accepts a share link or project/location code.
+- Scan QR: optional camera-based QR import when the browser permits camera access.
+
+Camera access cannot be forced by CardBoxGen. If QR scanning is blocked in an embedded browser, open the live app directly in Safari/Chrome or use the pasteable project code. The `/exec/` entry point redirects to the app for classroom/execution launchers:
+
+<https://sunnydesigntech.github.io/CardBoxGen/exec/>
+
+See [docs/camera_qr_sharing.md](docs/camera_qr_sharing.md) for permission troubleshooting and privacy notes.
+
 ## Examples
 
 Regenerate checked examples:
@@ -219,6 +234,13 @@ The test suite covers fabrication formulas, finger planning, shared edge-pair me
 GitHub Actions deploys `docs/` to Pages. In repository settings, set Pages source to **GitHub Actions**.
 
 The CI workflow installs dev requirements, checks docs bundle freshness, runs tests, runs the slow geometry sweep, regenerates examples, and exercises all first-class CLI presets.
+
+## Documentation Map
+
+- [docs/README.md](docs/README.md): GitHub Pages and static app operations.
+- [docs/fabrication_model.md](docs/fabrication_model.md): kerf, clearance, corner zones, and calibration model.
+- [docs/camera_qr_sharing.md](docs/camera_qr_sharing.md): camera permission, QR scanning, share links, and project/location codes.
+- [docs/wiki/](docs/wiki/): versioned source pages for the GitHub Wiki.
 
 ## Release Checklist
 

@@ -503,6 +503,25 @@
           </ul>
         </section>
 
+        <section class="packCard handoffCard">
+          <h3 data-i18n="sections.projectHandoff">Project handoff</h3>
+          <div class="handoffActions">
+            <button id="copyShareLink" type="button" class="toolBtn" data-i18n="actions.copyShareLink">Copy share link</button>
+            <button id="copyProjectCode" type="button" class="toolBtn" data-i18n="actions.copyProjectCode">Copy project code</button>
+            <button id="scanQr" type="button" class="toolBtn" data-i18n="actions.scanQr">Scan QR</button>
+          </div>
+          <div class="row">
+            <label for="projectCodeInput"><span data-i18n="labels.projectCode">Project / location code</span></label>
+            <textarea id="projectCodeInput" rows="3" data-i18n-placeholder="placeholders.projectCode" placeholder="Paste a share link or project code"></textarea>
+          </div>
+          <button id="importProjectCode" type="button" class="toolBtn large" data-i18n="actions.importProjectCode">Import code</button>
+          <div id="cameraPanel" class="cameraPanel" hidden>
+            <video id="qrVideo" playsinline muted></video>
+            <button id="stopQr" type="button" class="toolBtn large" data-i18n="actions.stopCamera">Stop camera</button>
+          </div>
+          <p id="shareStatus" class="hint" aria-live="polite"></p>
+        </section>
+
         <div class="actions">
           <button id="btnGenerate" class="toolBtn large" disabled data-i18n="status.loadingPyodide">Loading Python…</button>
           <button id="btnBundle" class="primaryBtn large" disabled data-i18n="actions.projectPack">Download project pack (ZIP)</button>

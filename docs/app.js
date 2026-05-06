@@ -176,6 +176,15 @@ const els = {
   exportHint: document.getElementById("exportHint"),
   preview: document.getElementById("preview"),
   warnings: document.getElementById("warnings"),
+  copyShareLink: document.getElementById("copyShareLink"),
+  copyProjectCode: document.getElementById("copyProjectCode"),
+  scanQr: document.getElementById("scanQr"),
+  stopQr: document.getElementById("stopQr"),
+  importProjectCode: document.getElementById("importProjectCode"),
+  projectCodeInput: document.getElementById("projectCodeInput"),
+  cameraPanel: document.getElementById("cameraPanel"),
+  qrVideo: document.getElementById("qrVideo"),
+  shareStatus: document.getElementById("shareStatus"),
 
   // v0.6 Step 4 — Reasoning + export
   reasoningInternal: document.getElementById("reasoningInternal"),
@@ -255,6 +264,8 @@ let lastRenderedTemplateId = null;
 let lastDerived = null;
 let lastAutoMechanism = null;
 let studentMechanismManuallyChosen = false;
+let qrStream = null;
+let qrScanActive = false;
 
 const FIT_PRESETS = [0.0, 0.1, 0.2];
 
@@ -1133,7 +1144,157 @@ function buildShareLink(project) {
   const url = new URL(window.location.href);
   url.searchParams.set("cfg", base64EncodeUtf8(JSON.stringify(project)));
   url.searchParams.set("lang", project?.language ?? currentLang);
+  url.hash = "";
   return url.toString();
+}
+
+function buildProjectCode(project) {
+  return `CBG1:${base64EncodeUtf8(JSON.stringify(project))}`;
+}
+
+function normalizeProjectCode(input) {
+  const text = String(input || "").trim();
+  if (!text) throw new Error(t("status.importEmpty"));
+  try {
+    const url = new URL(text);
+    const cfg = url.searchParams.get("cfg");
+    if (cfg) return cfg;
+  } catch {
+    // Not a URL; continue with code parsing.
+  }
+  if (text.startsWith("CBG1:")) return text.slice(5).trim();
+  return text;
+}
+
+function parseProjectImport(input) {
+  const normalized = normalizeProjectCode(input);
+  try {
+    return JSON.parse(normalized);
+  } catch {
+    const json = base64DecodeUtf8(normalized);
+    return JSON.parse(json);
+  }
+}
+
+function setShareStatusKey(key, vars = null) {
+  if (els.shareStatus) els.shareStatus.textContent = t(key, vars);
+}
+
+async function writeTextToClipboard(text) {
+  if (navigator.clipboard?.writeText && window.isSecureContext) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+  const area = document.createElement("textarea");
+  area.value = text;
+  area.setAttribute("readonly", "");
+  area.style.position = "fixed";
+  area.style.left = "-9999px";
+  document.body.appendChild(area);
+  area.select();
+  document.execCommand("copy");
+  area.remove();
+}
+
+async function copyShareLink() {
+  const project = collectProjectConfig();
+  const link = buildShareLink(project);
+  if (els.projectCodeInput) els.projectCodeInput.value = link;
+  await writeTextToClipboard(link);
+  setShareStatusKey("status.copiedShareLink");
+}
+
+async function copyProjectCode() {
+  const project = collectProjectConfig();
+  const code = buildProjectCode(project);
+  if (els.projectCodeInput) els.projectCodeInput.value = code;
+  await writeTextToClipboard(code);
+  setShareStatusKey("status.copiedProjectCode");
+}
+
+async function importProjectFromText(input) {
+  const project = parseProjectImport(input);
+  applyProjectToUi(project);
+  computeDerived();
+  rebuildMechanismRecommendations();
+  updateStepBadges();
+  if (pyodide) await generateSvg();
+  setShareStatusKey("status.importedProject");
+}
+
+async function importProjectCode() {
+  try {
+    await importProjectFromText(els.projectCodeInput?.value || "");
+  } catch (err) {
+    setShareStatusKey("status.importFailed", { message: err?.message || err });
+  }
+}
+
+function stopQrScanner() {
+  qrScanActive = false;
+  if (qrStream) {
+    for (const track of qrStream.getTracks()) track.stop();
+  }
+  qrStream = null;
+  if (els.qrVideo) els.qrVideo.srcObject = null;
+  if (els.cameraPanel) els.cameraPanel.hidden = true;
+}
+
+async function scanQrCode() {
+  stopQrScanner();
+  if (!window.isSecureContext) {
+    setShareStatusKey("status.cameraNeedsSecure");
+    return;
+  }
+  if (!navigator.mediaDevices?.getUserMedia) {
+    setShareStatusKey("status.cameraUnsupported");
+    return;
+  }
+  if (!("BarcodeDetector" in window)) {
+    setShareStatusKey("status.qrUnsupported");
+    return;
+  }
+
+  setShareStatusKey("status.cameraStarting");
+  try {
+    qrStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+    if (!els.qrVideo) throw new Error("QR video element missing");
+    els.cameraPanel.hidden = false;
+    els.qrVideo.srcObject = qrStream;
+    await els.qrVideo.play();
+    const detector = new BarcodeDetector({ formats: ["qr_code"] });
+    qrScanActive = true;
+    setShareStatusKey("status.cameraScanning");
+
+    const scanLoop = async () => {
+      if (!qrScanActive || !els.qrVideo || els.qrVideo.readyState < 2) {
+        if (qrScanActive) requestAnimationFrame(scanLoop);
+        return;
+      }
+      try {
+        const codes = await detector.detect(els.qrVideo);
+        const raw = codes?.find((code) => code.rawValue)?.rawValue;
+        if (raw) {
+          stopQrScanner();
+          if (els.projectCodeInput) els.projectCodeInput.value = raw;
+          await importProjectFromText(raw);
+          return;
+        }
+      } catch {
+        // Keep scanning; transient decode failures are normal while the camera moves.
+      }
+      if (qrScanActive) requestAnimationFrame(scanLoop);
+    };
+    requestAnimationFrame(scanLoop);
+  } catch (err) {
+    stopQrScanner();
+    const name = String(err?.name || "");
+    if (name === "NotAllowedError" || name === "SecurityError") {
+      setShareStatusKey("status.cameraBlocked");
+      return;
+    }
+    setShareStatusKey("status.cameraFailed", { message: err?.message || err });
+  }
 }
 
 function getDocStrings(lang) {
@@ -2315,6 +2476,22 @@ els.fitView?.addEventListener("click", () => {
 
 els.showCut?.addEventListener("change", applyLayerToggles);
 els.showLabels?.addEventListener("change", applyLayerToggles);
+els.copyShareLink?.addEventListener("click", () => {
+  copyShareLink().catch((err) => setShareStatusKey("status.copyFailed", { message: err?.message || err }));
+});
+els.copyProjectCode?.addEventListener("click", () => {
+  copyProjectCode().catch((err) => setShareStatusKey("status.copyFailed", { message: err?.message || err }));
+});
+els.importProjectCode?.addEventListener("click", () => {
+  importProjectCode().catch((err) => setShareStatusKey("status.importFailed", { message: err?.message || err }));
+});
+els.scanQr?.addEventListener("click", () => {
+  scanQrCode().catch((err) => setShareStatusKey("status.cameraFailed", { message: err?.message || err }));
+});
+els.stopQr?.addEventListener("click", () => {
+  stopQrScanner();
+  setShareStatusKey("status.cameraStopped");
+});
 
 let panState = null;
 els.preview?.addEventListener("pointerdown", (e) => {
