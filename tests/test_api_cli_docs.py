@@ -1,4 +1,5 @@
 import json
+import re
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
@@ -108,6 +109,27 @@ def test_i18n_keys_and_versions_match():
     key_sets = [flat(payload) for payload in payloads]
     assert all(keys == key_sets[0] for keys in key_sets)
     assert all(payload["app"]["version"] == f"v{__version__}" for payload in payloads)
+
+
+def test_web_app_i18n_references_exist():
+    root = Path(__file__).resolve().parents[1]
+    payload = json.loads((root / "docs" / "i18n" / "en.json").read_text(encoding="utf-8"))
+
+    def flat(obj, prefix=""):
+        if isinstance(obj, dict):
+            out = set()
+            for key, value in obj.items():
+                out |= flat(value, f"{prefix}.{key}" if prefix else key)
+            return out
+        return {prefix}
+
+    keys = flat(payload)
+    app_js = (root / "docs" / "app.js").read_text(encoding="utf-8")
+    index_html = (root / "docs" / "index.html").read_text(encoding="utf-8")
+    js_refs = {m.group(1) for m in re.finditer(r"(?<![\w.])t\(\s*[\"']([^\"']+)[\"']", app_js)}
+    html_refs = set(re.findall(r'data-i18n(?:-placeholder)?="([^"]+)"', index_html))
+    missing = sorted((js_refs | html_refs) - keys)
+    assert missing == []
 
 
 def test_web_app_version_matches_package():

@@ -27,6 +27,26 @@ def test_unbalanced_kerf_clearance_combo_is_blocking():
     assert any(message.code == "FIT_COMPENSATION_UNBALANCED" for message in validation.messages)
 
 
+def test_reserved_corner_zone_blocks_impossible_joint_span():
+    validation = validate_template_params(
+        "tray_open_front",
+        {
+            "inner_w": 42,
+            "inner_d": 42,
+            "inner_h": 35,
+            "front_h": 18,
+            "thickness": 6,
+            "kerf": 0.2,
+            "fit_clearance": 0.15,
+            "scoop": False,
+        },
+    )
+    assert validation.blocking
+    assert any(message.code == "JOINT_USABLE_SPAN_TOO_SHORT" and message.field == "front_h" for message in validation.messages)
+    assert validation.computed_limits["corner_clearance_mm"] > 0
+    assert validation.computed_limits["front_height_usable_joint_span"] < validation.computed_limits["front_height_minimum_usable_joint_span"]
+
+
 def test_cli_blocks_invalid_export_without_allow_flag(tmp_path):
     out = tmp_path / "bad.svg"
     proc = subprocess.run(

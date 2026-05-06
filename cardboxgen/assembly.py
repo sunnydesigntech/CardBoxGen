@@ -233,10 +233,10 @@ def make_rectangular_box_graph(
         return EdgeRef(name(panel), edge)
 
     margin = max(0.0, float(joint_margin))
-    full_w = max(0.1, outer_w - 2 * margin)
-    full_d = max(0.1, outer_d - 2 * margin)
-    full_h = max(0.1, wall_h - 2 * margin)
-    front_h = max(0.1, front_panel_h - 2 * margin)
+    full_w = outer_w - 2 * margin
+    full_d = outer_d - 2 * margin
+    full_h = wall_h - 2 * margin
+    front_h = front_panel_h - 2 * margin
 
     def binding(
         pair_id: str,

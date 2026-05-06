@@ -167,6 +167,75 @@ def _box_dimensions(params: Dict[str, Any], common: Dict[str, Any], messages: Li
     return {"inner_w": w, "inner_d": d, "inner_h": h}
 
 
+def _target_finger_width(norm: Dict[str, Any]) -> float:
+    return float(norm["finger_w"]) if norm["finger_w"] is not None else max(10.0, 3.0 * float(norm["thickness"]))
+
+
+def _required_corner_clearance(norm: Dict[str, Any]) -> float:
+    """Required no-finger span from every panel corner.
+
+    This mirrors the production panel composer: an edge may only leave the
+    nominal panel boundary after both the reserved corner zone and the maximum
+    joint normal depth. If the remaining usable span cannot fit the requested
+    minimum fingers, validation must block instead of shrinking the clearance.
+    """
+
+    t = float(norm["thickness"])
+    kerf = float(norm["kerf"])
+    clearance = float(norm["fit_clearance"])
+    target = _target_finger_width(norm)
+    tab_depth = drawn_tab_depth_for_target(t, kerf)
+    slot_depth = drawn_slot_depth_for_target(t + clearance, kerf)
+    base = max(t, target / 2.0, 2.0 * kerf)
+    return base + max(tab_depth, slot_depth)
+
+
+def _validate_joint_span(
+    *,
+    span_name: str,
+    field: str,
+    length: float,
+    norm: Dict[str, Any],
+    messages: List[WarningMsg],
+    limits: Dict[str, Any],
+) -> None:
+    corner = float(limits["corner_clearance_mm"])
+    usable = float(length) - 2.0 * corner
+    min_pitch = max(float(norm["thickness"]), float(norm["min_feature_width"]))
+    min_usable = int(norm["min_fingers"]) * min_pitch
+    limits[f"{span_name}_joint_length"] = length
+    limits[f"{span_name}_usable_joint_span"] = usable
+    limits[f"{span_name}_minimum_usable_joint_span"] = min_usable
+    if usable < min_usable:
+        required_length = 2.0 * corner + min_usable
+        messages.append(
+            _msg(
+                "error",
+                "JOINT_USABLE_SPAN_TOO_SHORT",
+                f"{span_name} joint span has only {usable:.1f} mm usable length after reserving {corner:.1f} mm at each corner.",
+                f"Increase {field} so this panel edge is at least {required_length:.1f} mm long, reduce material thickness, or reduce target finger width.",
+                field,
+            )
+        )
+        return
+
+    target = _target_finger_width(norm)
+    count = compute_finger_count(usable, target, min_fingers=norm["min_fingers"])
+    pitch = usable / max(1, count)
+    limits[f"{span_name}_finger_count"] = count
+    limits[f"{span_name}_finger_pitch"] = pitch
+    if pitch < min_pitch:
+        messages.append(
+            _msg(
+                "error",
+                "FINGER_PITCH_TOO_SMALL",
+                f"{span_name} finger pitch {pitch:.2f} mm is below the {min_pitch:.2f} mm minimum feature width.",
+                f"Increase {field}, reduce target finger width, or reduce min_fingers.",
+                "finger_w",
+            )
+        )
+
+
 def _validate_box_domain(tid: str, norm: Dict[str, Any], messages: List[WarningMsg], limits: Dict[str, Any]) -> None:
     t = norm["thickness"]
     min_web = norm["min_web_mm"]
@@ -192,12 +261,12 @@ def _validate_box_domain(tid: str, norm: Dict[str, Any], messages: List[WarningM
     outer_d = norm["inner_d"] + 2 * t
     wall_h = norm["inner_h"] + t
     limits.update({"outer_w": outer_w, "outer_d": outer_d, "wall_h": wall_h})
-    target = norm["finger_w"] if norm["finger_w"] is not None else max(10.0, 3.0 * t)
-    for edge_name, length in (("width", outer_w), ("depth", outer_d), ("height", wall_h)):
-        count = compute_finger_count(length, target, min_fingers=norm["min_fingers"])
-        pitch = length / max(1, count)
-        if pitch < max(t, min_feature):
-            messages.append(_msg("error", "FINGER_PITCH_TOO_SMALL", f"{edge_name} edge pitch {pitch:.2f} mm is below the minimum feature width.", "Increase dimensions or target finger width.", "finger_w"))
+    corner = _required_corner_clearance(norm)
+    limits["corner_clearance_mm"] = corner
+    limits["corner_clearance_rule"] = "max(thickness, target_finger_w/2, 2*kerf) + max(drawn_tab_depth, drawn_slot_depth)"
+    _validate_joint_span(span_name="width", field="inner_w", length=outer_w, norm=norm, messages=messages, limits=limits)
+    _validate_joint_span(span_name="depth", field="inner_d", length=outer_d, norm=norm, messages=messages, limits=limits)
+    _validate_joint_span(span_name="height", field="inner_h", length=wall_h, norm=norm, messages=messages, limits=limits)
 
     largest_part = max(outer_w, outer_d, wall_h)
     if norm["max_row_width"] < largest_part + 2 * norm["margin"]:
@@ -208,9 +277,29 @@ def _validate_tray(norm: Dict[str, Any], messages: List[WarningMsg], limits: Dic
     t = norm["thickness"]
     front_h = norm["front_h"] if norm.get("front_h") is not None else max(t * 2.0, min(norm["inner_h"] * 0.45, 32.0))
     min_front = max(2 * t, norm["min_web_mm"] + t)
+    corner = float(limits["corner_clearance_mm"])
+    min_pitch = max(float(norm["thickness"]), float(norm["min_feature_width"]))
+    min_joint_panel_h = 2.0 * corner + int(norm["min_fingers"]) * min_pitch
+    min_joint_front_h = max(min_front, min_joint_panel_h - t)
+    if not norm.get("_front_h_provided") and front_h < min_joint_front_h <= norm["inner_h"]:
+        front_h = min_joint_front_h
+        messages.append(
+            _msg(
+                "info",
+                "FRONT_HEIGHT_NORMALIZED",
+                "Default front height was raised so the lowered front can fit clean corner zones and the minimum finger count.",
+                f"Using front_h={front_h:.1f} mm. Set front_h explicitly to override.",
+                "front_h",
+            )
+        )
+    norm["front_h"] = front_h
+    front_panel_h = front_h + t
     limits["min_front_h"] = min_front
+    limits["min_front_h_for_joints"] = min_joint_front_h
+    limits["front_panel_h"] = front_panel_h
     if front_h < min_front:
         messages.append(_msg("error", "FRONT_HEIGHT_TOO_LOW", f"Front height {front_h:g} mm cannot support side/front joints.", f"Increase front_h to at least {min_front:.1f} mm.", "front_h"))
+    _validate_joint_span(span_name="front_height", field="front_h", length=front_panel_h, norm=norm, messages=messages, limits=limits)
     if norm["scoop"]:
         max_depth = front_h - t
         if norm["scoop_depth"] >= max_depth:
@@ -355,6 +444,7 @@ def validate_template_params(template_id: str, params: Dict[str, Any]) -> Valida
         norm.update(
             {
                 "front_h": _maybe_num(params, "front_h", "front_height"),
+                "_front_h_provided": any(key in params and params[key] not in (None, "") for key in ("front_h", "front_height")),
                 "scoop": _bool(params, "scoop", default=True),
                 "scoop_r": _num(params, "scoop_r", "scoop_radius", default=22.0),
                 "scoop_depth": _num(params, "scoop_depth", default=16.0),

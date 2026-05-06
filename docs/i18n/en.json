@@ -1157,6 +1157,7 @@
     "calStudent": "Student (tight/normal/loose)",
     "capacityCards": "Capacity (cards)",
     "cardHeight": "Card height (mm)",
+    "cardThickness": "Card thickness (mm)",
     "cardWidth": "Card width (mm)",
     "clearance": "Joint clearance (mm)",
     "clientContext": "Client & context",
@@ -1199,6 +1200,7 @@
     "pocketCount": "Pocket count",
     "preset": "Preset",
     "problemStatement": "Problem statement",
+    "rampAngle": "Ramp angle (degrees)",
     "rampCount": "Ramp count",
     "scoop": "Scoop (tray_open_front)",
     "scoopDepth": "Scoop depth (mm)",
@@ -1214,6 +1216,7 @@
     "successMetrics": "Success metrics (pick at least 2)",
     "tabWidth": "Tab width (mm)",
     "thickness": "Thickness (mm)",
+    "windowMargin": "Window margin (mm)",
     "wheelLayers": "Wheel layers"
   },
   "mode": {
@@ -1333,6 +1336,8 @@
     "rotaryPocketWallsThin": "Design review: Rotary wheel pocket walls may be too thin. Fix: reduce pocket count or increase overall size/thickness.",
     "slotInvalid": "Slot dimensions are invalid or exceed the front panel.",
     "tallWallsFlexRisk": "Design review: Tall walls with thin material can flex/warp. Fix: increase thickness, increase tab count, or reduce height.",
+    "blocking": "Fix these errors before export.",
+    "fix": "Fix",
     "title": "Warnings",
     "vagueClientContext": "Requirements check: Client & context looks vague. Add who/where/how it will be used (e.g., ‘personal desk use at home’).",
     "vagueDispenseTarget": "Requirements check: Dispense target detail looks vague. Add what ‘one dispense’ means (e.g., ‘1 candy per turn’).",

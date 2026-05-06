@@ -21,7 +21,8 @@
     "inner_w": 12.0,
     "inner_d": 12.0,
     "inner_h": 8.0,
-    "front_h": null,
+    "front_h": 6.0,
+    "_front_h_provided": false,
     "scoop": true,
     "scoop_r": 22.0,
     "scoop_depth": 2.5,
@@ -61,6 +62,34 @@
       "field": "inner_h"
     },
     {
+      "severity": "error",
+      "code": "JOINT_USABLE_SPAN_TOO_SHORT",
+      "message": "width joint span has only 1.6 mm usable length after reserving 8.2 mm at each corner.",
+      "fix": "Increase inner_w so this panel edge is at least 25.4 mm long, reduce material thickness, or reduce target finger width.",
+      "field": "inner_w"
+    },
+    {
+      "severity": "error",
+      "code": "JOINT_USABLE_SPAN_TOO_SHORT",
+      "message": "depth joint span has only 1.6 mm usable length after reserving 8.2 mm at each corner.",
+      "fix": "Increase inner_d so this panel edge is at least 25.4 mm long, reduce material thickness, or reduce target finger width.",
+      "field": "inner_d"
+    },
+    {
+      "severity": "error",
+      "code": "JOINT_USABLE_SPAN_TOO_SHORT",
+      "message": "height joint span has only -5.4 mm usable length after reserving 8.2 mm at each corner.",
+      "fix": "Increase inner_h so this panel edge is at least 25.4 mm long, reduce material thickness, or reduce target finger width.",
+      "field": "inner_h"
+    },
+    {
+      "severity": "error",
+      "code": "JOINT_USABLE_SPAN_TOO_SHORT",
+      "message": "front_height joint span has only -7.4 mm usable length after reserving 8.2 mm at each corner.",
+      "fix": "Increase front_h so this panel edge is at least 25.4 mm long, reduce material thickness, or reduce target finger width.",
+      "field": "front_h"
+    },
+    {
       "severity": "info",
       "code": "SCOOP_DEPTH_NORMALIZED",
       "message": "Default scoop depth was reduced to preserve front material.",
@@ -87,7 +116,23 @@
     "outer_w": 18.0,
     "outer_d": 18.0,
     "wall_h": 11.0,
+    "corner_clearance_mm": 8.2,
+    "corner_clearance_rule": "max(thickness, target_finger_w/2, 2*kerf) + max(drawn_tab_depth, drawn_slot_depth)",
+    "width_joint_length": 18.0,
+    "width_usable_joint_span": 1.6000000000000014,
+    "width_minimum_usable_joint_span": 9.0,
+    "depth_joint_length": 18.0,
+    "depth_usable_joint_span": 1.6000000000000014,
+    "depth_minimum_usable_joint_span": 9.0,
+    "height_joint_length": 11.0,
+    "height_usable_joint_span": -5.399999999999999,
+    "height_minimum_usable_joint_span": 9.0,
     "min_front_h": 6.0,
+    "min_front_h_for_joints": 22.4,
+    "front_panel_h": 9.0,
+    "front_height_joint_length": 9.0,
+    "front_height_usable_joint_span": -7.399999999999999,
+    "front_height_minimum_usable_joint_span": 9.0,
     "fit_model": {
       "target_final_tab_depth": 3.0,
       "target_final_slot_depth": 3.15,

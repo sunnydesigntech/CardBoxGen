@@ -84,6 +84,19 @@ For box-like presets, inner dimensions are the source of truth. The nominal mode
 
 The generated metadata records the internal and external dimensions, the shared edge-pair plan ids, tab masks, drawn widths, final-width estimates, and fit-model limits.
 
+## Corner and Edge Composition
+
+Fingered edges do not start at panel corners. Each panel edge reserves a clean no-finger zone from both ends:
+
+```text
+corner_clearance = max(thickness, target_finger_width / 2, 2 * kerf) + max(drawn_tab_depth, drawn_slot_depth)
+usable_joint_span = edge_length - 2 * corner_clearance
+```
+
+Finger plans are distributed only across `usable_joint_span`. If that span cannot fit the requested odd minimum finger count at or above the minimum feature width, validation returns `JOINT_USABLE_SPAN_TOO_SHORT` and export is blocked. This prevents corner artifacts caused by two adjacent finger profiles overlapping at the same panel corner.
+
+For omitted tray front height, CardBoxGen may raise the default lowered front to the minimum safe joint height and reports `FRONT_HEIGHT_NORMALIZED`. If the user explicitly provides an unsafe front height, generation is blocked instead of silently changing it.
+
 ## Laser Cut Path Model
 
 The SVG writer emits:
@@ -118,6 +131,7 @@ CardBoxGen rejects impossible or unsafe geometry when it can detect it:
 - too-small internal dimensions;
 - even or tiny finger counts;
 - finger pitch below minimum feature width;
+- joint usable spans too short after reserved corner zones;
 - unsafe window/slot margins;
 - divider bays that are too narrow;
 - screw holes too close to edges;

@@ -5,7 +5,8 @@
 - Added an explicit full-width kerf fabrication model with tested tab/slot width and depth compensation formulas.
 - Added `validate_template_params()` with normalized parameters, computed limits, structured field-level messages, and blocking/nonblocking severity.
 - Changed API and CLI behavior so impossible geometry returns a non-exportable diagnostic result instead of silently producing a cut file.
-- Added corner-relief handling around adjacent fingered edges to avoid impossible overlapping finger geometry.
+- Added reserved no-finger corner zones and span-aware validation so adjacent fingered edges cannot overlap into square corner artifacts.
+- Added transparent default tray-front height normalization when the omitted default would be too short for valid side joints.
 - Added assembly-oracle, invalid-dimension, fabrication-model, property, and slow deterministic geometry tests.
 - Expanded calibration output with width-fit slots, depth-fit notches, and a known-size reference rectangle.
 - Updated the web app to display Python-computed fit-model values and keep export disabled for blocking errors.

@@ -1157,6 +1157,7 @@
     "calStudent": "学生（紧／正常／松）",
     "capacityCards": "容量（张数）",
     "cardHeight": "卡片高度（mm）",
+    "cardThickness": "卡片厚度（mm）",
     "cardWidth": "卡片宽度（mm）",
     "clearance": "接合间隙（mm）",
     "clientContext": "客户／情境",
@@ -1199,6 +1200,7 @@
     "pocketCount": "转轮口袋数",
     "preset": "预设",
     "problemStatement": "问题描述",
+    "rampAngle": "斜坡角度（度）",
     "rampCount": "斜板数量",
     "scoop": "挖勺（tray_open_front）",
     "scoopDepth": "挖勺深度（mm）",
@@ -1214,6 +1216,7 @@
     "successMetrics": "成功指标（至少选 2 个）",
     "tabWidth": "小桥宽度（mm）",
     "thickness": "厚度（mm）",
+    "windowMargin": "窗口边距（mm）",
     "wheelLayers": "转轮层数"
   },
   "mode": {
@@ -1333,6 +1336,8 @@
     "rotaryPocketWallsThin": "设计检查：转轮口袋隔墙可能太薄。修正：减少口袋数或加大尺寸／增加厚度。",
     "slotInvalid": "出料槽尺寸不合理或超出前板范围。",
     "tallWallsFlexRisk": "设计检查：高墙配薄材料可能弯曲／变形。修正：增加厚度、增加榫数，或降低高度。",
+    "blocking": "请先修正这些错误才能导出。",
+    "fix": "修正",
     "title": "警告",
     "vagueClientContext": "需求检查：客户／情境有点模糊。请补上谁／在哪里／怎么用（例如：家中桌面个人使用）。",
     "vagueDispenseTarget": "需求检查：出料目标（细节）有点模糊。请补上『一次出料』的定义（例如：每转一次 1 颗）。",

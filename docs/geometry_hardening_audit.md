@@ -79,6 +79,8 @@ Public source and Pages check at baseline:
 - Changed `generate_svg()` to return diagnostic non-exportable SVG for blocking validation errors.
 - Changed CLI behavior so blocking validation exits nonzero and does not write exportable SVG unless `--allow-diagnostic-svg` is passed.
 - Added corner relief around adjacent fingered edges using the actual drawn joint depths.
+- Follow-up refinement removed hidden corner-clearance caps and `0.1mm` joint-span fallbacks; too-short usable spans now return `JOINT_USABLE_SPAN_TOO_SHORT`.
+- Omitted tray front height is normalized upward only when that is the safe default; explicitly undersized front heights remain blocking validation errors.
 - Added cutout bbox hints so tests can distinguish closed contained cutouts from intentional calibration slots.
 - Added JSON metadata embedding in exported SVG.
 - Added assembly-oracle tests for edge-pair metadata, complement masks, final fit estimates, cutout containment, panel self-intersection, and layout non-overlap.
@@ -94,7 +96,7 @@ After the hardening changes and bundle regeneration:
 ```text
 python tools/sync_docs.py && rm -rf tests/__pycache__ && python -m pytest -q
   Synced package API bundle -> docs/cardboxgen_bundle.py
-  31 passed
+  39 passed
 ```
 
 Final release verification commands are recorded in the release notes and final task response.

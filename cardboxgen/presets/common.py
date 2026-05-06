@@ -49,7 +49,7 @@ def cut_thumb_notch(width: float, y_top: float, radius: float, depth: float, *, 
 def corner_relief_mm(*, thickness: float, kerf: float, clearance: float, outer_w: float, outer_d: float, wall_h: float) -> float:
     tab_depth, slot_depth = joint_depths_drawn(thickness=thickness, kerf_mm=kerf, clearance_mm=clearance)
     relief = max(float(thickness), tab_depth, slot_depth) + max(0.05, float(kerf) * 0.25)
-    return min(relief, outer_w / 4, outer_d / 4, wall_h / 4)
+    return relief
 
 
 def corner_clearance_mm(
@@ -68,7 +68,7 @@ def corner_clearance_mm(
     normal_depth = max(tab_depth, slot_depth)
     base = max(float(thickness), float(target_finger_w) / 2.0, 2.0 * float(kerf))
     relief = base + normal_depth
-    return min(relief, outer_w / 4, outer_d / 4, wall_h / 4)
+    return relief
 
 
 def target_finger_width(thickness: float, finger_w: Optional[float]) -> float:
@@ -110,7 +110,15 @@ def build_edge_pairs_for_box(
 ) -> Dict[str, EdgePair]:
     pairs: Dict[str, EdgePair] = {}
     target = target_finger_width(thickness, finger_w)
-    corner = corner_relief_mm(thickness=thickness, kerf=kerf, clearance=clearance, outer_w=outer_w, outer_d=outer_d, wall_h=wall_h)
+    corner = corner_clearance_mm(
+        thickness=thickness,
+        kerf=kerf,
+        clearance=clearance,
+        target_finger_w=target,
+        outer_w=outer_w,
+        outer_d=outer_d,
+        wall_h=wall_h,
+    )
 
     def panel(name: str) -> str:
         return f"{prefix}{name}" if prefix else name
@@ -121,15 +129,15 @@ def build_edge_pairs_for_box(
         plan = build_finger_plan(length, count=n, kerf_mm=kerf, clearance_mm=clearance, start_with_tab_on_a=start_with_tab_on_a)
         pairs[pid] = EdgePair(id=pid, family=family, a=a, b=b, length=length, plan=plan)
 
-    mk_pair(f"{prefix}bottom_back", EdgeFamily.OUTER, EdgeKey(panel("BOTTOM"), "top"), EdgeKey(panel("BACK"), "bottom"), max(0.1, outer_w - 2 * corner))
-    mk_pair(f"{prefix}bottom_left", EdgeFamily.OUTER, EdgeKey(panel("BOTTOM"), "left"), EdgeKey(panel("LEFT"), "bottom"), max(0.1, outer_d - 2 * corner))
-    mk_pair(f"{prefix}bottom_right", EdgeFamily.OUTER, EdgeKey(panel("BOTTOM"), "right"), EdgeKey(panel("RIGHT"), "bottom"), max(0.1, outer_d - 2 * corner))
-    mk_pair(f"{prefix}corner_back_left", EdgeFamily.VERTICAL, EdgeKey(panel("BACK"), "left"), EdgeKey(panel("LEFT"), "right"), max(0.1, wall_h - 2 * corner))
-    mk_pair(f"{prefix}corner_back_right", EdgeFamily.VERTICAL, EdgeKey(panel("BACK"), "right"), EdgeKey(panel("RIGHT"), "left"), max(0.1, wall_h - 2 * corner))
+    mk_pair(f"{prefix}bottom_back", EdgeFamily.OUTER, EdgeKey(panel("BOTTOM"), "top"), EdgeKey(panel("BACK"), "bottom"), outer_w - 2 * corner)
+    mk_pair(f"{prefix}bottom_left", EdgeFamily.OUTER, EdgeKey(panel("BOTTOM"), "left"), EdgeKey(panel("LEFT"), "bottom"), outer_d - 2 * corner)
+    mk_pair(f"{prefix}bottom_right", EdgeFamily.OUTER, EdgeKey(panel("BOTTOM"), "right"), EdgeKey(panel("RIGHT"), "bottom"), outer_d - 2 * corner)
+    mk_pair(f"{prefix}corner_back_left", EdgeFamily.VERTICAL, EdgeKey(panel("BACK"), "left"), EdgeKey(panel("LEFT"), "right"), wall_h - 2 * corner)
+    mk_pair(f"{prefix}corner_back_right", EdgeFamily.VERTICAL, EdgeKey(panel("BACK"), "right"), EdgeKey(panel("RIGHT"), "left"), wall_h - 2 * corner)
     if include_front:
-        mk_pair(f"{prefix}bottom_front", EdgeFamily.OUTER, EdgeKey(panel("BOTTOM"), "bottom"), EdgeKey(panel("FRONT"), "bottom"), max(0.1, outer_w - 2 * corner))
-        mk_pair(f"{prefix}corner_front_left", EdgeFamily.VERTICAL, EdgeKey(panel("FRONT"), "left"), EdgeKey(panel("LEFT"), "left"), max(0.1, front_panel_h - 2 * corner))
-        mk_pair(f"{prefix}corner_front_right", EdgeFamily.VERTICAL, EdgeKey(panel("FRONT"), "right"), EdgeKey(panel("RIGHT"), "right"), max(0.1, front_panel_h - 2 * corner))
+        mk_pair(f"{prefix}bottom_front", EdgeFamily.OUTER, EdgeKey(panel("BOTTOM"), "bottom"), EdgeKey(panel("FRONT"), "bottom"), outer_w - 2 * corner)
+        mk_pair(f"{prefix}corner_front_left", EdgeFamily.VERTICAL, EdgeKey(panel("FRONT"), "left"), EdgeKey(panel("LEFT"), "left"), front_panel_h - 2 * corner)
+        mk_pair(f"{prefix}corner_front_right", EdgeFamily.VERTICAL, EdgeKey(panel("FRONT"), "right"), EdgeKey(panel("RIGHT"), "right"), front_panel_h - 2 * corner)
     return pairs
 
 
