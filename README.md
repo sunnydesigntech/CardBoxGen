@@ -1,7 +1,7 @@
 # CardBoxGen
 
-![CI](https://github.com/sunnydesigntech/CardBoxGen/actions/workflows/static.yml/badge.svg)
-![GitHub Pages](https://github.com/sunnydesigntech/CardBoxGen/actions/workflows/pages.yml/badge.svg)
+![CI](https://github.com/wcchun1234/CardBoxGen/actions/workflows/static.yml/badge.svg)
+![GitHub Pages](https://github.com/wcchun1234/CardBoxGen/actions/workflows/pages.yml/badge.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB.svg)
 
@@ -9,9 +9,9 @@ Current version: **v0.8.1**
 
 CardBoxGen generates millimeter SVG cut files for laser-cut card trays, boxes, dispensers, divider racks, card shoes, and a layered rotary dry-goods dispenser prototype. It runs as a Python CLI and as a static GitHub Pages app powered by Pyodide.
 
-Live app: <https://sunnydesigntech.github.io/CardBoxGen/>
+Live app: <https://wcchun1234.github.io/CardBoxGen/>
 
-Direct classroom/execution entry: <https://sunnydesigntech.github.io/CardBoxGen/exec/>
+Direct classroom/execution entry: <https://wcchun1234.github.io/CardBoxGen/exec/>
 
 ## What This Repo Provides
 
@@ -26,7 +26,7 @@ Direct classroom/execution entry: <https://sunnydesigntech.github.io/CardBoxGen/
 
 Use the live app when you only need a cut file:
 
-1. Open <https://sunnydesigntech.github.io/CardBoxGen/>.
+1. Open <https://wcchun1234.github.io/CardBoxGen/>.
 2. Pick a template.
 3. Enter measured material thickness, kerf, clearance, and dimensions.
 4. Check warnings/errors.
@@ -244,7 +244,7 @@ The web app includes a Project handoff panel:
 
 Camera access cannot be forced by CardBoxGen. If QR scanning is blocked in an embedded browser, open the live app directly in Safari/Chrome or use the pasteable project code. The `/exec/` entry point redirects to the app for classroom/execution launchers:
 
-<https://sunnydesigntech.github.io/CardBoxGen/exec/>
+<https://wcchun1234.github.io/CardBoxGen/exec/>
 
 See [docs/camera_qr_sharing.md](docs/camera_qr_sharing.md) for permission troubleshooting and privacy notes.
 
@@ -300,7 +300,7 @@ The CI workflow installs dev requirements, checks docs bundle freshness, runs te
 Recommended GitHub settings:
 
 - About description: browser-first Python/Pyodide SVG generator for laser-cut card trays, boxes, dispensers, mechanisms, and calibration fit tests.
-- Homepage: <https://sunnydesigntech.github.io/CardBoxGen/>
+- Homepage: <https://wcchun1234.github.io/CardBoxGen/>
 - Topics: `laser-cutting`, `svg-generator`, `box-generator`, `finger-joints`, `pyodide`, `github-pages`, `cad`, `fabrication`, `python`.
 - Pages source: GitHub Actions.
 - Issues and Wiki enabled.
